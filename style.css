@@ -71,7 +71,7 @@ body {
   z-index: 2;
   max-width: 1180px;
   margin: 0 auto;
-  padding: 32px 20px 56px;
+  padding: 16px 20px 56px;
 }
 
 .glass {
@@ -92,9 +92,10 @@ body {
   grid-template-columns: 1.5fr 1fr;
   gap: 20px;
   border-radius: 28px;
-  padding: 28px;
+  padding: 24px 28px;
   margin-bottom: 24px;
   width: 100%;
+  align-items: center;
 }
 
 .eyebrow {
@@ -107,7 +108,7 @@ body {
 
 .hero-text h1 {
   margin: 0;
-  font-size: clamp(2.2rem, 5vw, 4.5rem);
+  font-size: clamp(2.6rem, 6vw, 5rem);
   line-height: 0.95;
 }
 
@@ -117,6 +118,15 @@ body {
   color: var(--muted);
   font-size: 1.05rem;
   line-height: 1.6;
+}
+
+.made-by {
+  margin-top: 16px;
+  margin-bottom: 0;
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .stats-panel {
@@ -312,7 +322,7 @@ body {
 
 @media (max-width: 600px) {
   .app-shell {
-    padding: 18px 14px 36px;
+    padding: 14px 14px 36px;
   }
 
   .hero-card,
@@ -332,5 +342,9 @@ body {
 
   .game-area {
     height: 400px;
+  }
+
+  .hero-text h1 {
+    font-size: 2.8rem;
   }
 }
