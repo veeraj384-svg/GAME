@@ -71,7 +71,7 @@ body {
   z-index: 2;
   max-width: 1180px;
   margin: 0 auto;
-  padding: 16px 20px 56px;
+  padding: 20px 20px 56px;
 }
 
 .glass {
@@ -89,12 +89,11 @@ body {
 
 .hero-card {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 1.5fr 0.8fr;
   gap: 20px;
   border-radius: 28px;
   padding: 24px 28px;
-  margin-bottom: 24px;
-  width: 100%;
+  margin-bottom: 18px;
   align-items: center;
 }
 
@@ -108,7 +107,7 @@ body {
 
 .hero-text h1 {
   margin: 0;
-  font-size: clamp(2.6rem, 6vw, 5rem);
+  font-size: clamp(2.8rem, 6vw, 5rem);
   line-height: 0.95;
 }
 
@@ -129,11 +128,10 @@ body {
   letter-spacing: 0.04em;
 }
 
-.stats-panel {
+.hero-side {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 14px;
-  align-self: center;
 }
 
 .stat-box {
@@ -152,6 +150,89 @@ body {
 .value {
   font-size: 2rem;
   font-weight: 800;
+}
+
+.small-value {
+  font-size: 1.1rem;
+}
+
+.nav-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px;
+  border-radius: 22px;
+  margin-bottom: 22px;
+}
+
+.nav-btn {
+  border: none;
+  border-radius: 14px;
+  padding: 12px 18px;
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nav-btn.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #06111c;
+}
+
+.screen {
+  display: none;
+}
+
+.active-screen {
+  display: block;
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 20px;
+}
+
+.home-card {
+  border-radius: 26px;
+  padding: 24px;
+}
+
+.home-card h2,
+.home-card h3 {
+  margin-top: 0;
+}
+
+.home-card p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.game-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.big-btn {
+  width: 100%;
+  text-align: left;
+}
+
+.mini-info-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.mini-box {
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.mini-box p {
+  margin-bottom: 0;
+  color: var(--muted);
 }
 
 .game-card {
@@ -179,8 +260,15 @@ body {
 
 .actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.score-pill {
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 700;
 }
 
 .btn {
@@ -193,7 +281,9 @@ body {
   transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
 }
 
-.btn:hover {
+.btn:hover,
+.nav-btn:hover,
+.coin-button:hover {
   transform: translateY(-2px);
 }
 
@@ -284,35 +374,71 @@ body {
   font-size: 0.9rem;
 }
 
-.info-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin-top: 24px;
-}
-
-.info-card {
+.clicker-area {
+  min-height: 420px;
   border-radius: 24px;
-  padding: 20px;
+  border: 1px solid rgba(255,255,255,0.12);
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
 }
 
-.info-card h3 {
-  margin-top: 0;
+.coin-button {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: none;
+  font-size: 3rem;
+  cursor: pointer;
+  background: radial-gradient(circle at 30% 30%, #fff3bf, var(--gold));
+  box-shadow: 0 0 25px rgba(255, 209, 102, 0.55);
 }
 
-.info-card p {
+.coin-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.center-message {
+  margin-top: 18px;
+  text-align: center;
   color: var(--muted);
-  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.memory-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.memory-card {
+  height: 110px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  font-size: 2rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.memory-card.revealed,
+.memory-card.matched {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #06111c;
 }
 
 @media (max-width: 900px) {
   .hero-card,
-  .info-row {
+  .home-grid {
     grid-template-columns: 1fr;
   }
 
-  .stats-panel {
-    grid-template-columns: repeat(3, 1fr);
+  .memory-board {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .game-area {
@@ -325,13 +451,11 @@ body {
     padding: 14px 14px 36px;
   }
 
-  .hero-card,
-  .game-card,
-  .info-card {
-    border-radius: 22px;
+  .hero-text h1 {
+    font-size: 2.8rem;
   }
 
-  .stats-panel {
+  .hero-side {
     grid-template-columns: 1fr;
   }
 
@@ -344,7 +468,7 @@ body {
     height: 400px;
   }
 
-  .hero-text h1 {
-    font-size: 2.8rem;
+  .memory-card {
+    height: 90px;
   }
 }
