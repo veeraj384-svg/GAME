@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Veeraj Arcade | Premium Game Hub</title>
+  <title>Neon Dash | Premium Game Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -17,8 +17,8 @@
   <main class="app-shell">
     <header class="hero-card glass">
       <div class="hero-text">
-        <p class="eyebrow">PREMIUM ARCADE HUB</p>
-        <h1>Veeraj Arcade</h1>
+        <p class="eyebrow">PREMIUM GAME HUB</p>
+        <h1>Neon Dash</h1>
         <p class="subtext">
           Play multiple fun mini games in one premium website.
           Choose a game from the home screen and try to beat your best score.
@@ -32,8 +32,8 @@
           <span class="value">3</span>
         </div>
         <div class="stat-box glass-inner">
-          <span class="label">Mode</span>
-          <span class="value small-value">Arcade</span>
+          <span class="label">Style</span>
+          <span class="value small-value">Premium</span>
         </div>
       </div>
     </header>
@@ -47,34 +47,32 @@
 
     <section id="homeScreen" class="screen active-screen">
       <div class="home-grid">
-        <div class="home-card glass">
-          <h2>Choose a Game</h2>
-          <p>Welcome to your arcade. Pick any game below to start playing.</p>
-
-          <div class="game-list">
-            <button class="game-select primary big-btn" data-open="dashScreen">Play Neon Dash</button>
-            <button class="game-select secondary big-btn" data-open="clickerScreen">Play Coin Clicker</button>
-            <button class="game-select secondary big-btn" data-open="memoryScreen">Play Memory Match</button>
+        <button class="home-game-card glass" data-open="dashScreen">
+          <div class="home-game-top">
+            <span class="home-badge">ACTION</span>
+            <h2>Neon Dash</h2>
           </div>
-        </div>
+          <p>Dodge enemies, collect glowing coins, and survive as long as you can.</p>
+          <span class="home-link">Open Game →</span>
+        </button>
 
-        <div class="home-card glass">
-          <h3>Games Inside</h3>
-          <div class="mini-info-grid">
-            <div class="mini-box glass-inner">
-              <strong>Neon Dash</strong>
-              <p>Dodge enemies and collect coins.</p>
-            </div>
-            <div class="mini-box glass-inner">
-              <strong>Coin Clicker</strong>
-              <p>Click fast before the timer ends.</p>
-            </div>
-            <div class="mini-box glass-inner">
-              <strong>Memory Match</strong>
-              <p>Find all matching pairs.</p>
-            </div>
+        <button class="home-game-card glass" data-open="clickerScreen">
+          <div class="home-game-top">
+            <span class="home-badge">SPEED</span>
+            <h2>Coin Clicker</h2>
           </div>
-        </div>
+          <p>Click the giant coin as fast as possible before the timer runs out.</p>
+          <span class="home-link">Open Game →</span>
+        </button>
+
+        <button class="home-game-card glass" data-open="memoryScreen">
+          <div class="home-game-top">
+            <span class="home-badge">PUZZLE</span>
+            <h2>Memory Match</h2>
+          </div>
+          <p>Flip cards, match pairs, and try to win in the fewest moves.</p>
+          <span class="home-link">Open Game →</span>
+        </button>
       </div>
     </section>
 
@@ -125,8 +123,10 @@
           </div>
         </div>
 
-        <div class="clicker-area">
-          <button id="coinButton" class="coin-button" disabled>🪙</button>
+        <div class="large-game-panel glass-inner">
+          <div class="clicker-area">
+            <button id="coinButton" class="coin-button" disabled>🪙</button>
+          </div>
           <div id="clickerMessage" class="center-message">Press Start Game</div>
         </div>
       </div>
@@ -147,8 +147,10 @@
           </div>
         </div>
 
-        <div id="memoryBoard" class="memory-board"></div>
-        <div id="memoryMessage" class="center-message">Press New Game</div>
+        <div class="large-game-panel glass-inner">
+          <div id="memoryBoard" class="memory-board"></div>
+          <div id="memoryMessage" class="center-message">Press New Game</div>
+        </div>
       </div>
     </section>
   </main>
