@@ -18,6 +18,7 @@ function showScreen(screenId) {
   if (target) target.classList.add('active-screen');
 
   if (screenId !== 'dashScreen') stopDashGame();
+  if (screenId !== 'snakeScreen') stopSnakeGame();
 }
 
 navButtons.forEach(btn => {
@@ -295,24 +296,6 @@ function endDashGame() {
   `;
 }
 
-window.addEventListener('keydown', (e) => {
-  const key = e.key.toLowerCase();
-  if (key === 'arrowup' || key === 'w') playerState.dy = -playerState.speed;
-  if (key === 'arrowdown' || key === 's') playerState.dy = playerState.speed;
-  if (key === 'arrowleft' || key === 'a') playerState.dx = -playerState.speed;
-  if (key === 'arrowright' || key === 'd') playerState.dx = playerState.speed;
-});
-
-window.addEventListener('keyup', (e) => {
-  const key = e.key.toLowerCase();
-  if (key === 'arrowup' || key === 'w' || key === 'arrowdown' || key === 's') {
-    playerState.dy = 0;
-  }
-  if (key === 'arrowleft' || key === 'a' || key === 'arrowright' || key === 'd') {
-    playerState.dx = 0;
-  }
-});
-
 dashStartBtn.addEventListener('click', startDashGame);
 dashHomeBtn.addEventListener('click', () => showScreen('homeScreen'));
 placePlayer();
@@ -334,6 +317,7 @@ let clickerInterval = null;
 let clickerRunning = false;
 
 function resetClicker() {
+  if (clickerInterval) clearInterval(clickerInterval);
   clickerScore = 0;
   clickerTime = 15;
   clickerRunning = false;
@@ -463,6 +447,196 @@ function handleMemoryCardClick(card) {
 memoryStartBtn.addEventListener('click', resetMemoryGame);
 memoryHomeBtn.addEventListener('click', () => showScreen('homeScreen'));
 
+/* =========================
+   SNAKE
+========================= */
+
+const snakeCanvas = document.getElementById('snakeCanvas');
+const snakeCtx = snakeCanvas.getContext('2d');
+const snakeScoreEl = document.getElementById('snakeScore');
+const snakeBestEl = document.getElementById('snakeBest');
+const snakeStartBtn = document.getElementById('snakeStartBtn');
+const snakeHomeBtn = document.getElementById('snakeHomeBtn');
+const snakeMessage = document.getElementById('snakeMessage');
+
+const snakeGridSize = 20;
+const snakeTileCount = snakeCanvas.width / snakeGridSize;
+
+let snake = [];
+let snakeFood = { x: 10, y: 10 };
+let snakeDx = 1;
+let snakeDy = 0;
+let snakeScore = 0;
+let snakeBest = Number(localStorage.getItem('veerajSnakeBest')) || 0;
+let snakeLoopId = null;
+let snakeRunning = false;
+
+snakeBestEl.textContent = snakeBest;
+
+function drawSnakeBoard() {
+  snakeCtx.clearRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+
+  snakeCtx.fillStyle = 'rgba(255,255,255,0.03)';
+  snakeCtx.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+
+  snakeCtx.fillStyle = '#ffd166';
+  snakeCtx.beginPath();
+  snakeCtx.arc(
+    snakeFood.x * snakeGridSize + snakeGridSize / 2,
+    snakeFood.y * snakeGridSize + snakeGridSize / 2,
+    snakeGridSize / 2.8,
+    0,
+    Math.PI * 2
+  );
+  snakeCtx.fill();
+
+  snake.forEach((segment, index) => {
+    snakeCtx.fillStyle = index === 0 ? '#67e8f9' : '#a78bfa';
+    snakeCtx.fillRect(
+      segment.x * snakeGridSize + 2,
+      segment.y * snakeGridSize + 2,
+      snakeGridSize - 4,
+      snakeGridSize - 4
+    );
+  });
+}
+
+function placeSnakeFood() {
+  let valid = false;
+
+  while (!valid) {
+    snakeFood = {
+      x: Math.floor(Math.random() * snakeTileCount),
+      y: Math.floor(Math.random() * snakeTileCount)
+    };
+
+    valid = !snake.some(segment => segment.x === snakeFood.x && segment.y === snakeFood.y);
+  }
+}
+
+function resetSnakeGame() {
+  stopSnakeGame();
+
+  snake = [
+    { x: 8, y: 10 },
+    { x: 7, y: 10 },
+    { x: 6, y: 10 }
+  ];
+
+  snakeDx = 1;
+  snakeDy = 0;
+  snakeScore = 0;
+  snakeScoreEl.textContent = snakeScore;
+  snakeMessage.textContent = 'Use arrow keys to move';
+  placeSnakeFood();
+  drawSnakeBoard();
+}
+
+function stopSnakeGame() {
+  snakeRunning = false;
+  if (snakeLoopId) clearInterval(snakeLoopId);
+  snakeLoopId = null;
+}
+
+function moveSnake() {
+  const head = {
+    x: snake[0].x + snakeDx,
+    y: snake[0].y + snakeDy
+  };
+
+  if (
+    head.x < 0 ||
+    head.y < 0 ||
+    head.x >= snakeTileCount ||
+    head.y >= snakeTileCount ||
+    snake.some(segment => segment.x === head.x && segment.y === head.y)
+  ) {
+    endSnakeGame();
+    return;
+  }
+
+  snake.unshift(head);
+
+  if (head.x === snakeFood.x && head.y === snakeFood.y) {
+    snakeScore += 10;
+    snakeScoreEl.textContent = snakeScore;
+    placeSnakeFood();
+  } else {
+    snake.pop();
+  }
+
+  drawSnakeBoard();
+}
+
+function startSnakeGame() {
+  showScreen('snakeScreen');
+  resetSnakeGame();
+  snakeRunning = true;
+  snakeMessage.textContent = 'Snake is running';
+
+  snakeLoopId = setInterval(moveSnake, 120);
+}
+
+function endSnakeGame() {
+  stopSnakeGame();
+
+  if (snakeScore > snakeBest) {
+    snakeBest = snakeScore;
+    localStorage.setItem('veerajSnakeBest', String(snakeBest));
+    snakeBestEl.textContent = snakeBest;
+  }
+
+  snakeMessage.textContent = `Game over! Final Score: ${snakeScore}`;
+}
+
+snakeStartBtn.addEventListener('click', startSnakeGame);
+snakeHomeBtn.addEventListener('click', () => showScreen('homeScreen'));
+
+/* =========================
+   KEYBOARD
+========================= */
+
+window.addEventListener('keydown', (e) => {
+  const key = e.key.toLowerCase();
+
+  if (document.getElementById('dashScreen').classList.contains('active-screen')) {
+    if (key === 'arrowup' || key === 'w') playerState.dy = -playerState.speed;
+    if (key === 'arrowdown' || key === 's') playerState.dy = playerState.speed;
+    if (key === 'arrowleft' || key === 'a') playerState.dx = -playerState.speed;
+    if (key === 'arrowright' || key === 'd') playerState.dx = playerState.speed;
+  }
+
+  if (document.getElementById('snakeScreen').classList.contains('active-screen') && snakeRunning) {
+    if (key === 'arrowup' && snakeDy !== 1) {
+      snakeDx = 0;
+      snakeDy = -1;
+    } else if (key === 'arrowdown' && snakeDy !== -1) {
+      snakeDx = 0;
+      snakeDy = 1;
+    } else if (key === 'arrowleft' && snakeDx !== 1) {
+      snakeDx = -1;
+      snakeDy = 0;
+    } else if (key === 'arrowright' && snakeDx !== -1) {
+      snakeDx = 1;
+      snakeDy = 0;
+    }
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  const key = e.key.toLowerCase();
+
+  if (document.getElementById('dashScreen').classList.contains('active-screen')) {
+    if (key === 'arrowup' || key === 'w' || key === 'arrowdown' || key === 's') {
+      playerState.dy = 0;
+    }
+    if (key === 'arrowleft' || key === 'a' || key === 'arrowright' || key === 'd') {
+      playerState.dx = 0;
+    }
+  }
+});
+
 resetClicker();
 resetMemoryGame();
+resetSnakeGame();
 showScreen('homeScreen');
