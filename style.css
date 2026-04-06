@@ -167,20 +167,20 @@ canvas {
 
 .nav-bar {
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
   padding: 14px;
   border-radius: 22px;
   margin-bottom: 22px;
 }
 
 .nav-btn {
+  width: 100%;
   border: none;
-  border-radius: 14px;
-  padding: 12px 18px;
+  border-radius: 18px;
+  padding: 16px 24px;
   background: rgba(255,255,255,0.08);
   color: var(--text);
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 1.05rem;
   cursor: pointer;
   transition: 0.2s ease;
 }
@@ -188,8 +188,8 @@ canvas {
 .nav-btn.active {
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: #06111c;
+  box-shadow: 0 10px 30px rgba(103, 232, 249, 0.25);
 }
-
 .screen {
   display: none;
 }
