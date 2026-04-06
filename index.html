@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Home - Classroom</title>
+  <title>Neon Dash | Premium Game Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -17,10 +17,10 @@
   <main class="app-shell">
     <header class="hero-card glass">
       <div class="hero-text">
-        <p class="eyebrow">Unblocked by IBOSS</p>
-        <h1>Game Hub</h1>
+        <p class="eyebrow">PREMIUM GAME HUB</p>
+        <h1>Neon Dash</h1>
         <p class="subtext">
-          Play multiple fun mini games on one website.
+          Play multiple fun mini games in one premium website.
           Choose a game from the home screen and try to beat your best score.
         </p>
         <p class="made-by">Made by Veeraj Dave</p>
@@ -29,7 +29,7 @@
       <div class="hero-side">
         <div class="stat-box glass-inner">
           <span class="label">Games</span>
-          <span class="value">3</span>
+          <span class="value">4</span>
         </div>
         <div class="stat-box glass-inner">
           <span class="label">Style</span>
@@ -43,6 +43,7 @@
       <button class="nav-btn" data-screen="dashScreen">Neon Dash</button>
       <button class="nav-btn" data-screen="clickerScreen">Coin Clicker</button>
       <button class="nav-btn" data-screen="memoryScreen">Memory Match</button>
+      <button class="nav-btn" data-screen="snakeScreen">Snake</button>
     </nav>
 
     <section id="homeScreen" class="screen active-screen">
@@ -71,6 +72,15 @@
             <h2>Memory Match</h2>
           </div>
           <p>Flip cards, match pairs, and try to win in the fewest moves.</p>
+          <span class="home-link">Open Game →</span>
+        </button>
+
+        <button class="home-game-card glass" data-open="snakeScreen">
+          <div class="home-game-top">
+            <span class="home-badge">CLASSIC</span>
+            <h2>Snake</h2>
+          </div>
+          <p>Use the arrow keys to grow the snake, eat food, and avoid crashing.</p>
           <span class="home-link">Open Game →</span>
         </button>
       </div>
@@ -150,6 +160,29 @@
         <div class="large-game-panel glass-inner">
           <div id="memoryBoard" class="memory-board"></div>
           <div id="memoryMessage" class="center-message">Press New Game</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="snakeScreen" class="screen">
+      <div class="game-card glass">
+        <div class="top-bar">
+          <div>
+            <h2>Snake</h2>
+            <p>Use arrow keys to move. Eat food and avoid walls and yourself.</p>
+          </div>
+
+          <div class="actions">
+            <div class="score-pill glass-inner">Score: <span id="snakeScore">0</span></div>
+            <div class="score-pill glass-inner">Best: <span id="snakeBest">0</span></div>
+            <button id="snakeStartBtn" class="btn primary">Start Game</button>
+            <button id="snakeHomeBtn" class="btn secondary">Home</button>
+          </div>
+        </div>
+
+        <div class="large-game-panel glass-inner">
+          <canvas id="snakeCanvas" class="snake-canvas" width="600" height="600"></canvas>
+          <div id="snakeMessage" class="center-message">Press Start Game</div>
         </div>
       </div>
     </section>
