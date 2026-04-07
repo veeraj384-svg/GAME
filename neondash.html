@@ -29,7 +29,7 @@
         </div>
 
         <div class="canvas-wrap">
-          <canvas id="dashCanvas" class="game-canvas" width="420" height="620"></canvas>
+          <canvas id="dashCanvas" class="game-canvas" width="420" height="360"></canvas>
         </div>
 
         <div class="bottom-actions">
@@ -47,11 +47,11 @@
     const dashRestart = document.getElementById("dashRestart");
 
     const player = {
-      width: 52,
-      height: 18,
-      x: 184,
-      y: 580,
-      speed: 7
+      width: 56,
+      height: 16,
+      x: 182,
+      y: 330,
+      speed: 8
     };
 
     let dashScore = 0;
@@ -65,23 +65,27 @@
     dashBestBox.textContent = "Best: " + dashBest;
 
     function resetDashGame() {
-      player.x = 184;
+      player.x = 182;
+      player.y = 330;
       dashScore = 0;
       dashGameOver = false;
       blocks = [];
+      leftPressed = false;
+      rightPressed = false;
       dashFrame = 0;
       dashScoreBox.textContent = "Score: 0";
     }
 
     function spawnBlock() {
-      const width = Math.floor(Math.random() * 55) + 28;
+      const width = Math.floor(Math.random() * 55) + 30;
       const x = Math.floor(Math.random() * (dashCanvas.width - width));
-      const speed = Math.random() * 2.2 + 3.2;
+      const speed = Math.random() * 1.8 + 2.8;
+
       blocks.push({
         x,
-        y: -30,
+        y: -24,
         width,
-        height: 22,
+        height: 18,
         speed
       });
     }
@@ -94,6 +98,7 @@
       dashCtx.fillRect(0, 0, dashCanvas.width, dashCanvas.height);
 
       dashCtx.strokeStyle = "rgba(153, 231, 255, 0.08)";
+      dashCtx.lineWidth = 1;
       for (let i = 0; i < dashCanvas.width; i += 30) {
         dashCtx.beginPath();
         dashCtx.moveTo(i, 0);
@@ -105,7 +110,7 @@
     function drawPlayer() {
       dashCtx.fillStyle = "#8ee9ff";
       dashCtx.shadowColor = "#8ee9ff";
-      dashCtx.shadowBlur = 18;
+      dashCtx.shadowBlur = 16;
       dashCtx.fillRect(player.x, player.y, player.width, player.height);
       dashCtx.shadowBlur = 0;
     }
@@ -114,7 +119,7 @@
       blocks.forEach((block) => {
         dashCtx.fillStyle = "#ff5fa9";
         dashCtx.shadowColor = "#ff5fa9";
-        dashCtx.shadowBlur = 16;
+        dashCtx.shadowBlur = 14;
         dashCtx.fillRect(block.x, block.y, block.width, block.height);
         dashCtx.shadowBlur = 0;
       });
@@ -123,6 +128,7 @@
     function updatePlayer() {
       if (leftPressed) player.x -= player.speed;
       if (rightPressed) player.x += player.speed;
+
       if (player.x < 0) player.x = 0;
       if (player.x + player.width > dashCanvas.width) {
         player.x = dashCanvas.width - player.width;
@@ -130,7 +136,7 @@
     }
 
     function updateBlocks() {
-      if (dashFrame % 28 === 0) {
+      if (dashFrame % 30 === 0) {
         spawnBlock();
       }
 
@@ -142,6 +148,7 @@
         if (block.y > dashCanvas.height) {
           dashScore++;
           dashScoreBox.textContent = "Score: " + dashScore;
+
           if (dashScore > dashBest) {
             dashBest = dashScore;
             localStorage.setItem("neonDashBest", dashBest);
@@ -168,13 +175,16 @@
 
     function drawDashOverlay() {
       if (!dashGameOver) return;
-      dashCtx.fillStyle = "rgba(7, 12, 24, 0.55)";
-      dashCtx.fillRect(85, 240, 250, 120);
+
+      dashCtx.fillStyle = "rgba(7, 12, 24, 0.58)";
+      dashCtx.fillRect(105, 135, 210, 88);
+
       dashCtx.fillStyle = "#ffffff";
-      dashCtx.font = "bold 28px Arial";
-      dashCtx.fillText("Game Over", 136, 285);
-      dashCtx.font = "18px Arial";
-      dashCtx.fillText("Press Restart to play again", 112, 320);
+      dashCtx.font = "bold 24px Arial";
+      dashCtx.fillText("Game Over", 147, 170);
+
+      dashCtx.font = "16px Arial";
+      dashCtx.fillText("Press Restart to play again", 123, 198);
     }
 
     function dashLoop() {
