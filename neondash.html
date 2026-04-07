@@ -5,6 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Neon Dash | Game Hub</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .dash-canvas-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    #dashCanvas {
+      width: 760px;
+      max-width: 100%;
+      height: 260px;
+      display: block;
+      border-radius: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, #0c1830, #070d18);
+    }
+
+    @media (max-width: 900px) {
+      #dashCanvas {
+        height: 220px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      #dashCanvas {
+        height: 190px;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="page-shell">
@@ -28,8 +57,8 @@
           <div class="status-box" id="dashBestBox">Best: 0</div>
         </div>
 
-        <div class="canvas-wrap">
-          <canvas id="dashCanvas" class="game-canvas" width="420" height="360"></canvas>
+        <div class="dash-canvas-wrap">
+          <canvas id="dashCanvas" width="760" height="260"></canvas>
         </div>
 
         <div class="bottom-actions">
@@ -47,11 +76,11 @@
     const dashRestart = document.getElementById("dashRestart");
 
     const player = {
-      width: 56,
-      height: 16,
-      x: 182,
-      y: 330,
-      speed: 8
+      width: 64,
+      height: 14,
+      x: 348,
+      y: 230,
+      speed: 10
     };
 
     let dashScore = 0;
@@ -65,8 +94,8 @@
     dashBestBox.textContent = "Best: " + dashBest;
 
     function resetDashGame() {
-      player.x = 182;
-      player.y = 330;
+      player.x = 348;
+      player.y = 230;
       dashScore = 0;
       dashGameOver = false;
       blocks = [];
@@ -77,15 +106,15 @@
     }
 
     function spawnBlock() {
-      const width = Math.floor(Math.random() * 55) + 30;
+      const width = Math.floor(Math.random() * 70) + 36;
       const x = Math.floor(Math.random() * (dashCanvas.width - width));
       const speed = Math.random() * 1.8 + 2.8;
 
       blocks.push({
         x,
-        y: -24,
+        y: -22,
         width,
-        height: 18,
+        height: 16,
         speed
       });
     }
@@ -99,7 +128,7 @@
 
       dashCtx.strokeStyle = "rgba(153, 231, 255, 0.08)";
       dashCtx.lineWidth = 1;
-      for (let i = 0; i < dashCanvas.width; i += 30) {
+      for (let i = 0; i < dashCanvas.width; i += 40) {
         dashCtx.beginPath();
         dashCtx.moveTo(i, 0);
         dashCtx.lineTo(i, dashCanvas.height);
@@ -136,7 +165,7 @@
     }
 
     function updateBlocks() {
-      if (dashFrame % 30 === 0) {
+      if (dashFrame % 26 === 0) {
         spawnBlock();
       }
 
@@ -176,15 +205,15 @@
     function drawDashOverlay() {
       if (!dashGameOver) return;
 
-      dashCtx.fillStyle = "rgba(7, 12, 24, 0.58)";
-      dashCtx.fillRect(105, 135, 210, 88);
+      dashCtx.fillStyle = "rgba(7, 12, 24, 0.62)";
+      dashCtx.fillRect(250, 95, 260, 80);
 
       dashCtx.fillStyle = "#ffffff";
-      dashCtx.font = "bold 24px Arial";
-      dashCtx.fillText("Game Over", 147, 170);
+      dashCtx.font = "bold 26px Arial";
+      dashCtx.fillText("Game Over", 315, 127);
 
       dashCtx.font = "16px Arial";
-      dashCtx.fillText("Press Restart to play again", 123, 198);
+      dashCtx.fillText("Press Restart to play again", 292, 153);
     }
 
     function dashLoop() {
