@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory Match | Game Hub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <main class="game-page-wrap">
+      <section class="game-panel">
+        <div class="game-topbar">
+          <div class="game-header-left">
+            <p class="eyebrow">PUZZLE</p>
+            <h1>Memory Match</h1>
+            <p class="game-subtext">
+              Flip cards, match all pairs, and finish in as few moves as possible.
+            </p>
+          </div>
+          <a href="index.html" class="back-link">← Home</a>
+        </div>
+
+        <div class="info-row">
+          <div class="status-box" id="movesBox">Moves: 0</div>
+          <div class="status-box" id="matchesBox">Matches: 0 / 4</div>
+          <div class="status-box" id="bestMovesBox">Best: --</div>
+        </div>
+
+        <div id="memoryGrid" class="memory-grid"></div>
+
+        <div class="bottom-actions">
+          <button class="secondary-button" id="memoryRestart">Restart</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const memoryGrid = document.getElementById("memoryGrid");
+    const movesBox = document.getElementById("movesBox");
+    const matchesBox = document.getElementById("matchesBox");
+    const bestMovesBox = document.getElementById("bestMovesBox");
+    const memoryRestart = document.getElementById("memoryRestart");
+
+    const symbols = ["⚡", "⚡", "🎮", "🎮", "🚀", "🚀", "💎", "💎"];
+    let cards = [];
+    let firstCard = null;
+    let secondCard = null;
+    let lockBoard = false;
+    let moves = 0;
+    let matches = 0;
+    let bestMoves = localStorage.getItem("memoryMatchBest");
+
+    bestMovesBox.textContent = "Best: " + (bestMoves ? bestMoves : "--");
+
+    function shuffle(array) {
+      return [...array].sort(() => Math.random() - 0.5);
+    }
+
+    function updateMemoryUI() {
+      movesBox.textContent = "Moves: " + moves;
+      matchesBox.textContent = "Matches: " + matches + " / 4";
+      bestMovesBox.textContent = "Best: " + (bestMoves ? bestMoves : "--");
+    }
+
+    function createMemoryBoard() {
+      memoryGrid.innerHTML = "";
+      cards = shuffle(symbols);
+      firstCard = null;
+      secondCard = null;
+      lockBoard = false;
+      moves = 0;
+      matches = 0;
+      updateMemoryUI();
+
+      cards.forEach((symbol) => {
+        const button = document.createElement("button");
+        button.className = "memory-card";
+        button.dataset.symbol = symbol;
+        button.dataset.flipped = "false";
+        button.textContent = "?";
+
+        button.addEventListener("click", () => flipCard(button));
+        memoryGrid.appendChild(button);
+      });
+    }
+
+    function flipCard(card) {
+      if (lockBoard) return;
+      if (card === firstCard) return;
+      if (card.classList.contains("matched")) return;
+
+      card.textContent = card.dataset.symbol;
+      card.dataset.flipped = "true";
+
+      if (!firstCard) {
+        firstCard = card;
+        return;
+      }
+
+      secondCard = card;
+      moves++;
+      updateMemoryUI();
+      checkForMatch();
+    }
+
+    function checkForMatch() {
+      const isMatch = firstCard.dataset.symbol === secondCard.dataset.symbol;
+
+      if (isMatch) {
+        firstCard.classList.add("matched");
+        secondCard.classList.add("matched");
+        matches++;
+        resetTurn();
+
+        if (matches === 4) {
+          if (!bestMoves || moves < Number(bestMoves)) {
+            bestMoves = moves;
+            localStorage.setItem("memoryMatchBest", bestMoves);
+          }
+          updateMemoryUI();
+        }
+      } else {
+        lockBoard = true;
+        setTimeout(() => {
+          firstCard.textContent = "?";
+          secondCard.textContent = "?";
+          resetTurn();
+        }, 700);
+      }
+    }
+
+    function resetTurn() {
+      [firstCard, secondCard] = [null, null];
+      lockBoard = false;
+      updateMemoryUI();
+    }
+
+    memoryRestart.addEventListener("click", createMemoryBoard);
+
+    createMemoryBoard();
+  </script>
+</body>
+</html>
