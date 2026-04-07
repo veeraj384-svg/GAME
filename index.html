@@ -3,186 +3,77 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Home - Classroom</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <title>Game Hub | Premium Arcade</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <div class="bg-orb orb-1"></div>
-  <div class="bg-orb orb-2"></div>
-  <div class="bg-grid"></div>
-
-  <main class="app-shell">
-    <header class="hero-card glass">
-      <div class="hero-text">
-        <p class="eyebrow">Unblocked by IBOSS</p>
-        <h1>Game Hub</h1>
-        <p class="subtext">
-          Play multiple fun mini games on one website.
-          Choose a game from the home screen and try to beat your best score.
-        </p>
-        <p class="made-by">Made by Veeraj Dave</p>
-      </div>
-
-      <div class="hero-side">
-        <div class="stat-box glass-inner">
-          <span class="label">Games</span>
-          <span class="value">4</span>
+<body class="home-body">
+  <div class="page-shell">
+    <main class="hub-container">
+      <section class="hero-panel">
+        <div class="hero-left">
+          <p class="eyebrow">Unblocked by IBOSS</p>
+          <h1>Game Hub</h1>
+          <p class="hero-text">
+            Play multiple fun mini games on one website. Choose a game from the
+            home screen and try to beat your best score.
+          </p>
+          <p class="made-by">Made by Veeraj Dave</p>
         </div>
-        <div class="stat-box glass-inner">
-          <span class="label">Style</span>
-          <span class="value small-value">Premium</span>
+
+        <div class="hero-stats">
+          <div class="stat-card">
+            <span>Games</span>
+            <strong>5</strong>
+          </div>
+          <div class="stat-card">
+            <span>Style</span>
+            <strong>Premium</strong>
+          </div>
         </div>
-      </div>
-    </header>
+      </section>
 
-<nav class="nav-bar glass">
-  <button class="nav-btn nav-home-btn active" data-screen="homeScreen">Home</button>
-</nav>
+      <section class="home-strip">
+        <button class="home-button" type="button">Home</button>
+      </section>
 
-    <section id="homeScreen" class="screen active-screen">
-      <div class="home-grid">
-        <button class="home-game-card glass" data-open="dashScreen">
-          <div class="home-game-top">
-            <span class="home-badge">ACTION</span>
-            <h2>Neon Dash</h2>
-          </div>
-          <p>Dodge enemies, collect glowing coins, and survive as long as you can.</p>
-          <span class="home-link">Open Game →</span>
-        </button>
+      <section class="games-grid">
+        <article class="game-card">
+          <div class="card-tag">ACTION</div>
+          <h2>Neon Dash</h2>
+          <p>Dodge falling blocks, survive longer, and chase a new high score.</p>
+          <a href="neondash.html" class="card-link">Open Game →</a>
+        </article>
 
-        <button class="home-game-card glass" data-open="clickerScreen">
-          <div class="home-game-top">
-            <span class="home-badge">SPEED</span>
-            <h2>Coin Clicker</h2>
-          </div>
+        <article class="game-card">
+          <div class="card-tag">SPEED</div>
+          <h2>Coin Clicker</h2>
           <p>Click the giant coin as fast as possible before the timer runs out.</p>
-          <span class="home-link">Open Game →</span>
-        </button>
+          <a href="coinclicker.html" class="card-link">Open Game →</a>
+        </article>
 
-        <button class="home-game-card glass" data-open="memoryScreen">
-          <div class="home-game-top">
-            <span class="home-badge">PUZZLE</span>
-            <h2>Memory Match</h2>
-          </div>
-          <p>Flip cards, match pairs, and try to win in the fewest moves.</p>
-          <span class="home-link">Open Game →</span>
-        </button>
+        <article class="game-card">
+          <div class="card-tag">PUZZLE</div>
+          <h2>Memory Match</h2>
+          <p>Flip cards, match pairs, and try to finish in the fewest moves.</p>
+          <a href="memorymatch.html" class="card-link">Open Game →</a>
+        </article>
 
-        <button class="home-game-card glass" data-open="snakeScreen">
-          <div class="home-game-top">
-            <span class="home-badge">CLASSIC</span>
-            <h2>Snake</h2>
-          </div>
-          <p>Use the arrow keys to grow the snake, eat food, and avoid crashing.</p>
-          <span class="home-link">Open Game →</span>
-        </button>
-      </div>
-    </section>
+        <article class="game-card">
+          <div class="card-tag">CLASSIC</div>
+          <h2>Snake</h2>
+          <p>Eat food, grow longer, and avoid crashing into walls or yourself.</p>
+          <a href="snake.html" class="card-link">Open Game →</a>
+        </article>
 
-    <section id="dashScreen" class="screen">
-      <div class="game-card glass">
-        <div class="top-bar">
-          <div>
-            <h2>Neon Dash</h2>
-            <p>Use arrow keys or WASD</p>
-          </div>
-
-          <div class="actions">
-            <div class="score-pill glass-inner">Score: <span id="dashScore">0</span></div>
-            <div class="score-pill glass-inner">Best: <span id="dashBest">0</span></div>
-            <div class="score-pill glass-inner">Lives: <span id="dashLives">3</span></div>
-            <button id="dashStartBtn" class="btn primary">Start Game</button>
-            <button id="dashHomeBtn" class="btn secondary">Home</button>
-          </div>
-        </div>
-
-        <div id="dashGameArea" class="game-area">
-          <div id="player" class="player"></div>
-
-          <div id="dashOverlay" class="overlay">
-            <div class="overlay-card glass-inner">
-              <h3>Ready?</h3>
-              <p>Collect coins. Avoid red blocks.</p>
-              <p class="tiny">Arrow keys / WASD to move</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="clickerScreen" class="screen">
-      <div class="game-card glass">
-        <div class="top-bar">
-          <div>
-            <h2>Coin Clicker</h2>
-            <p>Click the coin as fast as you can before time runs out</p>
-          </div>
-
-          <div class="actions">
-            <div class="score-pill glass-inner">Score: <span id="clickerScore">0</span></div>
-            <div class="score-pill glass-inner">Time: <span id="clickerTime">15</span></div>
-            <button id="clickerStartBtn" class="btn primary">Start Game</button>
-            <button id="clickerHomeBtn" class="btn secondary">Home</button>
-          </div>
-        </div>
-
-        <div class="large-game-panel glass-inner">
-          <div class="clicker-area">
-            <button id="coinButton" class="coin-button" disabled>🪙</button>
-          </div>
-          <div id="clickerMessage" class="center-message">Press Start Game</div>
-        </div>
-      </div>
-    </section>
-
-    <section id="memoryScreen" class="screen">
-      <div class="game-card glass">
-        <div class="top-bar">
-          <div>
-            <h2>Memory Match</h2>
-            <p>Match all pairs to win</p>
-          </div>
-
-          <div class="actions">
-            <div class="score-pill glass-inner">Moves: <span id="memoryMoves">0</span></div>
-            <button id="memoryStartBtn" class="btn primary">New Game</button>
-            <button id="memoryHomeBtn" class="btn secondary">Home</button>
-          </div>
-        </div>
-
-        <div class="large-game-panel glass-inner">
-          <div id="memoryBoard" class="memory-board"></div>
-          <div id="memoryMessage" class="center-message">Press New Game</div>
-        </div>
-      </div>
-    </section>
-
-    <section id="snakeScreen" class="screen">
-      <div class="game-card glass">
-        <div class="top-bar">
-          <div>
-            <h2>Snake</h2>
-            <p>Use arrow keys to move. Eat food and avoid walls and yourself.</p>
-          </div>
-
-          <div class="actions">
-            <div class="score-pill glass-inner">Score: <span id="snakeScore">0</span></div>
-            <div class="score-pill glass-inner">Best: <span id="snakeBest">0</span></div>
-            <button id="snakeStartBtn" class="btn primary">Start Game</button>
-            <button id="snakeHomeBtn" class="btn secondary">Home</button>
-          </div>
-        </div>
-
-        <div class="large-game-panel glass-inner">
-          <canvas id="snakeCanvas" class="snake-canvas" width="600" height="600"></canvas>
-          <div id="snakeMessage" class="center-message">Press Start Game</div>
-        </div>
-      </div>
-    </section>
-  </main>
+        <article class="game-card">
+          <div class="card-tag">ARCADE</div>
+          <h2>Flappy Bird</h2>
+          <p>Tap to fly through pipes, stay alive, and beat your best score.</p>
+          <a href="flappy.html" class="card-link">Open Game →</a>
+        </article>
+      </section>
+    </main>
+  </div>
 
   <script src="script.js"></script>
 </body>
