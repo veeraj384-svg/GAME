@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neon Dash | Game Hub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <main class="game-page-wrap">
+      <section class="game-panel">
+        <div class="game-topbar">
+          <div class="game-header-left">
+            <p class="eyebrow">ACTION</p>
+            <h1>Neon Dash</h1>
+            <p class="game-subtext">
+              Move left and right, dodge the falling blocks, and survive as long as possible.
+            </p>
+          </div>
+          <a href="index.html" class="back-link">← Home</a>
+        </div>
+
+        <div class="info-row">
+          <div class="status-box">Move: Arrow Keys</div>
+          <div class="status-box">Goal: Survive</div>
+          <div class="status-box" id="dashScoreBox">Score: 0</div>
+          <div class="status-box" id="dashBestBox">Best: 0</div>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="dashCanvas" class="game-canvas" width="420" height="620"></canvas>
+        </div>
+
+        <div class="bottom-actions">
+          <button class="secondary-button" id="dashRestart">Restart</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const dashCanvas = document.getElementById("dashCanvas");
+    const dashCtx = dashCanvas.getContext("2d");
+    const dashScoreBox = document.getElementById("dashScoreBox");
+    const dashBestBox = document.getElementById("dashBestBox");
+    const dashRestart = document.getElementById("dashRestart");
+
+    const player = {
+      width: 52,
+      height: 18,
+      x: 184,
+      y: 580,
+      speed: 7
+    };
+
+    let dashScore = 0;
+    let dashBest = Number(localStorage.getItem("neonDashBest") || 0);
+    let dashGameOver = false;
+    let blocks = [];
+    let leftPressed = false;
+    let rightPressed = false;
+    let dashFrame = 0;
+
+    dashBestBox.textContent = "Best: " + dashBest;
+
+    function resetDashGame() {
+      player.x = 184;
+      dashScore = 0;
+      dashGameOver = false;
+      blocks = [];
+      dashFrame = 0;
+      dashScoreBox.textContent = "Score: 0";
+    }
+
+    function spawnBlock() {
+      const width = Math.floor(Math.random() * 55) + 28;
+      const x = Math.floor(Math.random() * (dashCanvas.width - width));
+      const speed = Math.random() * 2.2 + 3.2;
+      blocks.push({
+        x,
+        y: -30,
+        width,
+        height: 22,
+        speed
+      });
+    }
+
+    function drawBackground() {
+      const grad = dashCtx.createLinearGradient(0, 0, 0, dashCanvas.height);
+      grad.addColorStop(0, "#0c1830");
+      grad.addColorStop(1, "#070d18");
+      dashCtx.fillStyle = grad;
+      dashCtx.fillRect(0, 0, dashCanvas.width, dashCanvas.height);
+
+      dashCtx.strokeStyle = "rgba(153, 231, 255, 0.08)";
+      for (let i = 0; i < dashCanvas.width; i += 30) {
+        dashCtx.beginPath();
+        dashCtx.moveTo(i, 0);
+        dashCtx.lineTo(i, dashCanvas.height);
+        dashCtx.stroke();
+      }
+    }
+
+    function drawPlayer() {
+      dashCtx.fillStyle = "#8ee9ff";
+      dashCtx.shadowColor = "#8ee9ff";
+      dashCtx.shadowBlur = 18;
+      dashCtx.fillRect(player.x, player.y, player.width, player.height);
+      dashCtx.shadowBlur = 0;
+    }
+
+    function drawBlocks() {
+      blocks.forEach((block) => {
+        dashCtx.fillStyle = "#ff5fa9";
+        dashCtx.shadowColor = "#ff5fa9";
+        dashCtx.shadowBlur = 16;
+        dashCtx.fillRect(block.x, block.y, block.width, block.height);
+        dashCtx.shadowBlur = 0;
+      });
+    }
+
+    function updatePlayer() {
+      if (leftPressed) player.x -= player.speed;
+      if (rightPressed) player.x += player.speed;
+      if (player.x < 0) player.x = 0;
+      if (player.x + player.width > dashCanvas.width) {
+        player.x = dashCanvas.width - player.width;
+      }
+    }
+
+    function updateBlocks() {
+      if (dashFrame % 28 === 0) {
+        spawnBlock();
+      }
+
+      blocks.forEach((block) => {
+        block.y += block.speed;
+      });
+
+      blocks = blocks.filter((block) => {
+        if (block.y > dashCanvas.height) {
+          dashScore++;
+          dashScoreBox.textContent = "Score: " + dashScore;
+          if (dashScore > dashBest) {
+            dashBest = dashScore;
+            localStorage.setItem("neonDashBest", dashBest);
+            dashBestBox.textContent = "Best: " + dashBest;
+          }
+          return false;
+        }
+        return true;
+      });
+    }
+
+    function checkDashCollision() {
+      for (const block of blocks) {
+        if (
+          player.x < block.x + block.width &&
+          player.x + player.width > block.x &&
+          player.y < block.y + block.height &&
+          player.y + player.height > block.y
+        ) {
+          dashGameOver = true;
+        }
+      }
+    }
+
+    function drawDashOverlay() {
+      if (!dashGameOver) return;
+      dashCtx.fillStyle = "rgba(7, 12, 24, 0.55)";
+      dashCtx.fillRect(85, 240, 250, 120);
+      dashCtx.fillStyle = "#ffffff";
+      dashCtx.font = "bold 28px Arial";
+      dashCtx.fillText("Game Over", 136, 285);
+      dashCtx.font = "18px Arial";
+      dashCtx.fillText("Press Restart to play again", 112, 320);
+    }
+
+    function dashLoop() {
+      drawBackground();
+
+      if (!dashGameOver) {
+        updatePlayer();
+        updateBlocks();
+        checkDashCollision();
+        dashFrame++;
+      }
+
+      drawPlayer();
+      drawBlocks();
+      drawDashOverlay();
+
+      requestAnimationFrame(dashLoop);
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") leftPressed = true;
+      if (e.key === "ArrowRight") rightPressed = true;
+    });
+
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "ArrowLeft") leftPressed = false;
+      if (e.key === "ArrowRight") rightPressed = false;
+    });
+
+    dashRestart.addEventListener("click", resetDashGame);
+
+    resetDashGame();
+    dashLoop();
+  </script>
+</body>
+</html>
