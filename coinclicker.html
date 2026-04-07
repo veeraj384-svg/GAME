@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coin Clicker | Game Hub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <main class="game-page-wrap">
+      <section class="game-panel">
+        <div class="game-topbar">
+          <div class="game-header-left">
+            <p class="eyebrow">SPEED</p>
+            <h1>Coin Clicker</h1>
+            <p class="game-subtext">
+              Click the giant coin as many times as you can before the timer ends.
+            </p>
+          </div>
+          <a href="index.html" class="back-link">← Home</a>
+        </div>
+
+        <div class="center-panel">
+          <div class="score-display" id="coinScore">0</div>
+          <div class="info-row">
+            <div class="status-box" id="coinTimer">Time: 10</div>
+            <div class="status-box" id="coinBest">Best: 0</div>
+          </div>
+          <button class="big-coin" id="coinButton">🪙</button>
+          <div class="bottom-actions">
+            <button class="primary-button" id="coinStart">Start Game</button>
+            <button class="secondary-button" id="coinReset">Reset</button>
+          </div>
+          <p class="instructions">Click start, then click the coin as fast as possible.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const coinScore = document.getElementById("coinScore");
+    const coinTimer = document.getElementById("coinTimer");
+    const coinBest = document.getElementById("coinBest");
+    const coinButton = document.getElementById("coinButton");
+    const coinStart = document.getElementById("coinStart");
+    const coinReset = document.getElementById("coinReset");
+
+    let score = 0;
+    let timeLeft = 10;
+    let gameRunning = false;
+    let timer = null;
+    let best = Number(localStorage.getItem("coinClickerBest") || 0);
+
+    coinBest.textContent = "Best: " + best;
+
+    function updateCoinUI() {
+      coinScore.textContent = score;
+      coinTimer.textContent = "Time: " + timeLeft;
+      coinBest.textContent = "Best: " + best;
+    }
+
+    function resetCoinGame() {
+      score = 0;
+      timeLeft = 10;
+      gameRunning = false;
+      clearInterval(timer);
+      timer = null;
+      updateCoinUI();
+    }
+
+    function startCoinGame() {
+      resetCoinGame();
+      gameRunning = true;
+      timer = setInterval(() => {
+        timeLeft--;
+        updateCoinUI();
+
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          gameRunning = false;
+          if (score > best) {
+            best = score;
+            localStorage.setItem("coinClickerBest", best);
+            updateCoinUI();
+          }
+        }
+      }, 1000);
+    }
+
+    coinButton.addEventListener("click", () => {
+      if (!gameRunning) return;
+      score++;
+      updateCoinUI();
+    });
+
+    coinStart.addEventListener("click", startCoinGame);
+    coinReset.addEventListener("click", resetCoinGame);
+
+    updateCoinUI();
+  </script>
+</body>
+</html>
