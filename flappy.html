@@ -5,6 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flappy Bird | Game Hub</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .flappy-canvas-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    #flappyCanvas {
+      width: 760px;
+      max-width: 100%;
+      height: 260px;
+      display: block;
+      border-radius: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, #76d8ff, #dff7ff 70%, #d8f1cb);
+    }
+
+    @media (max-width: 900px) {
+      #flappyCanvas {
+        height: 220px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      #flappyCanvas {
+        height: 190px;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="page-shell">
@@ -27,8 +56,8 @@
           <div class="status-box" id="flappyBestBox">Best: 0</div>
         </div>
 
-        <div class="canvas-wrap">
-          <canvas id="flappyCanvas" class="game-canvas" width="420" height="620"></canvas>
+        <div class="flappy-canvas-wrap">
+          <canvas id="flappyCanvas" width="760" height="260"></canvas>
         </div>
 
         <div class="bottom-actions">
@@ -46,13 +75,13 @@
     const flappyRestart = document.getElementById("flappyRestart");
 
     const bird = {
-      x: 90,
-      y: 240,
-      width: 34,
-      height: 24,
+      x: 120,
+      y: 120,
+      width: 30,
+      height: 22,
       velocity: 0,
-      gravity: 0.45,
-      flap: -7.5
+      gravity: 0.38,
+      flap: -5.8
     };
 
     let pipes = [];
@@ -65,7 +94,7 @@
     flappyBestBox.textContent = "Best: " + flappyBest;
 
     function resetFlappyGame() {
-      bird.y = 240;
+      bird.y = 120;
       bird.velocity = 0;
       pipes = [];
       flappyScore = 0;
@@ -82,12 +111,14 @@
     }
 
     function makePipe() {
-      const topHeight = Math.floor(Math.random() * 220) + 70;
+      const topHeight = Math.floor(Math.random() * 90) + 30;
+      const gap = 85;
+
       pipes.push({
         x: flappyCanvas.width,
-        width: 62,
+        width: 58,
         top: topHeight,
-        gap: 165,
+        gap,
         passed: false
       });
     }
@@ -100,21 +131,27 @@
       flappyCtx.fillStyle = sky;
       flappyCtx.fillRect(0, 0, flappyCanvas.width, flappyCanvas.height);
 
-      flappyCtx.fillStyle = "rgba(255,255,255,0.6)";
+      flappyCtx.fillStyle = "rgba(255,255,255,0.55)";
       flappyCtx.beginPath();
-      flappyCtx.arc(75, 80, 28, 0, Math.PI * 2);
+      flappyCtx.arc(70, 55, 24, 0, Math.PI * 2);
       flappyCtx.fill();
+
+      flappyCtx.fillStyle = "#d2efb4";
+      flappyCtx.fillRect(0, flappyCanvas.height - 26, flappyCanvas.width, 26);
     }
 
     function drawBird() {
       flappyCtx.fillStyle = "#ffd34d";
       flappyCtx.fillRect(bird.x, bird.y, bird.width, bird.height);
+
       flappyCtx.fillStyle = "#ff9238";
-      flappyCtx.fillRect(bird.x + 28, bird.y + 9, 12, 6);
+      flappyCtx.fillRect(bird.x + 25, bird.y + 8, 11, 6);
+
       flappyCtx.fillStyle = "#ffffff";
-      flappyCtx.fillRect(bird.x + 18, bird.y + 4, 8, 8);
+      flappyCtx.fillRect(bird.x + 16, bird.y + 4, 8, 8);
+
       flappyCtx.fillStyle = "#111111";
-      flappyCtx.fillRect(bird.x + 21, bird.y + 7, 3, 3);
+      flappyCtx.fillRect(bird.x + 19, bird.y + 7, 3, 3);
     }
 
     function drawPipes() {
@@ -127,8 +164,8 @@
         flappyCtx.fillRect(pipe.x, bottomY, pipe.width, bottomHeight);
 
         flappyCtx.fillStyle = "#1f954c";
-        flappyCtx.fillRect(pipe.x - 4, pipe.top - 18, pipe.width + 8, 18);
-        flappyCtx.fillRect(pipe.x - 4, bottomY, pipe.width + 8, 18);
+        flappyCtx.fillRect(pipe.x - 4, pipe.top - 12, pipe.width + 8, 12);
+        flappyCtx.fillRect(pipe.x - 4, bottomY, pipe.width + 8, 12);
       });
     }
 
@@ -141,12 +178,12 @@
     function updatePipes() {
       if (!flappyStarted || flappyGameOver) return;
 
-      if (flappyFrame % 95 === 0) {
+      if (flappyFrame % 90 === 0) {
         makePipe();
       }
 
       pipes.forEach((pipe) => {
-        pipe.x -= 2.4;
+        pipe.x -= 3.2;
 
         if (!pipe.passed && pipe.x + pipe.width < bird.x) {
           pipe.passed = true;
@@ -165,7 +202,7 @@
     }
 
     function checkFlappyCollision() {
-      if (bird.y <= 0 || bird.y + bird.height >= flappyCanvas.height) {
+      if (bird.y <= 0 || bird.y + bird.height >= flappyCanvas.height - 26) {
         flappyGameOver = true;
       }
 
@@ -181,25 +218,35 @@
       }
     }
 
+    function drawScore() {
+      flappyCtx.fillStyle = "#14314f";
+      flappyCtx.font = "bold 20px Arial";
+      flappyCtx.fillText("Score: " + flappyScore, 16, 28);
+    }
+
     function drawFlappyOverlay() {
       if (!flappyStarted && !flappyGameOver) {
-        flappyCtx.fillStyle = "rgba(0,0,0,0.22)";
-        flappyCtx.fillRect(100, 240, 220, 90);
+        flappyCtx.fillStyle = "rgba(0,0,0,0.20)";
+        flappyCtx.fillRect(265, 85, 230, 72);
+
         flappyCtx.fillStyle = "#ffffff";
-        flappyCtx.font = "bold 26px Arial";
-        flappyCtx.fillText("Ready?", 165, 275);
-        flappyCtx.font = "16px Arial";
-        flappyCtx.fillText("Click or press Space", 142, 305);
+        flappyCtx.font = "bold 24px Arial";
+        flappyCtx.fillText("Ready?", 338, 113);
+
+        flappyCtx.font = "15px Arial";
+        flappyCtx.fillText("Click or press Space", 315, 136);
       }
 
       if (flappyGameOver) {
-        flappyCtx.fillStyle = "rgba(0,0,0,0.3)";
-        flappyCtx.fillRect(90, 235, 240, 100);
+        flappyCtx.fillStyle = "rgba(0,0,0,0.24)";
+        flappyCtx.fillRect(250, 82, 255, 78);
+
         flappyCtx.fillStyle = "#ffffff";
-        flappyCtx.font = "bold 28px Arial";
-        flappyCtx.fillText("Game Over", 136, 275);
-        flappyCtx.font = "17px Arial";
-        flappyCtx.fillText("Press Restart to play again", 108, 305);
+        flappyCtx.font = "bold 24px Arial";
+        flappyCtx.fillText("Game Over", 323, 110);
+
+        flappyCtx.font = "15px Arial";
+        flappyCtx.fillText("Press Restart to play again", 292, 136);
       }
     }
 
@@ -215,6 +262,7 @@
 
       drawPipes();
       drawBird();
+      drawScore();
       drawFlappyOverlay();
 
       requestAnimationFrame(flappyLoop);
