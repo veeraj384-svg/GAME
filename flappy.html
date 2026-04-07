@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flappy Bird | Game Hub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <main class="game-page-wrap">
+      <section class="game-panel">
+        <div class="game-topbar">
+          <div class="game-header-left">
+            <p class="eyebrow">ARCADE</p>
+            <h1>Flappy Bird</h1>
+            <p class="game-subtext">
+              Press Space or click to flap. Fly through the pipes and beat your best score.
+            </p>
+          </div>
+          <a href="index.html" class="back-link">← Home</a>
+        </div>
+
+        <div class="info-row">
+          <div class="status-box">Controls: Space / Click</div>
+          <div class="status-box" id="flappyScoreBox">Score: 0</div>
+          <div class="status-box" id="flappyBestBox">Best: 0</div>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="flappyCanvas" class="game-canvas" width="420" height="620"></canvas>
+        </div>
+
+        <div class="bottom-actions">
+          <button class="secondary-button" id="flappyRestart">Restart</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const flappyCanvas = document.getElementById("flappyCanvas");
+    const flappyCtx = flappyCanvas.getContext("2d");
+    const flappyScoreBox = document.getElementById("flappyScoreBox");
+    const flappyBestBox = document.getElementById("flappyBestBox");
+    const flappyRestart = document.getElementById("flappyRestart");
+
+    const bird = {
+      x: 90,
+      y: 240,
+      width: 34,
+      height: 24,
+      velocity: 0,
+      gravity: 0.45,
+      flap: -7.5
+    };
+
+    let pipes = [];
+    let flappyScore = 0;
+    let flappyBest = Number(localStorage.getItem("flappyBest") || 0);
+    let flappyFrame = 0;
+    let flappyStarted = false;
+    let flappyGameOver = false;
+
+    flappyBestBox.textContent = "Best: " + flappyBest;
+
+    function resetFlappyGame() {
+      bird.y = 240;
+      bird.velocity = 0;
+      pipes = [];
+      flappyScore = 0;
+      flappyFrame = 0;
+      flappyStarted = false;
+      flappyGameOver = false;
+      flappyScoreBox.textContent = "Score: 0";
+    }
+
+    function doFlap() {
+      if (flappyGameOver) return;
+      flappyStarted = true;
+      bird.velocity = bird.flap;
+    }
+
+    function makePipe() {
+      const topHeight = Math.floor(Math.random() * 220) + 70;
+      pipes.push({
+        x: flappyCanvas.width,
+        width: 62,
+        top: topHeight,
+        gap: 165,
+        passed: false
+      });
+    }
+
+    function drawFlappyBackground() {
+      const sky = flappyCtx.createLinearGradient(0, 0, 0, flappyCanvas.height);
+      sky.addColorStop(0, "#76d8ff");
+      sky.addColorStop(0.7, "#e4f8ff");
+      sky.addColorStop(1, "#d5f1ca");
+      flappyCtx.fillStyle = sky;
+      flappyCtx.fillRect(0, 0, flappyCanvas.width, flappyCanvas.height);
+
+      flappyCtx.fillStyle = "rgba(255,255,255,0.6)";
+      flappyCtx.beginPath();
+      flappyCtx.arc(75, 80, 28, 0, Math.PI * 2);
+      flappyCtx.fill();
+    }
+
+    function drawBird() {
+      flappyCtx.fillStyle = "#ffd34d";
+      flappyCtx.fillRect(bird.x, bird.y, bird.width, bird.height);
+      flappyCtx.fillStyle = "#ff9238";
+      flappyCtx.fillRect(bird.x + 28, bird.y + 9, 12, 6);
+      flappyCtx.fillStyle = "#ffffff";
+      flappyCtx.fillRect(bird.x + 18, bird.y + 4, 8, 8);
+      flappyCtx.fillStyle = "#111111";
+      flappyCtx.fillRect(bird.x + 21, bird.y + 7, 3, 3);
+    }
+
+    function drawPipes() {
+      pipes.forEach((pipe) => {
+        const bottomY = pipe.top + pipe.gap;
+        const bottomHeight = flappyCanvas.height - bottomY;
+
+        flappyCtx.fillStyle = "#25b85d";
+        flappyCtx.fillRect(pipe.x, 0, pipe.width, pipe.top);
+        flappyCtx.fillRect(pipe.x, bottomY, pipe.width, bottomHeight);
+
+        flappyCtx.fillStyle = "#1f954c";
+        flappyCtx.fillRect(pipe.x - 4, pipe.top - 18, pipe.width + 8, 18);
+        flappyCtx.fillRect(pipe.x - 4, bottomY, pipe.width + 8, 18);
+      });
+    }
+
+    function updateBird() {
+      if (!flappyStarted || flappyGameOver) return;
+      bird.velocity += bird.gravity;
+      bird.y += bird.velocity;
+    }
+
+    function updatePipes() {
+      if (!flappyStarted || flappyGameOver) return;
+
+      if (flappyFrame % 95 === 0) {
+        makePipe();
+      }
+
+      pipes.forEach((pipe) => {
+        pipe.x -= 2.4;
+
+        if (!pipe.passed && pipe.x + pipe.width < bird.x) {
+          pipe.passed = true;
+          flappyScore++;
+          flappyScoreBox.textContent = "Score: " + flappyScore;
+
+          if (flappyScore > flappyBest) {
+            flappyBest = flappyScore;
+            localStorage.setItem("flappyBest", flappyBest);
+            flappyBestBox.textContent = "Best: " + flappyBest;
+          }
+        }
+      });
+
+      pipes = pipes.filter((pipe) => pipe.x + pipe.width > -20);
+    }
+
+    function checkFlappyCollision() {
+      if (bird.y <= 0 || bird.y + bird.height >= flappyCanvas.height) {
+        flappyGameOver = true;
+      }
+
+      for (const pipe of pipes) {
+        const bottomY = pipe.top + pipe.gap;
+        const hitX = bird.x + bird.width > pipe.x && bird.x < pipe.x + pipe.width;
+        const hitTop = bird.y < pipe.top;
+        const hitBottom = bird.y + bird.height > bottomY;
+
+        if (hitX && (hitTop || hitBottom)) {
+          flappyGameOver = true;
+        }
+      }
+    }
+
+    function drawFlappyOverlay() {
+      if (!flappyStarted && !flappyGameOver) {
+        flappyCtx.fillStyle = "rgba(0,0,0,0.22)";
+        flappyCtx.fillRect(100, 240, 220, 90);
+        flappyCtx.fillStyle = "#ffffff";
+        flappyCtx.font = "bold 26px Arial";
+        flappyCtx.fillText("Ready?", 165, 275);
+        flappyCtx.font = "16px Arial";
+        flappyCtx.fillText("Click or press Space", 142, 305);
+      }
+
+      if (flappyGameOver) {
+        flappyCtx.fillStyle = "rgba(0,0,0,0.3)";
+        flappyCtx.fillRect(90, 235, 240, 100);
+        flappyCtx.fillStyle = "#ffffff";
+        flappyCtx.font = "bold 28px Arial";
+        flappyCtx.fillText("Game Over", 136, 275);
+        flappyCtx.font = "17px Arial";
+        flappyCtx.fillText("Press Restart to play again", 108, 305);
+      }
+    }
+
+    function flappyLoop() {
+      drawFlappyBackground();
+
+      if (!flappyGameOver) {
+        updateBird();
+        updatePipes();
+        checkFlappyCollision();
+        if (flappyStarted) flappyFrame++;
+      }
+
+      drawPipes();
+      drawBird();
+      drawFlappyOverlay();
+
+      requestAnimationFrame(flappyLoop);
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        doFlap();
+      }
+    });
+
+    flappyCanvas.addEventListener("click", doFlap);
+    flappyRestart.addEventListener("click", resetFlappyGame);
+
+    resetFlappyGame();
+    flappyLoop();
+  </script>
+</body>
+</html>
