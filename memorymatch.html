@@ -6,31 +6,45 @@
   <title>Memory Match | Game Hub</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="theme-puzzle">
   <div class="page-shell">
     <main class="game-page-wrap">
       <section class="game-panel">
         <div class="game-topbar">
           <div class="game-header-left">
-            <p class="eyebrow">PUZZLE</p>
+            <p class="eyebrow">Puzzle Relay</p>
             <h1>Memory Match</h1>
             <p class="game-subtext">
-              Flip cards, match all pairs, and finish in as few moves as possible.
+              Reveal the symbols, lock in every pair, and finish the board in the fewest moves possible.
             </p>
           </div>
-          <a href="index.html" class="back-link">← Home</a>
+          <a href="index.html" class="back-link">&larr; Home</a>
         </div>
 
         <div class="info-row">
-          <div class="status-box" id="movesBox">Moves: 0</div>
+          <div class="status-box is-accent" id="movesBox">Moves: 0</div>
           <div class="status-box" id="matchesBox">Matches: 0 / 4</div>
           <div class="status-box" id="bestMovesBox">Best: --</div>
         </div>
 
-        <div id="memoryGrid" class="memory-grid"></div>
+        <div class="center-panel memory-stage">
+          <div class="message-banner" id="memoryMessage">Match all 4 pairs with the fewest moves you can.</div>
+          <div id="memoryGrid" class="memory-grid"></div>
 
-        <div class="bottom-actions">
-          <button class="secondary-button" id="memoryRestart">Restart</button>
+          <div class="bottom-actions">
+            <button class="secondary-button" id="memoryRestart">Restart Puzzle</button>
+          </div>
+
+          <div class="game-tip-grid">
+            <div class="tip-card">
+              <strong>Read the board</strong>
+              <span>Try to remember corner cards first so you can scan the rest more quickly.</span>
+            </div>
+            <div class="tip-card">
+              <strong>Clean runs</strong>
+              <span>Your best score is measured by moves, so accuracy beats random flipping.</span>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -42,6 +56,7 @@
     const matchesBox = document.getElementById("matchesBox");
     const bestMovesBox = document.getElementById("bestMovesBox");
     const memoryRestart = document.getElementById("memoryRestart");
+    const memoryMessage = document.getElementById("memoryMessage");
 
     const symbols = ["⚡", "⚡", "🎮", "🎮", "🚀", "🚀", "💎", "💎"];
     let cards = [];
@@ -52,16 +67,28 @@
     let matches = 0;
     let bestMoves = localStorage.getItem("memoryMatchBest");
 
-    bestMovesBox.textContent = "Best: " + (bestMoves ? bestMoves : "--");
-
     function shuffle(array) {
       return [...array].sort(() => Math.random() - 0.5);
+    }
+
+    function setMemoryMessage(message) {
+      memoryMessage.textContent = message;
     }
 
     function updateMemoryUI() {
       movesBox.textContent = "Moves: " + moves;
       matchesBox.textContent = "Matches: " + matches + " / 4";
       bestMovesBox.textContent = "Best: " + (bestMoves ? bestMoves : "--");
+    }
+
+    function revealCard(card) {
+      card.textContent = card.dataset.symbol;
+      card.classList.add("revealed");
+    }
+
+    function hideCard(card) {
+      card.textContent = "?";
+      card.classList.remove("revealed");
     }
 
     function createMemoryBoard() {
@@ -73,12 +100,12 @@
       moves = 0;
       matches = 0;
       updateMemoryUI();
+      setMemoryMessage("Fresh puzzle loaded. Match every pair in as few moves as possible.");
 
       cards.forEach((symbol) => {
         const button = document.createElement("button");
         button.className = "memory-card";
         button.dataset.symbol = symbol;
-        button.dataset.flipped = "false";
         button.textContent = "?";
 
         button.addEventListener("click", () => flipCard(button));
@@ -91,11 +118,11 @@
       if (card === firstCard) return;
       if (card.classList.contains("matched")) return;
 
-      card.textContent = card.dataset.symbol;
-      card.dataset.flipped = "true";
+      revealCard(card);
 
       if (!firstCard) {
         firstCard = card;
+        setMemoryMessage("Card locked in. Find its match.");
         return;
       }
 
@@ -112,22 +139,27 @@
         firstCard.classList.add("matched");
         secondCard.classList.add("matched");
         matches++;
+        setMemoryMessage("Match found. " + (4 - matches) + " pair" + (matches === 3 ? "" : "s") + " left.");
         resetTurn();
 
         if (matches === 4) {
           if (!bestMoves || moves < Number(bestMoves)) {
             bestMoves = moves;
             localStorage.setItem("memoryMatchBest", bestMoves);
+            setMemoryMessage("Perfect memory. New best score in " + moves + " moves.");
+          } else {
+            setMemoryMessage("Board cleared in " + moves + " moves. Best remains " + bestMoves + ".");
           }
           updateMemoryUI();
         }
       } else {
         lockBoard = true;
+        setMemoryMessage("Not a match. Watch the cards and try again.");
         setTimeout(() => {
-          firstCard.textContent = "?";
-          secondCard.textContent = "?";
+          hideCard(firstCard);
+          hideCard(secondCard);
           resetTurn();
-        }, 700);
+        }, 720);
       }
     }
 
@@ -139,6 +171,7 @@
 
     memoryRestart.addEventListener("click", createMemoryBoard);
 
+    updateMemoryUI();
     createMemoryBoard();
   </script>
 </body>
