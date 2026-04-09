@@ -5,64 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Neon Dash | Game Hub</title>
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .dash-canvas-wrap {
-      display: flex;
-      justify-content: center;
-      margin-top: 8px;
-    }
-
-    #dashCanvas {
-      width: 760px;
-      max-width: 100%;
-      height: 260px;
-      display: block;
-      border-radius: 22px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: linear-gradient(180deg, #0c1830, #070d18);
-    }
-
-    @media (max-width: 900px) {
-      #dashCanvas {
-        height: 220px;
-      }
-    }
-
-    @media (max-width: 640px) {
-      #dashCanvas {
-        height: 190px;
-      }
-    }
-  </style>
 </head>
-<body>
+<body class="theme-neon">
   <div class="page-shell">
     <main class="game-page-wrap">
       <section class="game-panel">
         <div class="game-topbar">
           <div class="game-header-left">
-            <p class="eyebrow">ACTION</p>
+            <p class="eyebrow">Neon Survival</p>
             <h1>Neon Dash</h1>
             <p class="game-subtext">
-              Move left and right, dodge the falling blocks, and survive as long as possible.
+              Slide across the synth grid, dodge the falling blocks, and survive as the storm accelerates.
             </p>
           </div>
-          <a href="index.html" class="back-link">← Home</a>
+          <a href="index.html" class="back-link">&larr; Home</a>
         </div>
 
         <div class="info-row">
           <div class="status-box">Move: Arrow Keys</div>
           <div class="status-box">Goal: Survive</div>
-          <div class="status-box" id="dashScoreBox">Score: 0</div>
+          <div class="status-box is-accent" id="dashScoreBox">Score: 0</div>
           <div class="status-box" id="dashBestBox">Best: 0</div>
         </div>
 
-        <div class="dash-canvas-wrap">
-          <canvas id="dashCanvas" width="760" height="260"></canvas>
+        <div class="message-banner" id="dashMessage">The run starts instantly. Dodge the blocks and chase the best score.</div>
+
+        <div class="canvas-stage">
+          <canvas id="dashCanvas" class="game-canvas" width="760" height="260"></canvas>
         </div>
 
         <div class="bottom-actions">
-          <button class="secondary-button" id="dashRestart">Restart</button>
+          <button class="secondary-button" id="dashRestart">Restart Run</button>
         </div>
       </section>
     </main>
@@ -74,6 +47,7 @@
     const dashScoreBox = document.getElementById("dashScoreBox");
     const dashBestBox = document.getElementById("dashBestBox");
     const dashRestart = document.getElementById("dashRestart");
+    const dashMessage = document.getElementById("dashMessage");
 
     const player = {
       width: 64,
@@ -93,6 +67,25 @@
 
     dashBestBox.textContent = "Best: " + dashBest;
 
+    function setDashMessage(message) {
+      dashMessage.textContent = message;
+    }
+
+    function drawRoundedRect(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
     function resetDashGame() {
       player.x = 348;
       player.y = 230;
@@ -103,6 +96,7 @@
       rightPressed = false;
       dashFrame = 0;
       dashScoreBox.textContent = "Score: 0";
+      setDashMessage("Fresh storm loaded. Stay centered until you read the first pattern.");
     }
 
     function spawnBlock() {
@@ -121,37 +115,81 @@
 
     function drawBackground() {
       const grad = dashCtx.createLinearGradient(0, 0, 0, dashCanvas.height);
-      grad.addColorStop(0, "#0c1830");
-      grad.addColorStop(1, "#070d18");
+      grad.addColorStop(0, "#140c2b");
+      grad.addColorStop(0.56, "#0a1731");
+      grad.addColorStop(1, "#040812");
       dashCtx.fillStyle = grad;
       dashCtx.fillRect(0, 0, dashCanvas.width, dashCanvas.height);
 
-      dashCtx.strokeStyle = "rgba(153, 231, 255, 0.08)";
-      dashCtx.lineWidth = 1;
+      dashCtx.fillStyle = "rgba(255, 110, 209, 0.25)";
+      dashCtx.beginPath();
+      dashCtx.arc(dashCanvas.width / 2, 118, 76, 0, Math.PI * 2);
+      dashCtx.fill();
+
+      for (let i = 0; i < 24; i++) {
+        const x = (i * 79 + dashFrame * 0.25) % dashCanvas.width;
+        const y = (i * 37) % 120;
+        dashCtx.fillStyle = "rgba(255,255,255,0.35)";
+        dashCtx.fillRect(x, y, 2, 2);
+      }
+
+      dashCtx.strokeStyle = "rgba(137, 247, 255, 0.08)";
       for (let i = 0; i < dashCanvas.width; i += 40) {
         dashCtx.beginPath();
-        dashCtx.moveTo(i, 0);
-        dashCtx.lineTo(i, dashCanvas.height);
+        dashCtx.moveTo(i, 126);
+        dashCtx.lineTo(i + 34, dashCanvas.height);
         dashCtx.stroke();
       }
+
+      for (let y = 150; y < dashCanvas.height; y += 18) {
+        dashCtx.beginPath();
+        dashCtx.moveTo(0, y);
+        dashCtx.lineTo(dashCanvas.width, y);
+        dashCtx.stroke();
+      }
+
+      dashCtx.fillStyle = "rgba(8, 12, 30, 0.3)";
+      dashCtx.fillRect(0, 0, dashCanvas.width, 60);
     }
 
     function drawPlayer() {
-      dashCtx.fillStyle = "#8ee9ff";
-      dashCtx.shadowColor = "#8ee9ff";
-      dashCtx.shadowBlur = 16;
-      dashCtx.fillRect(player.x, player.y, player.width, player.height);
-      dashCtx.shadowBlur = 0;
+      dashCtx.save();
+      dashCtx.shadowColor = "#89f7ff";
+      dashCtx.shadowBlur = 18;
+      dashCtx.fillStyle = "#89f7ff";
+      drawRoundedRect(dashCtx, player.x, player.y, player.width, player.height, 8);
+      dashCtx.fill();
+      dashCtx.restore();
+
+      dashCtx.fillStyle = "#f7fbff";
+      drawRoundedRect(dashCtx, player.x + 8, player.y + 4, player.width - 16, 4, 2);
+      dashCtx.fill();
     }
 
     function drawBlocks() {
       blocks.forEach((block) => {
-        dashCtx.fillStyle = "#ff5fa9";
-        dashCtx.shadowColor = "#ff5fa9";
-        dashCtx.shadowBlur = 14;
-        dashCtx.fillRect(block.x, block.y, block.width, block.height);
-        dashCtx.shadowBlur = 0;
+        dashCtx.save();
+        dashCtx.fillStyle = "#ff6ed1";
+        dashCtx.shadowColor = "#ff6ed1";
+        dashCtx.shadowBlur = 18;
+        drawRoundedRect(dashCtx, block.x, block.y, block.width, block.height, 8);
+        dashCtx.fill();
+        dashCtx.restore();
+
+        dashCtx.fillStyle = "#ffd9f1";
+        drawRoundedRect(dashCtx, block.x + 6, block.y + 4, block.width - 12, 3, 2);
+        dashCtx.fill();
       });
+    }
+
+    function drawDashHud() {
+      dashCtx.fillStyle = "rgba(7, 11, 28, 0.55)";
+      drawRoundedRect(dashCtx, 14, 14, 118, 36, 14);
+      dashCtx.fill();
+
+      dashCtx.fillStyle = "#ffffff";
+      dashCtx.font = "bold 18px Arial";
+      dashCtx.fillText("Score " + dashScore, 28, 38);
     }
 
     function updatePlayer() {
@@ -182,7 +220,11 @@
             dashBest = dashScore;
             localStorage.setItem("neonDashBest", dashBest);
             dashBestBox.textContent = "Best: " + dashBest;
+            setDashMessage("New best in motion. Stay focused.");
+          } else if (dashScore > 0 && dashScore % 5 === 0) {
+            setDashMessage("Clean streak. " + dashScore + " blocks survived.");
           }
+
           return false;
         }
         return true;
@@ -200,20 +242,26 @@
           dashGameOver = true;
         }
       }
+
+      if (dashGameOver) {
+        setDashMessage("Impact at score " + dashScore + ". Restart and chase a cleaner line.");
+      }
     }
 
     function drawDashOverlay() {
       if (!dashGameOver) return;
 
-      dashCtx.fillStyle = "rgba(7, 12, 24, 0.62)";
-      dashCtx.fillRect(250, 95, 260, 80);
+      dashCtx.fillStyle = "rgba(7, 12, 24, 0.66)";
+      drawRoundedRect(dashCtx, 238, 88, 286, 88, 18);
+      dashCtx.fill();
 
       dashCtx.fillStyle = "#ffffff";
-      dashCtx.font = "bold 26px Arial";
-      dashCtx.fillText("Game Over", 315, 127);
+      dashCtx.font = "bold 28px Arial";
+      dashCtx.fillText("Signal Lost", 317, 121);
 
       dashCtx.font = "16px Arial";
-      dashCtx.fillText("Press Restart to play again", 292, 153);
+      dashCtx.fillText("Press Restart to launch again", 289, 148);
+      dashCtx.fillText("Final score: " + dashScore, 320, 168);
     }
 
     function dashLoop() {
@@ -228,6 +276,7 @@
 
       drawPlayer();
       drawBlocks();
+      drawDashHud();
       drawDashOverlay();
 
       requestAnimationFrame(dashLoop);
