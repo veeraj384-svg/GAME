@@ -5,63 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flappy Bird | Game Hub</title>
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .flappy-canvas-wrap {
-      display: flex;
-      justify-content: center;
-      margin-top: 8px;
-    }
-
-    #flappyCanvas {
-      width: 760px;
-      max-width: 100%;
-      height: 260px;
-      display: block;
-      border-radius: 22px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: linear-gradient(180deg, #76d8ff, #dff7ff 70%, #d8f1cb);
-    }
-
-    @media (max-width: 900px) {
-      #flappyCanvas {
-        height: 220px;
-      }
-    }
-
-    @media (max-width: 640px) {
-      #flappyCanvas {
-        height: 190px;
-      }
-    }
-  </style>
 </head>
-<body>
+<body class="theme-arcade">
   <div class="page-shell">
     <main class="game-page-wrap">
       <section class="game-panel">
         <div class="game-topbar">
           <div class="game-header-left">
-            <p class="eyebrow">ARCADE</p>
+            <p class="eyebrow">Arcade Flight</p>
             <h1>Flappy Bird</h1>
             <p class="game-subtext">
-              Press Space or click to flap. Fly through the pipes and beat your best score.
+              Press Space or click to flap, slip through the pipes, and keep the little flyer above the clouds.
             </p>
           </div>
-          <a href="index.html" class="back-link">← Home</a>
+          <a href="index.html" class="back-link">&larr; Home</a>
         </div>
 
         <div class="info-row">
           <div class="status-box">Controls: Space / Click</div>
-          <div class="status-box" id="flappyScoreBox">Score: 0</div>
+          <div class="status-box is-accent" id="flappyScoreBox">Score: 0</div>
           <div class="status-box" id="flappyBestBox">Best: 0</div>
         </div>
 
-        <div class="flappy-canvas-wrap">
-          <canvas id="flappyCanvas" width="760" height="260"></canvas>
+        <div class="message-banner" id="flappyMessage">Press Space or click to launch the first run.</div>
+
+        <div class="canvas-stage">
+          <canvas id="flappyCanvas" class="game-canvas" width="760" height="260"></canvas>
         </div>
 
         <div class="bottom-actions">
-          <button class="secondary-button" id="flappyRestart">Restart</button>
+          <button class="secondary-button" id="flappyRestart">Restart Flight</button>
         </div>
       </section>
     </main>
@@ -73,6 +46,9 @@
     const flappyScoreBox = document.getElementById("flappyScoreBox");
     const flappyBestBox = document.getElementById("flappyBestBox");
     const flappyRestart = document.getElementById("flappyRestart");
+    const flappyMessage = document.getElementById("flappyMessage");
+
+    const groundHeight = 30;
 
     const bird = {
       x: 120,
@@ -91,6 +67,25 @@
     let flappyStarted = false;
     let flappyGameOver = false;
 
+    function setFlappyMessage(message) {
+      flappyMessage.textContent = message;
+    }
+
+    function drawRoundedRect(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
     flappyBestBox.textContent = "Best: " + flappyBest;
 
     function resetFlappyGame() {
@@ -102,12 +97,16 @@
       flappyStarted = false;
       flappyGameOver = false;
       flappyScoreBox.textContent = "Score: 0";
+      setFlappyMessage("Fresh flight path ready. Tap in to start.");
     }
 
     function doFlap() {
       if (flappyGameOver) return;
       flappyStarted = true;
       bird.velocity = bird.flap;
+      if (flappyScore === 0) {
+        setFlappyMessage("You are airborne. Thread the next gap.");
+      }
     }
 
     function makePipe() {
@@ -123,49 +122,109 @@
       });
     }
 
+    function drawCloud(x, y, scale, opacity) {
+      flappyCtx.fillStyle = "rgba(255, 255, 255, " + opacity + ")";
+      flappyCtx.beginPath();
+      flappyCtx.arc(x, y, 18 * scale, 0, Math.PI * 2);
+      flappyCtx.arc(x + 20 * scale, y - 7 * scale, 15 * scale, 0, Math.PI * 2);
+      flappyCtx.arc(x + 36 * scale, y, 14 * scale, 0, Math.PI * 2);
+      flappyCtx.fill();
+    }
+
     function drawFlappyBackground() {
       const sky = flappyCtx.createLinearGradient(0, 0, 0, flappyCanvas.height);
-      sky.addColorStop(0, "#76d8ff");
-      sky.addColorStop(0.7, "#e4f8ff");
-      sky.addColorStop(1, "#d5f1ca");
+      sky.addColorStop(0, "#59d1ff");
+      sky.addColorStop(0.62, "#d7f6ff");
+      sky.addColorStop(1, "#d9efb4");
       flappyCtx.fillStyle = sky;
       flappyCtx.fillRect(0, 0, flappyCanvas.width, flappyCanvas.height);
 
-      flappyCtx.fillStyle = "rgba(255,255,255,0.55)";
+      flappyCtx.fillStyle = "rgba(255, 226, 122, 0.45)";
       flappyCtx.beginPath();
-      flappyCtx.arc(70, 55, 24, 0, Math.PI * 2);
+      flappyCtx.arc(84, 58, 28, 0, Math.PI * 2);
       flappyCtx.fill();
 
-      flappyCtx.fillStyle = "#d2efb4";
-      flappyCtx.fillRect(0, flappyCanvas.height - 26, flappyCanvas.width, 26);
+      drawCloud(160, 54, 1.1, 0.72);
+      drawCloud(360, 74, 0.9, 0.68);
+      drawCloud(590, 48, 1, 0.6);
+
+      flappyCtx.fillStyle = "#8fd9a2";
+      flappyCtx.beginPath();
+      flappyCtx.moveTo(0, flappyCanvas.height - 52);
+      flappyCtx.quadraticCurveTo(120, 188, 240, flappyCanvas.height - 52);
+      flappyCtx.quadraticCurveTo(360, 204, 480, flappyCanvas.height - 52);
+      flappyCtx.quadraticCurveTo(620, 188, 760, flappyCanvas.height - 52);
+      flappyCtx.lineTo(760, flappyCanvas.height);
+      flappyCtx.lineTo(0, flappyCanvas.height);
+      flappyCtx.closePath();
+      flappyCtx.fill();
+
+      flappyCtx.fillStyle = "#6eb96f";
+      flappyCtx.fillRect(0, flappyCanvas.height - groundHeight, flappyCanvas.width, groundHeight);
     }
 
     function drawBird() {
-      flappyCtx.fillStyle = "#ffd34d";
-      flappyCtx.fillRect(bird.x, bird.y, bird.width, bird.height);
+      const wingLift = Math.sin(flappyFrame / 4) * 4;
 
-      flappyCtx.fillStyle = "#ff9238";
-      flappyCtx.fillRect(bird.x + 25, bird.y + 8, 11, 6);
+      flappyCtx.save();
+      flappyCtx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
+      flappyCtx.rotate(Math.max(-0.4, Math.min(0.65, bird.velocity * 0.05)));
+
+      flappyCtx.fillStyle = "#ffd54a";
+      flappyCtx.shadowColor = "rgba(255, 213, 74, 0.38)";
+      flappyCtx.shadowBlur = 14;
+      drawRoundedRect(flappyCtx, -15, -11, 30, 22, 8);
+      flappyCtx.fill();
+
+      flappyCtx.shadowBlur = 0;
+      flappyCtx.fillStyle = "#ff9e35";
+      drawRoundedRect(flappyCtx, -3, -2 + wingLift / 2, 15, 9, 5);
+      flappyCtx.fill();
 
       flappyCtx.fillStyle = "#ffffff";
-      flappyCtx.fillRect(bird.x + 16, bird.y + 4, 8, 8);
+      flappyCtx.beginPath();
+      flappyCtx.arc(6, -3, 5, 0, Math.PI * 2);
+      flappyCtx.fill();
 
       flappyCtx.fillStyle = "#111111";
-      flappyCtx.fillRect(bird.x + 19, bird.y + 7, 3, 3);
+      flappyCtx.beginPath();
+      flappyCtx.arc(7.5, -2.5, 2, 0, Math.PI * 2);
+      flappyCtx.fill();
+
+      flappyCtx.fillStyle = "#ff7d2e";
+      flappyCtx.beginPath();
+      flappyCtx.moveTo(15, 1);
+      flappyCtx.lineTo(24, 5);
+      flappyCtx.lineTo(15, 9);
+      flappyCtx.closePath();
+      flappyCtx.fill();
+      flappyCtx.restore();
     }
 
     function drawPipes() {
       pipes.forEach((pipe) => {
         const bottomY = pipe.top + pipe.gap;
-        const bottomHeight = flappyCanvas.height - bottomY;
+        const bottomHeight = flappyCanvas.height - groundHeight - bottomY;
 
-        flappyCtx.fillStyle = "#25b85d";
-        flappyCtx.fillRect(pipe.x, 0, pipe.width, pipe.top);
-        flappyCtx.fillRect(pipe.x, bottomY, pipe.width, bottomHeight);
+        flappyCtx.save();
+        flappyCtx.fillStyle = "#1ab25b";
+        flappyCtx.shadowColor = "rgba(26, 178, 91, 0.22)";
+        flappyCtx.shadowBlur = 12;
+        drawRoundedRect(flappyCtx, pipe.x, 0, pipe.width, pipe.top, 10);
+        flappyCtx.fill();
+        drawRoundedRect(flappyCtx, pipe.x, bottomY, pipe.width, bottomHeight, 10);
+        flappyCtx.fill();
+        flappyCtx.restore();
 
-        flappyCtx.fillStyle = "#1f954c";
-        flappyCtx.fillRect(pipe.x - 4, pipe.top - 12, pipe.width + 8, 12);
-        flappyCtx.fillRect(pipe.x - 4, bottomY, pipe.width + 8, 12);
+        flappyCtx.fillStyle = "#56dd89";
+        flappyCtx.fillRect(pipe.x + 8, 0, 8, pipe.top);
+        flappyCtx.fillRect(pipe.x + 8, bottomY, 8, bottomHeight);
+
+        flappyCtx.fillStyle = "#178949";
+        drawRoundedRect(flappyCtx, pipe.x - 6, pipe.top - 14, pipe.width + 12, 14, 7);
+        flappyCtx.fill();
+        drawRoundedRect(flappyCtx, pipe.x - 6, bottomY, pipe.width + 12, 14, 7);
+        flappyCtx.fill();
       });
     }
 
@@ -194,6 +253,9 @@
             flappyBest = flappyScore;
             localStorage.setItem("flappyBest", flappyBest);
             flappyBestBox.textContent = "Best: " + flappyBest;
+            setFlappyMessage("New best flight. Score " + flappyScore + " and climbing.");
+          } else if (flappyScore > 0 && flappyScore % 3 === 0) {
+            setFlappyMessage("Smooth flying. Keep threading the gaps.");
           }
         }
       });
@@ -202,7 +264,7 @@
     }
 
     function checkFlappyCollision() {
-      if (bird.y <= 0 || bird.y + bird.height >= flappyCanvas.height - 26) {
+      if (bird.y <= 0 || bird.y + bird.height >= flappyCanvas.height - groundHeight) {
         flappyGameOver = true;
       }
 
@@ -216,37 +278,48 @@
           flappyGameOver = true;
         }
       }
+
+      if (flappyGameOver) {
+        setFlappyMessage("Flight ended at " + flappyScore + ". Tap restart and take another shot.");
+      }
     }
 
     function drawScore() {
-      flappyCtx.fillStyle = "#14314f";
-      flappyCtx.font = "bold 20px Arial";
-      flappyCtx.fillText("Score: " + flappyScore, 16, 28);
+      flappyCtx.fillStyle = "rgba(20, 49, 79, 0.72)";
+      drawRoundedRect(flappyCtx, 14, 14, 108, 36, 14);
+      flappyCtx.fill();
+
+      flappyCtx.fillStyle = "#ffffff";
+      flappyCtx.font = "bold 18px Arial";
+      flappyCtx.fillText("Score " + flappyScore, 28, 37);
     }
 
     function drawFlappyOverlay() {
       if (!flappyStarted && !flappyGameOver) {
-        flappyCtx.fillStyle = "rgba(0,0,0,0.20)";
-        flappyCtx.fillRect(265, 85, 230, 72);
+        flappyCtx.fillStyle = "rgba(0, 0, 0, 0.22)";
+        drawRoundedRect(flappyCtx, 246, 78, 268, 82, 18);
+        flappyCtx.fill();
 
         flappyCtx.fillStyle = "#ffffff";
-        flappyCtx.font = "bold 24px Arial";
-        flappyCtx.fillText("Ready?", 338, 113);
+        flappyCtx.font = "bold 25px Arial";
+        flappyCtx.fillText("Ready for takeoff?", 289, 109);
 
-        flappyCtx.font = "15px Arial";
-        flappyCtx.fillText("Click or press Space", 315, 136);
+        flappyCtx.font = "16px Arial";
+        flappyCtx.fillText("Click or press Space to flap", 287, 135);
       }
 
       if (flappyGameOver) {
-        flappyCtx.fillStyle = "rgba(0,0,0,0.24)";
-        flappyCtx.fillRect(250, 82, 255, 78);
+        flappyCtx.fillStyle = "rgba(0, 0, 0, 0.28)";
+        drawRoundedRect(flappyCtx, 246, 78, 268, 88, 18);
+        flappyCtx.fill();
 
         flappyCtx.fillStyle = "#ffffff";
-        flappyCtx.font = "bold 24px Arial";
-        flappyCtx.fillText("Game Over", 323, 110);
+        flappyCtx.font = "bold 26px Arial";
+        flappyCtx.fillText("Flight Over", 322, 109);
 
-        flappyCtx.font = "15px Arial";
-        flappyCtx.fillText("Press Restart to play again", 292, 136);
+        flappyCtx.font = "16px Arial";
+        flappyCtx.fillText("Press Restart to fly again", 297, 136);
+        flappyCtx.fillText("Final score: " + flappyScore, 322, 158);
       }
     }
 
