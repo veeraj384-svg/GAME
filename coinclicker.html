@@ -6,33 +6,54 @@
   <title>Coin Clicker | Game Hub</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="theme-coin">
   <div class="page-shell">
     <main class="game-page-wrap">
       <section class="game-panel">
         <div class="game-topbar">
           <div class="game-header-left">
-            <p class="eyebrow">SPEED</p>
+            <p class="eyebrow">Speed Challenge</p>
             <h1>Coin Clicker</h1>
             <p class="game-subtext">
-              Click the giant coin as many times as you can before the timer ends.
+              Launch a 10 second click sprint, hammer the glowing coin, and try to set a new personal best.
             </p>
           </div>
-          <a href="index.html" class="back-link">← Home</a>
+          <a href="index.html" class="back-link">&larr; Home</a>
         </div>
 
-        <div class="center-panel">
+        <div class="info-row">
+          <div class="status-box is-accent" id="coinTimer">Time: 10</div>
+          <div class="status-box" id="coinBest">Best: 0</div>
+          <div class="status-box">Mode: 10 Second Rush</div>
+        </div>
+
+        <div class="center-panel spotlight-stage">
           <div class="score-display" id="coinScore">0</div>
-          <div class="info-row">
-            <div class="status-box" id="coinTimer">Time: 10</div>
-            <div class="status-box" id="coinBest">Best: 0</div>
+          <div class="score-caption">Clicks this round</div>
+
+          <div class="coin-stage">
+            <button class="big-coin" id="coinButton" aria-label="Click coin">🪙</button>
           </div>
-          <button class="big-coin" id="coinButton">🪙</button>
+
           <div class="bottom-actions">
-            <button class="primary-button" id="coinStart">Start Game</button>
+            <button class="primary-button" id="coinStart">Start Run</button>
             <button class="secondary-button" id="coinReset">Reset</button>
           </div>
-          <p class="instructions">Click start, then click the coin as fast as possible.</p>
+
+          <div class="message-banner" id="coinMessage">Press start to begin the 10 second rush.</div>
+
+          <div class="game-tip-grid">
+            <div class="tip-card">
+              <strong>Fastest fingers</strong>
+              <span>Click rapidly with a steady rhythm instead of spamming wildly.</span>
+            </div>
+            <div class="tip-card">
+              <strong>Final seconds</strong>
+              <span>The timer glows near the end so you know when to push for one more burst.</span>
+            </div>
+          </div>
+
+          <p class="instructions">Start the round, then click the coin as fast as you can before the countdown hits zero.</p>
         </div>
       </section>
     </main>
@@ -45,6 +66,7 @@
     const coinButton = document.getElementById("coinButton");
     const coinStart = document.getElementById("coinStart");
     const coinReset = document.getElementById("coinReset");
+    const coinMessage = document.getElementById("coinMessage");
 
     let score = 0;
     let timeLeft = 10;
@@ -52,52 +74,83 @@
     let timer = null;
     let best = Number(localStorage.getItem("coinClickerBest") || 0);
 
-    coinBest.textContent = "Best: " + best;
+    function setCoinMessage(message) {
+      coinMessage.textContent = message;
+    }
 
     function updateCoinUI() {
       coinScore.textContent = score;
       coinTimer.textContent = "Time: " + timeLeft;
       coinBest.textContent = "Best: " + best;
+      coinTimer.classList.toggle("is-live", gameRunning && timeLeft <= 3);
+      coinTimer.classList.toggle("is-alert", gameRunning && timeLeft <= 3);
     }
 
-    function resetCoinGame() {
+    function resetCoinGame(showMessage = true) {
       score = 0;
       timeLeft = 10;
       gameRunning = false;
       clearInterval(timer);
       timer = null;
       updateCoinUI();
+
+      if (showMessage) {
+        setCoinMessage("Round reset. Press start when you are ready for another sprint.");
+      }
+    }
+
+    function finishCoinGame() {
+      clearInterval(timer);
+      timer = null;
+      gameRunning = false;
+
+      if (score > best) {
+        best = score;
+        localStorage.setItem("coinClickerBest", best);
+        setCoinMessage("New high score! " + score + " clicks in 10 seconds.");
+      } else {
+        setCoinMessage("Time! You finished with " + score + " clicks. Try to beat " + best + ".");
+      }
+
+      updateCoinUI();
     }
 
     function startCoinGame() {
-      resetCoinGame();
+      resetCoinGame(false);
       gameRunning = true;
+      setCoinMessage("Go! The coin is live for the next 10 seconds.");
+      updateCoinUI();
+
       timer = setInterval(() => {
         timeLeft--;
         updateCoinUI();
 
         if (timeLeft <= 0) {
-          clearInterval(timer);
-          gameRunning = false;
-          if (score > best) {
-            best = score;
-            localStorage.setItem("coinClickerBest", best);
-            updateCoinUI();
-          }
+          finishCoinGame();
         }
       }, 1000);
     }
 
     coinButton.addEventListener("click", () => {
       if (!gameRunning) return;
+
       score++;
+      coinButton.classList.add("is-pressed");
+      setTimeout(() => coinButton.classList.remove("is-pressed"), 70);
       updateCoinUI();
+
+      if (score === 15) {
+        setCoinMessage("Nice pace. You are heating up.");
+      } else if (score === 30) {
+        setCoinMessage("Great run. Keep the streak alive.");
+      }
     });
 
     coinStart.addEventListener("click", startCoinGame);
-    coinReset.addEventListener("click", resetCoinGame);
+    coinReset.addEventListener("click", () => resetCoinGame(true));
 
     updateCoinUI();
+    setCoinMessage("Press start to begin the 10 second rush.");
   </script>
 </body>
 </html>
