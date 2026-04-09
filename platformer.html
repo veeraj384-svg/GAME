@@ -168,6 +168,7 @@
     const maxSpeed = 6.2;
     const jumpPower = -12;
     const TOTAL_LEVELS = 100;
+    const GROUND_Y = 380;
 
     let keys = {
       left: false,
@@ -199,28 +200,43 @@
       localStorage.setItem("platformerTotalCoins", totalCoins);
     }
 
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function buildFlag(platforms, levelNumber) {
+      const standOn = platforms[platforms.length - 1];
+      const poleHeight = 60;
+      const poleX = clamp(standOn.x + standOn.w - 18, 40, 860);
+
+      return {
+        x: poleX,
+        y: standOn.y - poleHeight,
+        w: 18,
+        h: poleHeight,
+        platformTop: standOn.y
+      };
+    }
+
     function generateLevel(levelNumber) {
       const idx = levelNumber - 1;
-      const baseY = 380;
-      const theme = idx % 5;
-
-      const playerStart = { x: 40, y: 300 };
-      const platforms = [{ x: 0, y: baseY, w: 900, h: 40 }];
+      const platforms = [{ x: 0, y: GROUND_Y, w: 900, h: 40 }];
       const spikes = [];
       const coins = [];
 
-      let x = 90;
-      let y = 330 - (idx % 3) * 10;
+      const playerStart = { x: 40, y: 300 };
 
-      const extraPlatforms = 4 + Math.min(5, Math.floor(idx / 10));
-      const shiftAmount = 24 + (idx % 4) * 8;
+      let x = 100;
+      let y = 330 - (idx % 3) * 8;
+      const extraPlatforms = 4 + Math.min(6, Math.floor(idx / 10));
+      const swing = 20 + (idx % 4) * 8;
 
       for (let i = 0; i < extraPlatforms; i++) {
-        const width = 90 + ((idx + i * 17) % 3) * 20;
-        y += ((i + idx) % 2 === 0 ? -1 : 1) * shiftAmount;
+        const width = 90 + ((idx + i * 11) % 3) * 20;
+        y += ((idx + i) % 2 === 0 ? -1 : 1) * swing;
+        y = clamp(y, 150, 330);
 
-        if (y < 150) y = 170;
-        if (y > 340) y = 320;
+        if (x > 760) break;
 
         platforms.push({
           x,
@@ -236,42 +252,40 @@
           taken: false
         });
 
-        x += 120 + ((idx + i * 13) % 3) * 25;
+        x += 115 + ((idx + i * 13) % 3) * 28;
       }
 
-      const spikeCount = Math.min(6, 1 + Math.floor(idx / 15));
-      for (let i = 0; i < spikeCount; i++) {
-        const sx = 170 + ((idx * 73 + i * 121) % 620);
-        spikes.push({
-          x: sx,
-          y: baseY - 16,
-          w: 30 + ((idx + i) % 3) * 10,
-          h: 16
-        });
-      }
+      if (platforms[platforms.length - 1].x < 720) {
+        const last = platforms[platforms.length - 1];
+        const finalY = clamp(last.y + (((idx % 2) === 0) ? -20 : 20), 160, 320);
 
-      if (theme >= 2) {
         platforms.push({
-          x: 720,
-          y: 165 - (idx % 2) * 20,
-          w: 110,
+          x: 760,
+          y: finalY,
+          w: 95,
           h: 16
         });
 
         coins.push({
-          x: 775,
-          y: 135 - (idx % 2) * 20,
+          x: 807,
+          y: finalY - 24,
           r: 8,
           taken: false
         });
       }
 
-      const flag = {
-        x: 835,
-        y: 110 + (idx % 3) * 15,
-        w: 18,
-        h: 60
-      };
+      const spikeCount = Math.min(6, 1 + Math.floor(idx / 15));
+      for (let i = 0; i < spikeCount; i++) {
+        const sx = 180 + ((idx * 71 + i * 117) % 600);
+        spikes.push({
+          x: sx,
+          y: GROUND_Y - 16,
+          w: 30 + ((idx + i) % 3) * 10,
+          h: 16
+        });
+      }
+
+      const flag = buildFlag(platforms, levelNumber);
 
       return {
         playerStart,
@@ -283,8 +297,7 @@
     }
 
     function loadLevel(index) {
-      if (index < 0) index = 0;
-      if (index >= TOTAL_LEVELS) index = TOTAL_LEVELS - 1;
+      index = clamp(index, 0, TOTAL_LEVELS - 1);
 
       currentLevelIndex = index;
       activeLevel = generateLevel(index + 1);
@@ -332,9 +345,7 @@
           btn.classList.add("locked");
           btn.disabled = true;
         } else {
-          btn.addEventListener("click", () => {
-            loadLevel(i);
-          });
+          btn.addEventListener("click", () => loadLevel(i));
         }
 
         levelGrid.appendChild(btn);
@@ -403,8 +414,7 @@
       if (keys.right) player.vx += moveSpeed;
 
       player.vx *= friction;
-      if (player.vx > maxSpeed) player.vx = maxSpeed;
-      if (player.vx < -maxSpeed) player.vx = -maxSpeed;
+      player.vx = clamp(player.vx, -maxSpeed, maxSpeed);
 
       player.vy += gravity;
 
@@ -470,7 +480,21 @@
     }
 
     function updateFlag() {
-      if (rectsOverlap(player, activeLevel.flag)) {
+      const poleRect = {
+        x: activeLevel.flag.x,
+        y: activeLevel.flag.y,
+        w: 10,
+        h: activeLevel.flag.h
+      };
+
+      const bannerRect = {
+        x: activeLevel.flag.x + 4,
+        y: activeLevel.flag.y + 6,
+        w: 22,
+        h: 14
+      };
+
+      if (rectsOverlap(player, poleRect) || rectsOverlap(player, bannerRect)) {
         levelCompleteTimer++;
 
         if (levelCompleteTimer > 18) {
@@ -481,9 +505,7 @@
             loadLevel(currentLevelIndex + 1);
           } else {
             gameWon = true;
-            if (highestUnlockedLevel < TOTAL_LEVELS - 1) {
-              highestUnlockedLevel = TOTAL_LEVELS - 1;
-            }
+            highestUnlockedLevel = TOTAL_LEVELS - 1;
             updateUI();
             renderLevelButtons();
             saveProgress();
