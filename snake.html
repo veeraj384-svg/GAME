@@ -6,33 +6,35 @@
   <title>Snake | Game Hub</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="theme-classic">
   <div class="page-shell">
     <main class="game-page-wrap">
       <section class="game-panel">
         <div class="game-topbar">
           <div class="game-header-left">
-            <p class="eyebrow">CLASSIC</p>
+            <p class="eyebrow">Classic Flow</p>
             <h1>Snake</h1>
             <p class="game-subtext">
-              Use the arrow keys to collect food, grow your snake, and avoid crashing.
+              Glide across the neon grid, collect glowing fruit, and keep the chain alive without folding into yourself.
             </p>
           </div>
-          <a href="index.html" class="back-link">← Home</a>
+          <a href="index.html" class="back-link">&larr; Home</a>
         </div>
 
         <div class="info-row">
           <div class="status-box">Move: Arrow Keys</div>
-          <div class="status-box" id="snakeScoreBox">Score: 0</div>
+          <div class="status-box is-accent" id="snakeScoreBox">Score: 0</div>
           <div class="status-box" id="snakeBestBox">Best: 0</div>
         </div>
 
-        <div class="canvas-wrap">
+        <div class="message-banner" id="snakeMessage">Collect the fruit, grow the chain, and stay smooth on the turns.</div>
+
+        <div class="canvas-stage">
           <canvas id="snakeCanvas" class="game-canvas" width="420" height="420"></canvas>
         </div>
 
         <div class="bottom-actions">
-          <button class="secondary-button" id="snakeRestart">Restart</button>
+          <button class="secondary-button" id="snakeRestart">Restart Run</button>
         </div>
       </section>
     </main>
@@ -44,6 +46,7 @@
     const snakeScoreBox = document.getElementById("snakeScoreBox");
     const snakeBestBox = document.getElementById("snakeBestBox");
     const snakeRestart = document.getElementById("snakeRestart");
+    const snakeMessage = document.getElementById("snakeMessage");
 
     const gridSize = 20;
     const tileCount = snakeCanvas.width / gridSize;
@@ -58,9 +61,36 @@
 
     snakeBestBox.textContent = "Best: " + snakeBest;
 
+    function setSnakeMessage(message) {
+      snakeMessage.textContent = message;
+    }
+
+    function drawRoundedRect(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
     function placeFood() {
-      food.x = Math.floor(Math.random() * tileCount);
-      food.y = Math.floor(Math.random() * tileCount);
+      let newFood;
+
+      do {
+        newFood = {
+          x: Math.floor(Math.random() * tileCount),
+          y: Math.floor(Math.random() * tileCount)
+        };
+      } while (snake.some((segment) => segment.x === newFood.x && segment.y === newFood.y));
+
+      food = newFood;
     }
 
     function resetSnakeGame() {
@@ -71,26 +101,93 @@
       snakeGameOver = false;
       placeFood();
       snakeScoreBox.textContent = "Score: 0";
+      setSnakeMessage("Fresh run started. Stay calm and plan the next turn.");
     }
 
     function drawSnakeBackground() {
       const bg = snakeCtx.createLinearGradient(0, 0, snakeCanvas.width, snakeCanvas.height);
-      bg.addColorStop(0, "#0c1730");
-      bg.addColorStop(1, "#07101f");
+      bg.addColorStop(0, "#0c1e1f");
+      bg.addColorStop(0.5, "#10212e");
+      bg.addColorStop(1, "#07131c");
       snakeCtx.fillStyle = bg;
       snakeCtx.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+
+      for (let x = 0; x < snakeCanvas.width; x += gridSize) {
+        for (let y = 0; y < snakeCanvas.height; y += gridSize) {
+          snakeCtx.fillStyle = (x + y) % 40 === 0 ? "rgba(124, 243, 170, 0.055)" : "rgba(255, 255, 255, 0.025)";
+          snakeCtx.fillRect(x + 1, y + 1, gridSize - 2, gridSize - 2);
+        }
+      }
+
+      snakeCtx.fillStyle = "rgba(124, 243, 170, 0.08)";
+      snakeCtx.fillRect(0, 0, snakeCanvas.width, 54);
     }
 
     function drawFood() {
-      snakeCtx.fillStyle = "#ff658d";
-      snakeCtx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
+      const px = food.x * gridSize + 10;
+      const py = food.y * gridSize + 10;
+
+      snakeCtx.save();
+      snakeCtx.shadowColor = "#ff7a8f";
+      snakeCtx.shadowBlur = 20;
+      snakeCtx.fillStyle = "#ff5f78";
+      snakeCtx.beginPath();
+      snakeCtx.arc(px, py, 7, 0, Math.PI * 2);
+      snakeCtx.fill();
+
+      snakeCtx.fillStyle = "#ffd3d9";
+      snakeCtx.beginPath();
+      snakeCtx.arc(px - 2, py - 3, 2.6, 0, Math.PI * 2);
+      snakeCtx.fill();
+      snakeCtx.restore();
     }
 
     function drawSnake() {
       snake.forEach((segment, index) => {
-        snakeCtx.fillStyle = index === 0 ? "#9effbf" : "#52d68b";
-        snakeCtx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
+        const x = segment.x * gridSize + 1;
+        const y = segment.y * gridSize + 1;
+        const color = index === 0 ? "#b9ffd5" : "#5be48d";
+
+        snakeCtx.save();
+        snakeCtx.shadowColor = index === 0 ? "#b9ffd5" : "#5be48d";
+        snakeCtx.shadowBlur = index === 0 ? 18 : 10;
+        snakeCtx.fillStyle = color;
+        drawRoundedRect(snakeCtx, x, y, gridSize - 2, gridSize - 2, 6);
+        snakeCtx.fill();
+        snakeCtx.restore();
+
+        if (index === 0) {
+          snakeCtx.fillStyle = "#072115";
+          let eyeA = [x + 13, y + 5];
+          let eyeB = [x + 13, y + 13];
+
+          if (dx === -1) {
+            eyeA = [x + 5, y + 5];
+            eyeB = [x + 5, y + 13];
+          } else if (dy === -1) {
+            eyeA = [x + 5, y + 5];
+            eyeB = [x + 13, y + 5];
+          } else if (dy === 1) {
+            eyeA = [x + 5, y + 13];
+            eyeB = [x + 13, y + 13];
+          }
+
+          snakeCtx.beginPath();
+          snakeCtx.arc(eyeA[0], eyeA[1], 1.6, 0, Math.PI * 2);
+          snakeCtx.arc(eyeB[0], eyeB[1], 1.6, 0, Math.PI * 2);
+          snakeCtx.fill();
+        }
       });
+    }
+
+    function drawSnakeHud() {
+      snakeCtx.fillStyle = "rgba(5, 13, 17, 0.42)";
+      drawRoundedRect(snakeCtx, 14, 14, 118, 34, 12);
+      snakeCtx.fill();
+
+      snakeCtx.fillStyle = "#e9fff2";
+      snakeCtx.font = "bold 16px Arial";
+      snakeCtx.fillText("Score " + snakeScore, 28, 36);
     }
 
     function moveSnake() {
@@ -100,11 +197,16 @@
       if (head.x === food.x && head.y === food.y) {
         snakeScore++;
         snakeScoreBox.textContent = "Score: " + snakeScore;
+
         if (snakeScore > snakeBest) {
           snakeBest = snakeScore;
           localStorage.setItem("snakeBestScore", snakeBest);
           snakeBestBox.textContent = "Best: " + snakeBest;
+          setSnakeMessage("New best score in progress. Keep the route clean.");
+        } else if (snakeScore > 0 && snakeScore % 5 === 0) {
+          setSnakeMessage("Nice control. " + snakeScore + " fruit collected.");
         }
+
         placeFood();
       } else {
         snake.pop();
@@ -128,17 +230,25 @@
           snakeGameOver = true;
         }
       }
+
+      if (snakeGameOver) {
+        setSnakeMessage("Game over. You reached " + snakeScore + ". Press restart for another run.");
+      }
     }
 
     function drawSnakeOverlay() {
       if (!snakeGameOver) return;
-      snakeCtx.fillStyle = "rgba(7, 12, 24, 0.6)";
-      snakeCtx.fillRect(90, 160, 240, 95);
+
+      snakeCtx.fillStyle = "rgba(6, 15, 19, 0.72)";
+      drawRoundedRect(snakeCtx, 84, 152, 252, 112, 18);
+      snakeCtx.fill();
+
       snakeCtx.fillStyle = "#ffffff";
-      snakeCtx.font = "bold 28px Arial";
-      snakeCtx.fillText("Game Over", 136, 200);
+      snakeCtx.font = "bold 30px Arial";
+      snakeCtx.fillText("Run Over", 148, 196);
       snakeCtx.font = "17px Arial";
-      snakeCtx.fillText("Press Restart to play again", 109, 230);
+      snakeCtx.fillText("Press Restart to jump back in", 122, 228);
+      snakeCtx.fillText("Final score: " + snakeScore, 155, 252);
     }
 
     function snakeLoop() {
@@ -150,6 +260,7 @@
       drawSnakeBackground();
       drawFood();
       drawSnake();
+      drawSnakeHud();
       drawSnakeOverlay();
 
       setTimeout(snakeLoop, 110);
@@ -157,13 +268,17 @@
 
     document.addEventListener("keydown", (e) => {
       if (e.key === "ArrowUp" && dy !== 1) {
-        dx = 0; dy = -1;
+        dx = 0;
+        dy = -1;
       } else if (e.key === "ArrowDown" && dy !== -1) {
-        dx = 0; dy = 1;
+        dx = 0;
+        dy = 1;
       } else if (e.key === "ArrowLeft" && dx !== 1) {
-        dx = -1; dy = 0;
+        dx = -1;
+        dy = 0;
       } else if (e.key === "ArrowRight" && dx !== -1) {
-        dx = 1; dy = 0;
+        dx = 1;
+        dy = 0;
       }
     });
 
