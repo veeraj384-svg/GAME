@@ -5,138 +5,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Platformer Quest | Game Hub</title>
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .platformer-canvas-wrap {
-      display: flex;
-      justify-content: center;
-      margin-top: 8px;
-    }
-
-    #platformerCanvas {
-      width: 900px;
-      max-width: 100%;
-      height: 420px;
-      display: block;
-      border-radius: 22px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: linear-gradient(180deg, #6fd7ff 0%, #dff7ff 70%, #dff0c6 100%);
-    }
-
-    .level-panel {
-      margin-top: 18px;
-      padding: 18px;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
-    }
-
-    .level-panel-title {
-      margin: 0 0 14px;
-      font-size: 1.1rem;
-      font-weight: 800;
-      color: #f4f7ff;
-    }
-
-    .level-grid {
-      display: grid;
-      grid-template-columns: repeat(10, minmax(50px, 1fr));
-      gap: 10px;
-    }
-
-    .level-btn {
-      height: 44px;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      background: rgba(255,255,255,0.06);
-      color: #f4f7ff;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .level-btn:hover {
-      transform: translateY(-1px);
-    }
-
-    .level-btn.current {
-      background: linear-gradient(90deg, #99e7ff, #b89cff);
-      color: #07111f;
-    }
-
-    .level-btn.locked {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .platformer-actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 18px;
-    }
-
-    .platformer-message {
-      margin-top: 14px;
-      color: #b8c4de;
-      font-weight: 700;
-    }
-
-    @media (max-width: 900px) {
-      #platformerCanvas {
-        height: 340px;
-      }
-
-      .level-grid {
-        grid-template-columns: repeat(5, minmax(50px, 1fr));
-      }
-    }
-
-    @media (max-width: 640px) {
-      #platformerCanvas {
-        height: 260px;
-      }
-
-      .level-grid {
-        grid-template-columns: repeat(4, minmax(50px, 1fr));
-      }
-    }
-  </style>
 </head>
-<body>
+<body class="theme-adventure">
   <div class="page-shell">
     <main class="game-page-wrap">
       <section class="game-panel">
         <div class="game-topbar">
           <div class="game-header-left">
-            <p class="eyebrow">ADVENTURE</p>
+            <p class="eyebrow">Adventure Run</p>
             <h1>Platformer Quest</h1>
             <p class="game-subtext">
-              Run, jump, collect coins, avoid spikes, and beat 100 levels. Use the level select to jump to any unlocked stage.
+              Run, jump, collect coins, avoid spikes, and clear all 100 levels across a brighter, more polished world.
             </p>
           </div>
-          <a href="index.html" class="back-link">← Home</a>
+          <a href="index.html" class="back-link">&larr; Home</a>
         </div>
 
         <div class="info-row">
           <div class="status-box">Move: Left / Right</div>
           <div class="status-box">Jump: Space / Up</div>
           <div class="status-box" id="levelBox">Level: 1</div>
-          <div class="status-box" id="coinBox">Coins: 0</div>
+          <div class="status-box is-accent" id="coinBox">Coins: 0</div>
           <div class="status-box" id="livesBox">Lives: 3</div>
           <div class="status-box" id="unlockBox">Unlocked: 1</div>
         </div>
 
-        <div class="platformer-canvas-wrap">
-          <canvas id="platformerCanvas" width="900" height="420"></canvas>
+        <div class="canvas-stage">
+          <canvas id="platformerCanvas" class="game-canvas" width="900" height="420"></canvas>
         </div>
 
-        <div class="platformer-actions">
+        <div class="bottom-actions">
           <button class="secondary-button" id="prevLevelBtn">Previous Level</button>
           <button class="secondary-button" id="restartBtn">Restart Level</button>
           <button class="secondary-button" id="nextLevelBtn">Next Level</button>
           <button class="secondary-button" id="resetProgressBtn">Reset Progress</button>
         </div>
 
-        <p class="platformer-message" id="messageBox">Beat each level to unlock the next one.</p>
+        <div class="message-banner" id="messageBox">Beat each level to unlock the next one.</div>
 
         <div class="level-panel">
           <h2 class="level-panel-title">Level Select</h2>
@@ -202,6 +107,21 @@
 
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
+    }
+
+    function drawRoundedRect(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
     }
 
     function buildFlag(platforms, levelNumber) {
@@ -518,25 +438,53 @@
 
     function drawBackground() {
       const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      sky.addColorStop(0, "#75d9ff");
-      sky.addColorStop(0.75, "#e4f8ff");
-      sky.addColorStop(1, "#daf0c3");
+      sky.addColorStop(0, "#67cfff");
+      sky.addColorStop(0.7, "#def6ff");
+      sky.addColorStop(1, "#dff1c2");
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = "rgba(255,255,255,0.45)";
+      ctx.fillStyle = "rgba(255, 214, 116, 0.36)";
       ctx.beginPath();
-      ctx.arc(90, 65, 28, 0, Math.PI * 2);
+      ctx.arc(104, 68, 32, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.fillStyle = "rgba(255,255,255,0.74)";
       ctx.beginPath();
       ctx.arc(250, 85, 18, 0, Math.PI * 2);
       ctx.arc(272, 85, 16, 0, Math.PI * 2);
       ctx.arc(292, 85, 14, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "#9ad978";
+      ctx.beginPath();
+      ctx.arc(640, 72, 17, 0, Math.PI * 2);
+      ctx.arc(662, 72, 15, 0, Math.PI * 2);
+      ctx.arc(682, 72, 13, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#a7d7ad";
+      ctx.beginPath();
+      ctx.moveTo(0, 300);
+      ctx.quadraticCurveTo(130, 210, 270, 300);
+      ctx.quadraticCurveTo(400, 220, 540, 300);
+      ctx.quadraticCurveTo(650, 230, 900, 300);
+      ctx.lineTo(900, canvas.height);
+      ctx.lineTo(0, canvas.height);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#7fc88c";
+      ctx.beginPath();
+      ctx.moveTo(0, 332);
+      ctx.quadraticCurveTo(140, 262, 320, 332);
+      ctx.quadraticCurveTo(470, 272, 610, 332);
+      ctx.quadraticCurveTo(760, 272, 900, 332);
+      ctx.lineTo(900, canvas.height);
+      ctx.lineTo(0, canvas.height);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#74bd60";
       ctx.fillRect(0, canvas.height - 24, canvas.width, 24);
     }
 
@@ -544,21 +492,37 @@
       const colors = ["#6b4eff", "#4f7bff", "#9459ff", "#4dc1ff", "#5e6dff"];
       const color = colors[currentLevelIndex % colors.length];
 
-      ctx.fillStyle = color;
       activeLevel.platforms.forEach((p) => {
-        ctx.fillRect(p.x, p.y, p.w, p.h);
+        ctx.fillStyle = color;
+        drawRoundedRect(ctx, p.x, p.y, p.w, p.h, 8);
+        ctx.fill();
+
+        ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
+        drawRoundedRect(ctx, p.x + 4, p.y + 3, p.w - 8, 4, 2);
+        ctx.fill();
+
+        ctx.fillStyle = "rgba(18, 35, 84, 0.2)";
+        drawRoundedRect(ctx, p.x + 4, p.y + 8, p.w - 8, p.h - 10, 4);
+        ctx.fill();
       });
     }
 
     function drawSpikes() {
-      ctx.fillStyle = "#ff5f8c";
       activeLevel.spikes.forEach((s) => {
         const spikeCount = Math.floor(s.w / 10);
         for (let i = 0; i < spikeCount; i++) {
+          ctx.fillStyle = "#ff5f8c";
           ctx.beginPath();
           ctx.moveTo(s.x + i * 10, s.y + s.h);
           ctx.lineTo(s.x + i * 10 + 5, s.y);
           ctx.lineTo(s.x + i * 10 + 10, s.y + s.h);
+          ctx.fill();
+
+          ctx.fillStyle = "rgba(255, 219, 230, 0.55)";
+          ctx.beginPath();
+          ctx.moveTo(s.x + i * 10 + 2, s.y + s.h - 1);
+          ctx.lineTo(s.x + i * 10 + 5, s.y + 5);
+          ctx.lineTo(s.x + i * 10 + 8, s.y + s.h - 1);
           ctx.fill();
         }
       });
@@ -568,59 +532,90 @@
       activeLevel.coins.forEach((coin) => {
         if (coin.taken) return;
 
+        ctx.save();
+        ctx.shadowColor = "rgba(255, 213, 74, 0.5)";
+        ctx.shadowBlur = 16;
         ctx.fillStyle = "#ffd54a";
         ctx.beginPath();
         ctx.arc(coin.x, coin.y, coin.r, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
 
         ctx.fillStyle = "#ffef9b";
         ctx.beginPath();
         ctx.arc(coin.x - 2, coin.y - 2, 3, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.strokeStyle = "rgba(255, 245, 189, 0.65)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(coin.x, coin.y, coin.r - 3, 0, Math.PI * 2);
+        ctx.stroke();
       });
     }
 
     function drawFlag() {
       const f = activeLevel.flag;
       ctx.fillStyle = "#5b3f2b";
-      ctx.fillRect(f.x, f.y, 4, f.h);
+      drawRoundedRect(ctx, f.x, f.y, 4, f.h, 2);
+      ctx.fill();
 
       ctx.fillStyle = "#ff4d6d";
-      ctx.fillRect(f.x + 4, f.y + 6, 22, 14);
+      ctx.beginPath();
+      ctx.moveTo(f.x + 4, f.y + 6);
+      ctx.lineTo(f.x + 28, f.y + 13);
+      ctx.lineTo(f.x + 4, f.y + 20);
+      ctx.closePath();
+      ctx.fill();
     }
 
     function drawPlayer() {
-      ctx.fillStyle = "#103b64";
-      ctx.fillRect(player.x, player.y, player.w, player.h);
+      ctx.fillStyle = "#143e66";
+      drawRoundedRect(ctx, player.x, player.y, player.w, player.h, 8);
+      ctx.fill();
 
       ctx.fillStyle = "#8ee9ff";
-      ctx.fillRect(player.x + 4, player.y + 4, player.w - 8, player.h - 8);
+      drawRoundedRect(ctx, player.x + 4, player.y + 5, player.w - 8, player.h - 10, 6);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffcb68";
+      drawRoundedRect(ctx, player.x + 6, player.y + 3, player.w - 12, 6, 3);
+      ctx.fill();
 
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(player.x + 16, player.y + 8, 6, 6);
+      ctx.beginPath();
+      ctx.arc(player.x + 19, player.y + 13, 4, 0, Math.PI * 2);
+      ctx.fill();
 
       ctx.fillStyle = "#111111";
-      ctx.fillRect(player.x + 19, player.y + 11, 2, 2);
+      ctx.beginPath();
+      ctx.arc(player.x + 20.5, player.y + 13, 1.8, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     function drawLevelNumber() {
-      ctx.fillStyle = "rgba(20, 49, 79, 0.85)";
-      ctx.font = "bold 22px Arial";
-      ctx.fillText("Level " + (currentLevelIndex + 1), 16, 30);
+      ctx.fillStyle = "rgba(20, 49, 79, 0.72)";
+      drawRoundedRect(ctx, 14, 14, 126, 38, 14);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 20px Arial";
+      ctx.fillText("Level " + (currentLevelIndex + 1), 28, 39);
     }
 
     function drawOverlay() {
       if (gameWon) {
         ctx.fillStyle = "rgba(0,0,0,0.35)";
-        ctx.fillRect(275, 120, 350, 130);
+        drawRoundedRect(ctx, 255, 110, 390, 138, 22);
+        ctx.fill();
 
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 34px Arial";
-        ctx.fillText("100 Levels Complete!", 292, 165);
+        ctx.fillText("100 Levels Complete!", 275, 160);
 
         ctx.font = "20px Arial";
-        ctx.fillText("Total Coins: " + totalCoins, 383, 200);
-        ctx.fillText("You beat Platformer Quest", 338, 230);
+        ctx.fillText("Total Coins: " + totalCoins, 360, 195);
+        ctx.fillText("You beat Platformer Quest", 315, 226);
       }
     }
 
