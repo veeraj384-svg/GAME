@@ -22,15 +22,81 @@
       background: linear-gradient(180deg, #6fd7ff 0%, #dff7ff 70%, #dff0c6 100%);
     }
 
+    .level-panel {
+      margin-top: 18px;
+      padding: 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .level-panel-title {
+      margin: 0 0 14px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #f4f7ff;
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(10, minmax(50px, 1fr));
+      gap: 10px;
+    }
+
+    .level-btn {
+      height: 44px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.06);
+      color: #f4f7ff;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .level-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .level-btn.current {
+      background: linear-gradient(90deg, #99e7ff, #b89cff);
+      color: #07111f;
+    }
+
+    .level-btn.locked {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .platformer-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .platformer-message {
+      margin-top: 14px;
+      color: #b8c4de;
+      font-weight: 700;
+    }
+
     @media (max-width: 900px) {
       #platformerCanvas {
         height: 340px;
+      }
+
+      .level-grid {
+        grid-template-columns: repeat(5, minmax(50px, 1fr));
       }
     }
 
     @media (max-width: 640px) {
       #platformerCanvas {
         height: 260px;
+      }
+
+      .level-grid {
+        grid-template-columns: repeat(4, minmax(50px, 1fr));
       }
     }
   </style>
@@ -44,7 +110,7 @@
             <p class="eyebrow">ADVENTURE</p>
             <h1>Platformer Quest</h1>
             <p class="game-subtext">
-              Run, jump, collect coins, avoid spikes, and reach the flag to unlock the next level.
+              Run, jump, collect coins, avoid spikes, and beat 100 levels. Use the level select to jump to any unlocked stage.
             </p>
           </div>
           <a href="index.html" class="back-link">← Home</a>
@@ -56,14 +122,25 @@
           <div class="status-box" id="levelBox">Level: 1</div>
           <div class="status-box" id="coinBox">Coins: 0</div>
           <div class="status-box" id="livesBox">Lives: 3</div>
+          <div class="status-box" id="unlockBox">Unlocked: 1</div>
         </div>
 
         <div class="platformer-canvas-wrap">
           <canvas id="platformerCanvas" width="900" height="420"></canvas>
         </div>
 
-        <div class="bottom-actions">
+        <div class="platformer-actions">
+          <button class="secondary-button" id="prevLevelBtn">Previous Level</button>
           <button class="secondary-button" id="restartBtn">Restart Level</button>
+          <button class="secondary-button" id="nextLevelBtn">Next Level</button>
+          <button class="secondary-button" id="resetProgressBtn">Reset Progress</button>
+        </div>
+
+        <p class="platformer-message" id="messageBox">Beat each level to unlock the next one.</p>
+
+        <div class="level-panel">
+          <h2 class="level-panel-title">Level Select</h2>
+          <div class="level-grid" id="levelGrid"></div>
         </div>
       </section>
     </main>
@@ -76,93 +153,33 @@
     const levelBox = document.getElementById("levelBox");
     const coinBox = document.getElementById("coinBox");
     const livesBox = document.getElementById("livesBox");
+    const unlockBox = document.getElementById("unlockBox");
+    const messageBox = document.getElementById("messageBox");
+    const levelGrid = document.getElementById("levelGrid");
+
+    const prevLevelBtn = document.getElementById("prevLevelBtn");
+    const nextLevelBtn = document.getElementById("nextLevelBtn");
     const restartBtn = document.getElementById("restartBtn");
+    const resetProgressBtn = document.getElementById("resetProgressBtn");
 
     const gravity = 0.6;
-    const friction = 0.8;
-    const moveSpeed = 0.8;
-    const maxSpeed = 6;
+    const friction = 0.82;
+    const moveSpeed = 0.85;
+    const maxSpeed = 6.2;
     const jumpPower = -12;
+    const TOTAL_LEVELS = 100;
 
     let keys = {
       left: false,
       right: false
     };
 
-    let totalCoins = 0;
+    let totalCoins = Number(localStorage.getItem("platformerTotalCoins") || 0);
     let lives = 3;
-    let currentLevelIndex = 0;
+    let currentLevelIndex = Number(localStorage.getItem("platformerCurrentLevel") || 0);
+    let highestUnlockedLevel = Number(localStorage.getItem("platformerHighestUnlocked") || 0);
     let levelCompleteTimer = 0;
     let gameWon = false;
-
-    const levels = [
-      {
-        playerStart: { x: 40, y: 300 },
-        platforms: [
-          { x: 0, y: 380, w: 900, h: 40 },
-          { x: 160, y: 320, w: 120, h: 16 },
-          { x: 340, y: 280, w: 140, h: 16 },
-          { x: 560, y: 240, w: 140, h: 16 },
-          { x: 740, y: 200, w: 90, h: 16 }
-        ],
-        spikes: [
-          { x: 500, y: 364, w: 50, h: 16 }
-        ],
-        coins: [
-          { x: 205, y: 285, r: 8, taken: false },
-          { x: 390, y: 245, r: 8, taken: false },
-          { x: 605, y: 205, r: 8, taken: false }
-        ],
-        flag: { x: 800, y: 140, w: 18, h: 60 }
-      },
-      {
-        playerStart: { x: 40, y: 300 },
-        platforms: [
-          { x: 0, y: 380, w: 900, h: 40 },
-          { x: 130, y: 330, w: 110, h: 16 },
-          { x: 280, y: 290, w: 110, h: 16 },
-          { x: 440, y: 250, w: 110, h: 16 },
-          { x: 600, y: 220, w: 120, h: 16 },
-          { x: 760, y: 180, w: 90, h: 16 }
-        ],
-        spikes: [
-          { x: 240, y: 364, w: 40, h: 16 },
-          { x: 555, y: 364, w: 60, h: 16 }
-        ],
-        coins: [
-          { x: 180, y: 295, r: 8, taken: false },
-          { x: 330, y: 255, r: 8, taken: false },
-          { x: 490, y: 215, r: 8, taken: false },
-          { x: 655, y: 185, r: 8, taken: false }
-        ],
-        flag: { x: 815, y: 120, w: 18, h: 60 }
-      },
-      {
-        playerStart: { x: 40, y: 300 },
-        platforms: [
-          { x: 0, y: 380, w: 900, h: 40 },
-          { x: 100, y: 330, w: 100, h: 16 },
-          { x: 240, y: 290, w: 90, h: 16 },
-          { x: 380, y: 245, w: 90, h: 16 },
-          { x: 520, y: 205, w: 90, h: 16 },
-          { x: 650, y: 240, w: 90, h: 16 },
-          { x: 770, y: 185, w: 90, h: 16 }
-        ],
-        spikes: [
-          { x: 205, y: 364, w: 35, h: 16 },
-          { x: 470, y: 364, w: 40, h: 16 },
-          { x: 735, y: 364, w: 35, h: 16 }
-        ],
-        coins: [
-          { x: 145, y: 295, r: 8, taken: false },
-          { x: 285, y: 255, r: 8, taken: false },
-          { x: 425, y: 210, r: 8, taken: false },
-          { x: 565, y: 170, r: 8, taken: false },
-          { x: 815, y: 150, r: 8, taken: false }
-        ],
-        flag: { x: 840, y: 125, w: 18, h: 60 }
-      }
-    ];
 
     const player = {
       x: 40,
@@ -174,38 +191,181 @@
       onGround: false
     };
 
-    function cloneLevel(level) {
+    let activeLevel = null;
+
+    function saveProgress() {
+      localStorage.setItem("platformerHighestUnlocked", highestUnlockedLevel);
+      localStorage.setItem("platformerCurrentLevel", currentLevelIndex);
+      localStorage.setItem("platformerTotalCoins", totalCoins);
+    }
+
+    function generateLevel(levelNumber) {
+      const idx = levelNumber - 1;
+      const baseY = 380;
+      const theme = idx % 5;
+
+      const playerStart = { x: 40, y: 300 };
+      const platforms = [{ x: 0, y: baseY, w: 900, h: 40 }];
+      const spikes = [];
+      const coins = [];
+
+      let x = 90;
+      let y = 330 - (idx % 3) * 10;
+
+      const extraPlatforms = 4 + Math.min(5, Math.floor(idx / 10));
+      const shiftAmount = 24 + (idx % 4) * 8;
+
+      for (let i = 0; i < extraPlatforms; i++) {
+        const width = 90 + ((idx + i * 17) % 3) * 20;
+        y += ((i + idx) % 2 === 0 ? -1 : 1) * shiftAmount;
+
+        if (y < 150) y = 170;
+        if (y > 340) y = 320;
+
+        platforms.push({
+          x,
+          y,
+          w: width,
+          h: 16
+        });
+
+        coins.push({
+          x: x + Math.floor(width / 2),
+          y: y - 24,
+          r: 8,
+          taken: false
+        });
+
+        x += 120 + ((idx + i * 13) % 3) * 25;
+      }
+
+      const spikeCount = Math.min(6, 1 + Math.floor(idx / 15));
+      for (let i = 0; i < spikeCount; i++) {
+        const sx = 170 + ((idx * 73 + i * 121) % 620);
+        spikes.push({
+          x: sx,
+          y: baseY - 16,
+          w: 30 + ((idx + i) % 3) * 10,
+          h: 16
+        });
+      }
+
+      if (theme >= 2) {
+        platforms.push({
+          x: 720,
+          y: 165 - (idx % 2) * 20,
+          w: 110,
+          h: 16
+        });
+
+        coins.push({
+          x: 775,
+          y: 135 - (idx % 2) * 20,
+          r: 8,
+          taken: false
+        });
+      }
+
+      const flag = {
+        x: 835,
+        y: 110 + (idx % 3) * 15,
+        w: 18,
+        h: 60
+      };
+
       return {
-        playerStart: { ...level.playerStart },
-        platforms: level.platforms.map(p => ({ ...p })),
-        spikes: level.spikes.map(s => ({ ...s })),
-        coins: level.coins.map(c => ({ ...c })),
-        flag: { ...level.flag }
+        playerStart,
+        platforms,
+        spikes,
+        coins,
+        flag
       };
     }
 
-    let activeLevel = cloneLevel(levels[currentLevelIndex]);
-
     function loadLevel(index) {
+      if (index < 0) index = 0;
+      if (index >= TOTAL_LEVELS) index = TOTAL_LEVELS - 1;
+
       currentLevelIndex = index;
-      activeLevel = cloneLevel(levels[index]);
+      activeLevel = generateLevel(index + 1);
+
       player.x = activeLevel.playerStart.x;
       player.y = activeLevel.playerStart.y;
       player.vx = 0;
       player.vy = 0;
       player.onGround = false;
+
       levelCompleteTimer = 0;
+      gameWon = false;
+
       updateUI();
+      renderLevelButtons();
+      saveProgress();
     }
 
     function updateUI() {
       levelBox.textContent = "Level: " + (currentLevelIndex + 1);
       coinBox.textContent = "Coins: " + totalCoins;
       livesBox.textContent = "Lives: " + lives;
+      unlockBox.textContent = "Unlocked: " + (highestUnlockedLevel + 1);
+
+      if (currentLevelIndex === TOTAL_LEVELS - 1) {
+        messageBox.textContent = "Final level. Beat it to finish all 100 levels.";
+      } else {
+        messageBox.textContent = "Beat level " + (currentLevelIndex + 1) + " to unlock level " + (currentLevelIndex + 2) + ".";
+      }
+    }
+
+    function renderLevelButtons() {
+      levelGrid.innerHTML = "";
+
+      for (let i = 0; i < TOTAL_LEVELS; i++) {
+        const btn = document.createElement("button");
+        btn.className = "level-btn";
+        btn.textContent = i + 1;
+
+        if (i === currentLevelIndex) {
+          btn.classList.add("current");
+        }
+
+        if (i > highestUnlockedLevel) {
+          btn.classList.add("locked");
+          btn.disabled = true;
+        } else {
+          btn.addEventListener("click", () => {
+            loadLevel(i);
+          });
+        }
+
+        levelGrid.appendChild(btn);
+      }
     }
 
     function restartLevel() {
       loadLevel(currentLevelIndex);
+    }
+
+    function resetProgress() {
+      totalCoins = 0;
+      lives = 3;
+      currentLevelIndex = 0;
+      highestUnlockedLevel = 0;
+      localStorage.removeItem("platformerHighestUnlocked");
+      localStorage.removeItem("platformerCurrentLevel");
+      localStorage.removeItem("platformerTotalCoins");
+      loadLevel(0);
+    }
+
+    function goPrevLevel() {
+      if (currentLevelIndex > 0) {
+        loadLevel(currentLevelIndex - 1);
+      }
+    }
+
+    function goNextLevel() {
+      if (currentLevelIndex < highestUnlockedLevel && currentLevelIndex < TOTAL_LEVELS - 1) {
+        loadLevel(currentLevelIndex + 1);
+      }
     }
 
     function loseLife() {
@@ -214,10 +374,7 @@
 
       if (lives <= 0) {
         lives = 3;
-        totalCoins = 0;
-        gameWon = false;
-        loadLevel(0);
-        updateUI();
+        restartLevel();
         return;
       }
 
@@ -261,6 +418,9 @@
       if (player.y > canvas.height + 100) {
         loseLife();
       }
+
+      if (player.x < 0) player.x = 0;
+      if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
     }
 
     function resolvePlatformCollisions(axis) {
@@ -290,11 +450,12 @@
     }
 
     function updateCoins() {
-      activeLevel.coins.forEach(coin => {
+      activeLevel.coins.forEach((coin) => {
         if (!coin.taken && circleRectOverlap(coin, player)) {
           coin.taken = true;
           totalCoins++;
           updateUI();
+          saveProgress();
         }
       });
     }
@@ -312,11 +473,20 @@
       if (rectsOverlap(player, activeLevel.flag)) {
         levelCompleteTimer++;
 
-        if (levelCompleteTimer > 20) {
-          if (currentLevelIndex < levels.length - 1) {
+        if (levelCompleteTimer > 18) {
+          if (currentLevelIndex < TOTAL_LEVELS - 1) {
+            if (currentLevelIndex + 1 > highestUnlockedLevel) {
+              highestUnlockedLevel = currentLevelIndex + 1;
+            }
             loadLevel(currentLevelIndex + 1);
           } else {
             gameWon = true;
+            if (highestUnlockedLevel < TOTAL_LEVELS - 1) {
+              highestUnlockedLevel = TOTAL_LEVELS - 1;
+            }
+            updateUI();
+            renderLevelButtons();
+            saveProgress();
           }
         }
       } else {
@@ -349,15 +519,18 @@
     }
 
     function drawPlatforms() {
-      ctx.fillStyle = "#6b4eff";
-      activeLevel.platforms.forEach(p => {
+      const colors = ["#6b4eff", "#4f7bff", "#9459ff", "#4dc1ff", "#5e6dff"];
+      const color = colors[currentLevelIndex % colors.length];
+
+      ctx.fillStyle = color;
+      activeLevel.platforms.forEach((p) => {
         ctx.fillRect(p.x, p.y, p.w, p.h);
       });
     }
 
     function drawSpikes() {
       ctx.fillStyle = "#ff5f8c";
-      activeLevel.spikes.forEach(s => {
+      activeLevel.spikes.forEach((s) => {
         const spikeCount = Math.floor(s.w / 10);
         for (let i = 0; i < spikeCount; i++) {
           ctx.beginPath();
@@ -370,8 +543,9 @@
     }
 
     function drawCoins() {
-      activeLevel.coins.forEach(coin => {
+      activeLevel.coins.forEach((coin) => {
         if (coin.taken) return;
+
         ctx.fillStyle = "#ffd54a";
         ctx.beginPath();
         ctx.arc(coin.x, coin.y, coin.r, 0, Math.PI * 2);
@@ -407,6 +581,12 @@
       ctx.fillRect(player.x + 19, player.y + 11, 2, 2);
     }
 
+    function drawLevelNumber() {
+      ctx.fillStyle = "rgba(20, 49, 79, 0.85)";
+      ctx.font = "bold 22px Arial";
+      ctx.fillText("Level " + (currentLevelIndex + 1), 16, 30);
+    }
+
     function drawOverlay() {
       if (gameWon) {
         ctx.fillStyle = "rgba(0,0,0,0.35)";
@@ -414,11 +594,11 @@
 
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 34px Arial";
-        ctx.fillText("You Win!", 378, 165);
+        ctx.fillText("100 Levels Complete!", 292, 165);
 
         ctx.font = "20px Arial";
-        ctx.fillText("Total Coins: " + totalCoins, 372, 200);
-        ctx.fillText("Refresh to play again", 350, 230);
+        ctx.fillText("Total Coins: " + totalCoins, 383, 200);
+        ctx.fillText("You beat Platformer Quest", 338, 230);
       }
     }
 
@@ -437,6 +617,7 @@
       drawCoins();
       drawFlag();
       drawPlayer();
+      drawLevelNumber();
       drawOverlay();
 
       requestAnimationFrame(gameLoop);
@@ -447,6 +628,7 @@
       if (e.key === "ArrowRight") keys.right = true;
 
       if ((e.key === "ArrowUp" || e.key === " " || e.code === "Space") && player.onGround) {
+        e.preventDefault();
         player.vy = jumpPower;
         player.onGround = false;
       }
@@ -457,9 +639,16 @@
       if (e.key === "ArrowRight") keys.right = false;
     });
 
+    prevLevelBtn.addEventListener("click", goPrevLevel);
+    nextLevelBtn.addEventListener("click", goNextLevel);
     restartBtn.addEventListener("click", restartLevel);
+    resetProgressBtn.addEventListener("click", resetProgress);
 
-    loadLevel(0);
+    if (currentLevelIndex > highestUnlockedLevel) {
+      currentLevelIndex = highestUnlockedLevel;
+    }
+
+    loadLevel(currentLevelIndex);
     gameLoop();
   </script>
 </body>
