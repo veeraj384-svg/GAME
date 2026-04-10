@@ -7,9 +7,9 @@
   <link rel="stylesheet" href="style.css" />
   <style>
     .pixel-panel {
-      background: #4c3946;
-      border: 6px solid #5b4660;
-      box-shadow: inset 0 0 0 4px #3f2f3a;
+      background: #4b3946;
+      border: 6px solid #5c4860;
+      box-shadow: inset 0 0 0 4px #3f313b;
       border-radius: 16px;
       padding: 20px;
     }
@@ -38,13 +38,13 @@
       padding: 0;
       height: 92px;
       cursor: pointer;
-      background: #91a8d4;
-      color: #1b2b57;
+      background: #90a9d5;
+      color: #1c2b57;
       font: 800 2rem/1 "Trebuchet MS", sans-serif;
       box-shadow:
-        inset 0 0 0 6px #597fbc,
-        inset 0 0 0 12px #a9bce0,
-        0 8px 0 rgba(35, 23, 31, 0.35);
+        inset 0 0 0 6px #5d82bf,
+        inset 0 0 0 12px #a9bcdf,
+        0 8px 0 rgba(32, 21, 28, 0.35);
       transition: transform 0.12s ease;
     }
 
@@ -53,12 +53,12 @@
     }
 
     .pixel-level-btn.current {
-      background: #f0f4ff;
+      background: #eef3ff;
       color: #172754;
       box-shadow:
-        inset 0 0 0 6px #597fbc,
-        inset 0 0 0 12px #e6ecfb,
-        0 8px 0 rgba(35, 23, 31, 0.35);
+        inset 0 0 0 6px #5d82bf,
+        inset 0 0 0 12px #e4ecfd,
+        0 8px 0 rgba(32, 21, 28, 0.35);
     }
 
     .pixel-level-btn.locked {
@@ -106,7 +106,7 @@
             <p class="eyebrow">Original Puzzle Platformer</p>
             <h1>Gemrise Adventure</h1>
             <p class="game-subtext">
-              Collect every gem to wake the flag, use seesaws to gain height, and clear 30 handcrafted-inspired original levels that start easy and get tougher as you go.
+              Collect every gem to wake the exit flag, use seesaws to gain height, and clear 30 original single-screen rooms that start gentle and get steadily harder.
             </p>
           </div>
           <a href="index.html" class="back-link">&larr; Home</a>
@@ -138,7 +138,7 @@
         </div>
 
         <p class="pixel-note">
-          <strong>Tip:</strong> The first levels are forgiving. Later levels add tighter landings, more spikes, more snakes, and harder launch chains.
+          <strong>Update:</strong> Level 1 is now intentionally easy and fully beatable. Levels 1-6 teach the mechanics, then the later rooms tighten the timing and hazard pressure.
         </p>
       </section>
     </main>
@@ -153,7 +153,6 @@
     const flagLabel = document.getElementById("flagLabel");
     const messageBox = document.getElementById("messageBox");
     const levelGrid = document.getElementById("levelGrid");
-
     const prevBtn = document.getElementById("prevBtn");
     const restartBtn = document.getElementById("restartBtn");
     const nextBtn = document.getElementById("nextBtn");
@@ -162,9 +161,15 @@
     const H = canvas.height;
     const TOTAL_LEVELS = 30;
 
-    const input = {
-      left: false,
-      right: false
+    const input = { left: false, right: false };
+
+    const physics = {
+      accel: 0.72,
+      friction: 0.84,
+      maxSpeed: 5.7,
+      gravity: 0.5,
+      jump: -10.9,
+      maxFall: 14
     };
 
     const player = {
@@ -180,22 +185,11 @@
       support: null
     };
 
-    const physics = {
-      accel: 0.72,
-      friction: 0.84,
-      gravity: 0.5,
-      jump: -10.9,
-      maxSpeed: 5.7,
-      maxFall: 14
-    };
-
     let jumpBuffer = 0;
     let levelIndex = 0;
     let currentLevel = null;
     let messageTimer = 0;
-
     let unlockedLevel = Number(localStorage.getItem("gemriseUnlocked") || 1);
-    let completedLevels = JSON.parse(localStorage.getItem("gemriseCompleted") || "[]");
 
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
@@ -232,152 +226,8 @@
       };
     }
 
-    function makeShellPlatforms() {
-      return [
-        platform(0, 0, W, 28),
-        platform(0, 0, 28, H),
-        platform(W - 28, 0, 28, H),
-        platform(0, H - 28, W, 28)
-      ];
-    }
-
-    function createVariant(variant, tier, levelNumber) {
-      const platforms = makeShellPlatforms();
-      const seesaws = [];
-      const spikes = [];
-      const snakes = [];
-      const gems = [];
-      let spawn = { x: 64, y: 436 };
-      let exit = { x: 864, y: 72, w: 28, h: 72 };
-
-      if (variant === 0) {
-        platforms.push(
-          platform(28, 456, 250, 56),
-          platform(618, 456, 314, 56),
-          platform(772, 182, 132, 18)
-        );
-        seesaws.push(
-          seesaw(468, 418, 220, 0.46 + tier * 0.03, 0.0105, 0.0016 + tier * 0.00015, -0.04)
-        );
-        gems.push(gem(790, 142));
-        if (tier >= 1) spikes.push(spike(566, 484, 52, 28));
-        if (tier >= 3) gems.push(gem(424, 334));
-      }
-
-      if (variant === 1) {
-        platforms.push(
-          platform(28, 456, 188, 56),
-          platform(312, 388, 124, 18),
-          platform(730, 456, 202, 56),
-          platform(760, 176, 132, 18)
-        );
-        seesaws.push(
-          seesaw(530, 366, 210, 0.54 + tier * 0.04, 0.0102, 0.00175 + tier * 0.00018, 0.05)
-        );
-        spikes.push(spike(610, 484, 82 + tier * 10, 28));
-        gems.push(gem(370, 348), gem(810, 136));
-        if (tier >= 2) snakes.push(snake(786, 438, 758, 868, 1.05 + tier * 0.12));
-      }
-
-      if (variant === 2) {
-        platforms.push(
-          platform(28, 456, 220, 56),
-          platform(280, 300, 118, 18),
-          platform(530, 232, 118, 18),
-          platform(760, 456, 172, 56),
-          platform(770, 132, 122, 18)
-        );
-        seesaws.push(
-          seesaw(452, 430, 200, 0.52 + tier * 0.04, 0.0102, 0.0018 + tier * 0.00015, -0.03),
-          seesaw(664, 408, 180, 0.56 + tier * 0.04, 0.0101, 0.00185 + tier * 0.00015, 0.03)
-        );
-        gems.push(gem(340, 260), gem(590, 192), gem(826, 92));
-        if (tier >= 2) spikes.push(spike(680, 484, 64, 28));
-      }
-
-      if (variant === 3) {
-        spawn = { x: 64, y: 380 };
-        exit = { x: 854, y: 62, w: 28, h: 72 };
-        platforms.push(
-          platform(28, 400, 212, 112),
-          platform(698, 400, 234, 112),
-          platform(738, 154, 128, 18)
-        );
-        seesaws.push(
-          seesaw(382, 324, 192, 0.58 + tier * 0.03, 0.0102, 0.00195 + tier * 0.00014, -0.05),
-          seesaw(582, 250, 170, 0.52 + tier * 0.04, 0.0103, 0.0018 + tier * 0.00012, 0.04)
-        );
-        spikes.push(spike(514, 428, 128 + tier * 10, 28));
-        gems.push(gem(414, 276), gem(806, 114));
-        if (tier >= 1) snakes.push(snake(744, 382, 724, 844, 1.12 + tier * 0.1));
-      }
-
-      if (variant === 4) {
-        platforms.push(
-          platform(28, 456, 180, 56),
-          platform(284, 456, 124, 56),
-          platform(620, 456, 312, 56),
-          platform(270, 194, 126, 18),
-          platform(788, 130, 110, 18)
-        );
-        seesaws.push(
-          seesaw(492, 420, 230, 0.68 + tier * 0.04, 0.0095, 0.00205 + tier * 0.00016, -0.06)
-        );
-        spikes.push(spike(420, 484, 162 + tier * 8, 28));
-        gems.push(gem(330, 154), gem(836, 90));
-        if (tier >= 2) snakes.push(snake(660, 438, 650, 862, 1.16 + tier * 0.1));
-      }
-
-      if (variant === 5) {
-        spawn = { x: 74, y: 350 };
-        exit = { x: 848, y: 58, w: 28, h: 72 };
-        platforms.push(
-          platform(28, 372, 186, 140),
-          platform(254, 278, 110, 18),
-          platform(430, 196, 112, 18),
-          platform(650, 332, 124, 18),
-          platform(760, 164, 128, 18)
-        );
-        seesaws.push(
-          seesaw(384, 344, 188, 0.54 + tier * 0.04, 0.0101, 0.00185 + tier * 0.00015, -0.04),
-          seesaw(614, 278, 172, 0.62 + tier * 0.04, 0.0098, 0.00195 + tier * 0.00015, 0.02)
-        );
-        spikes.push(spike(560, 484, 78 + tier * 10, 28), spike(780, 484, 46 + tier * 8, 28));
-        gems.push(gem(308, 238), gem(484, 156), gem(820, 124));
-        if (tier >= 2) snakes.push(snake(88, 354, 70, 162, 1.05 + tier * 0.08));
-      }
-
-      return {
-        title: "Level " + levelNumber,
-        hint: tier === 0
-          ? "Easy start. Learn the seesaws and collect the gems."
-          : tier === 1
-          ? "More height and bigger spike pits. Plan your jumps."
-          : tier === 2
-          ? "The levels are getting trickier. Watch snake patrols."
-          : tier === 3
-          ? "Hard rooms now. Chain seesaws and keep your landings clean."
-          : "Late-game challenge. Tight timing and riskier routes.",
-        tier,
-        spawn,
-        exit,
-        platforms,
-        seesaws,
-        spikes,
-        snakes,
-        gems
-      };
-    }
-
-    function createLevel(levelNumber) {
-      const tier = Math.min(4, Math.floor((levelNumber - 1) / 6));
-      const variant = (levelNumber - 1) % 6;
-      return createVariant(variant, tier, levelNumber);
-    }
-
     function saveProgress() {
       localStorage.setItem("gemriseUnlocked", String(unlockedLevel));
-      localStorage.setItem("gemriseCompleted", JSON.stringify(completedLevels));
     }
 
     function allGemsCollected() {
@@ -389,9 +239,141 @@
       messageTimer = duration;
     }
 
+    function makeFrame() {
+      return [
+        platform(0, 0, W, 28),
+        platform(0, 0, 28, H),
+        platform(W - 28, 0, 28, H),
+        platform(0, H - 28, W, 28)
+      ];
+    }
+
+    function createLevel(levelNumber) {
+      const tier = Math.floor((levelNumber - 1) / 6);
+      const variant = (levelNumber - 1) % 6;
+
+      const platforms = makeFrame();
+      const seesaws = [];
+      const spikes = [];
+      const snakes = [];
+      const gems = [];
+
+      let spawn = { x: 76, y: 450 };
+      let exit = { x: 852, y: 112, w: 30, h: 74 };
+      let hint = "Collect all gems, then reach the flag.";
+
+      if (variant === 0) {
+        hint = tier === 0 ? "Easy start. Use the seesaw to reach the gem platform." : "Now the same idea needs better timing.";
+        platforms.push(
+          platform(28, 456, 220, 56),
+          platform(706, 456, 226, 56),
+          platform(724, 292, 154, 18)
+        );
+        seesaws.push(seesaw(474, 418, 228, 0.44 + tier * 0.04, 0.0104, 0.00155 + tier * 0.00018, -0.04));
+        gems.push(gem(792, 252));
+        if (tier >= 1) gems.push(gem(406, 360));
+        if (tier >= 2) spikes.push(spike(612, 484, 46 + tier * 8, 28));
+      }
+
+      if (variant === 1) {
+        hint = tier <= 1 ? "Practice short hops and one bigger launch." : "This room adds tighter landings.";
+        platforms.push(
+          platform(28, 456, 180, 56),
+          platform(276, 394, 112, 18),
+          platform(634, 456, 298, 56),
+          platform(744, 250, 122, 18)
+        );
+        seesaws.push(seesaw(504, 420, 214, 0.52 + tier * 0.04, 0.0101, 0.00175 + tier * 0.00018, 0.05));
+        gems.push(gem(330, 354), gem(804, 210));
+        if (tier >= 1) spikes.push(spike(580, 484, 58 + tier * 10, 28));
+        if (tier >= 3) snakes.push(snake(720, 438, 680, 844, 1.05 + tier * 0.12));
+      }
+
+      if (variant === 2) {
+        hint = tier === 0 ? "Chain two seesaws together." : "The same chain gets less forgiving later.";
+        platforms.push(
+          platform(28, 456, 180, 56),
+          platform(274, 330, 110, 18),
+          platform(770, 456, 162, 56),
+          platform(740, 194, 128, 18)
+        );
+        seesaws.push(
+          seesaw(332, 418, 170, 0.46 + tier * 0.04, 0.0103, 0.0017 + tier * 0.00016, -0.03),
+          seesaw(560, 360, 184, 0.56 + tier * 0.04, 0.0099, 0.00182 + tier * 0.00018, 0.03)
+        );
+        gems.push(gem(330, 290), gem(806, 154));
+        if (tier >= 2) spikes.push(spike(652, 484, 60 + tier * 10, 28));
+        if (tier >= 4) snakes.push(snake(802, 438, 782, 876, 1.4));
+      }
+
+      if (variant === 3) {
+        hint = tier <= 1 ? "Watch the spike pit and aim for the right ledge." : "More pressure now. Clear the room in one smooth flow.";
+        platforms.push(
+          platform(28, 402, 210, 110),
+          platform(714, 402, 218, 110),
+          platform(742, 244, 124, 18)
+        );
+        seesaws.push(
+          seesaw(398, 328, 188, 0.56 + tier * 0.04, 0.0101, 0.0019 + tier * 0.00016, -0.04),
+          seesaw(596, 292, 168, 0.52 + tier * 0.05, 0.01, 0.00182 + tier * 0.00016, 0.04)
+        );
+        gems.push(gem(430, 278), gem(800, 204));
+        spikes.push(spike(506, 430, 122 + tier * 8, 28));
+        if (tier >= 2) snakes.push(snake(752, 384, 734, 842, 1.1 + tier * 0.1));
+      }
+
+      if (variant === 4) {
+        hint = tier <= 1 ? "Long launcher room. Hit the seesaw from the end for more height." : "Late tiers punish weak launches.";
+        platforms.push(
+          platform(28, 456, 148, 56),
+          platform(238, 456, 110, 56),
+          platform(654, 456, 278, 56),
+          platform(250, 248, 122, 18),
+          platform(754, 150, 120, 18)
+        );
+        seesaws.push(seesaw(478, 418, 240, 0.68 + tier * 0.04, 0.0094, 0.002 + tier * 0.00018, -0.06));
+        gems.push(gem(310, 208), gem(810, 110));
+        spikes.push(spike(378, 484, 154 + tier * 10, 28));
+        if (tier >= 2) snakes.push(snake(710, 438, 690, 844, 1.16 + tier * 0.08));
+      }
+
+      if (variant === 5) {
+        hint = tier === 0 ? "Final tutorial room. Small launch, then big launch." : "This layout becomes a real challenge in later tiers.";
+        spawn = { x: 74, y: 404 };
+        exit = { x: 846, y: 108, w: 30, h: 74 };
+        platforms.push(
+          platform(28, 428, 170, 84),
+          platform(254, 340, 104, 18),
+          platform(420, 262, 102, 18),
+          platform(648, 330, 116, 18),
+          platform(760, 214, 120, 18)
+        );
+        seesaws.push(
+          seesaw(384, 398, 176, 0.5 + tier * 0.04, 0.0102, 0.00178 + tier * 0.00014, -0.04),
+          seesaw(612, 344, 176, 0.62 + tier * 0.04, 0.0097, 0.00192 + tier * 0.00016, 0.03)
+        );
+        gems.push(gem(306, 300), gem(472, 222), gem(818, 174));
+        if (tier >= 1) spikes.push(spike(556, 484, 72 + tier * 8, 28));
+        if (tier >= 3) spikes.push(spike(778, 484, 48 + tier * 8, 28));
+        if (tier >= 2) snakes.push(snake(86, 410, 70, 146, 1 + tier * 0.08));
+      }
+
+      return {
+        title: "Level " + levelNumber,
+        tier,
+        hint,
+        spawn,
+        exit,
+        platforms,
+        seesaws,
+        spikes,
+        snakes,
+        gems
+      };
+    }
+
     function rebuildLevelGrid() {
       levelGrid.innerHTML = "";
-
       for (let i = 1; i <= TOTAL_LEVELS; i++) {
         const button = document.createElement("button");
         button.className = "pixel-level-btn";
@@ -414,23 +396,19 @@
 
     function updateHud() {
       const collected = currentLevel.gems.filter((item) => item.collected).length;
-      const total = currentLevel.gems.length;
-
       levelLabel.textContent = currentLevel.title;
-      gemLabel.textContent = "Gems: " + collected + " / " + total;
+      gemLabel.textContent = "Gems: " + collected + " / " + currentLevel.gems.length;
       flagLabel.textContent = allGemsCollected() ? "Flag: Green" : "Flag: Red";
       flagLabel.style.color = allGemsCollected() ? "#79f2c5" : "#ff9dad";
 
       prevBtn.disabled = levelIndex === 0;
-      nextBtn.disabled = levelIndex >= unlockedLevel - 1 && levelIndex !== TOTAL_LEVELS - 1;
-
+      nextBtn.disabled = levelIndex + 1 >= unlockedLevel || levelIndex === TOTAL_LEVELS - 1;
       rebuildLevelGrid();
     }
 
     function loadLevel(index) {
       levelIndex = clamp(index, 0, TOTAL_LEVELS - 1);
       currentLevel = createLevel(levelIndex + 1);
-
       player.x = currentLevel.spawn.x;
       player.y = currentLevel.spawn.y;
       player.vx = 0;
@@ -440,9 +418,8 @@
       player.onGround = false;
       player.support = null;
       jumpBuffer = 0;
-
       updateHud();
-      setMessage(currentLevel.hint, 160);
+      setMessage(currentLevel.hint, 180);
     }
 
     function restartLevel(message) {
@@ -451,10 +428,6 @@
     }
 
     function completeLevel() {
-      if (!completedLevels.includes(levelIndex + 1)) {
-        completedLevels.push(levelIndex + 1);
-      }
-
       unlockedLevel = Math.max(unlockedLevel, Math.min(TOTAL_LEVELS, levelIndex + 2));
       saveProgress();
 
@@ -465,27 +438,25 @@
       }
 
       loadLevel(levelIndex + 1);
-      setMessage("Level cleared. Next level unlocked.", 180);
+      setMessage("Level cleared. Next level unlocked.", 200);
     }
 
-    function getSeesawGeometry(seesaw) {
-      const half = seesaw.length / 2;
-      const cos = Math.cos(seesaw.angle);
-      const sin = Math.sin(seesaw.angle);
-
+    function getSeesawGeometry(item) {
+      const half = item.length / 2;
+      const cos = Math.cos(item.angle);
+      const sin = Math.sin(item.angle);
       return {
-        x1: seesaw.pivotX - cos * half,
-        y1: seesaw.pivotY - sin * half,
-        x2: seesaw.pivotX + cos * half,
-        y2: seesaw.pivotY + sin * half
+        x1: item.pivotX - cos * half,
+        y1: item.pivotY - sin * half,
+        x2: item.pivotX + cos * half,
+        y2: item.pivotY + sin * half
       };
     }
 
-    function getSeesawSurface(seesaw, sampleX) {
-      const g = getSeesawGeometry(seesaw);
+    function getSeesawSurface(item, sampleX) {
+      const g = getSeesawGeometry(item);
       const dx = g.x2 - g.x1;
       const dy = g.y2 - g.y1;
-
       if (Math.abs(dx) < 10) return null;
 
       const minX = Math.min(g.x1, g.x2);
@@ -496,7 +467,7 @@
       if (t < -0.08 || t > 1.08) return null;
 
       return {
-        y: g.y1 + dy * t - seesaw.thickness * 0.5,
+        y: g.y1 + dy * t - item.thickness * 0.5,
         minX,
         maxX
       };
@@ -516,44 +487,30 @@
         messageTimer--;
         return;
       }
-
-      if (allGemsCollected()) {
-        messageBox.textContent = "All gems collected. The flag is active.";
-      } else {
-        messageBox.textContent = currentLevel.hint;
-      }
+      messageBox.textContent = allGemsCollected() ? "All gems collected. Reach the flag." : currentLevel.hint;
     }
 
     function updateSeesaws() {
-      currentLevel.seesaws.forEach((seesaw) => {
+      currentLevel.seesaws.forEach((item) => {
         let riderForce = 0;
 
-        if (
-          player.support &&
-          player.support.type === "seesaw" &&
-          player.support.ref === seesaw &&
-          player.onGround
-        ) {
-          const offset = clamp(
-            (player.x + player.w * 0.5 - seesaw.pivotX) / (seesaw.length * 0.5),
-            -1,
-            1
-          );
-          riderForce = offset * seesaw.weight;
+        if (player.support && player.support.type === "seesaw" && player.support.ref === item && player.onGround) {
+          const offset = clamp((player.x + player.w * 0.5 - item.pivotX) / (item.length * 0.5), -1, 1);
+          riderForce = offset * item.weight;
         }
 
-        seesaw.angularVelocity += -seesaw.angle * seesaw.spring + riderForce;
-        seesaw.angularVelocity *= seesaw.damping;
-        seesaw.angle += seesaw.angularVelocity;
+        item.angularVelocity += -item.angle * item.spring + riderForce;
+        item.angularVelocity *= item.damping;
+        item.angle += item.angularVelocity;
 
-        if (seesaw.angle > seesaw.maxAngle) {
-          seesaw.angle = seesaw.maxAngle;
-          seesaw.angularVelocity *= -0.35;
+        if (item.angle > item.maxAngle) {
+          item.angle = item.maxAngle;
+          item.angularVelocity *= -0.35;
         }
 
-        if (seesaw.angle < -seesaw.maxAngle) {
-          seesaw.angle = -seesaw.maxAngle;
-          seesaw.angularVelocity *= -0.35;
+        if (item.angle < -item.maxAngle) {
+          item.angle = -item.maxAngle;
+          item.angularVelocity *= -0.35;
         }
       });
     }
@@ -561,12 +518,10 @@
     function updateSnakes() {
       currentLevel.snakes.forEach((enemy) => {
         enemy.x += enemy.speed * enemy.dir;
-
         if (enemy.x <= enemy.minX) {
           enemy.x = enemy.minX;
           enemy.dir = 1;
         }
-
         if (enemy.x >= enemy.maxX) {
           enemy.x = enemy.maxX;
           enemy.dir = -1;
@@ -577,7 +532,6 @@
     function resolvePlatformX() {
       currentLevel.platforms.forEach((plat) => {
         if (!rectsOverlap(player, plat)) return;
-
         if (player.prevX + player.w <= plat.x) {
           player.x = plat.x - player.w;
           player.vx = 0;
@@ -591,7 +545,6 @@
     function resolvePlatformY() {
       currentLevel.platforms.forEach((plat) => {
         if (!rectsOverlap(player, plat)) return;
-
         if (player.prevY + player.h <= plat.y && player.vy >= 0) {
           player.y = plat.y - player.h;
           player.vy = 0;
@@ -606,14 +559,12 @@
 
     function resolveSeesawLanding() {
       const centerX = player.x + player.w * 0.5;
-
-      for (const seesaw of currentLevel.seesaws) {
-        const surface = getSeesawSurface(seesaw, centerX);
+      for (const item of currentLevel.seesaws) {
+        const surface = getSeesawSurface(item, centerX);
         if (!surface) continue;
 
         const prevBottom = player.prevY + player.h;
         const currentBottom = player.y + player.h;
-
         if (
           player.vy >= 0 &&
           prevBottom <= surface.y + 8 &&
@@ -624,7 +575,7 @@
           player.y = surface.y - player.h;
           player.vy = 0;
           player.onGround = true;
-          player.support = { type: "seesaw", ref: seesaw };
+          player.support = { type: "seesaw", ref: item };
           break;
         }
       }
@@ -634,11 +585,11 @@
       const oldSupport = player.support;
 
       if (oldSupport && oldSupport.type === "seesaw" && player.onGround) {
-        const seesaw = oldSupport.ref;
-        const offset = player.x + player.w * 0.5 - seesaw.pivotX;
-        player.x += seesaw.angularVelocity * offset * 0.12;
+        const item = oldSupport.ref;
+        const offset = player.x + player.w * 0.5 - item.pivotX;
+        player.x += item.angularVelocity * offset * 0.12;
 
-        const surface = getSeesawSurface(seesaw, player.x + player.w * 0.5);
+        const surface = getSeesawSurface(item, player.x + player.w * 0.5);
         if (surface && Math.abs(player.y + player.h - surface.y) < 24) {
           player.y = surface.y - player.h;
         }
@@ -658,15 +609,11 @@
         let bonusY = 0;
 
         if (oldSupport && oldSupport.type === "seesaw") {
-          const seesaw = oldSupport.ref;
-          const offset = clamp(
-            (player.x + player.w * 0.5 - seesaw.pivotX) / (seesaw.length * 0.5),
-            -1,
-            1
-          );
-          const kick = seesaw.angularVelocity * seesaw.length * offset;
+          const item = oldSupport.ref;
+          const offset = clamp((player.x + player.w * 0.5 - item.pivotX) / (item.length * 0.5), -1, 1);
+          const kick = item.angularVelocity * item.length * offset;
           bonusX = kick * 0.18;
-          bonusY = Math.min(4.4, Math.abs(kick) * 0.08);
+          bonusY = Math.min(4.2, Math.abs(kick) * 0.08);
         }
 
         player.vy = physics.jump - bonusY;
@@ -687,7 +634,6 @@
       player.y += player.vy;
       player.onGround = false;
       player.support = null;
-
       resolvePlatformY();
       resolveSeesawLanding();
 
@@ -698,10 +644,8 @@
 
     function collectGems() {
       let changed = false;
-
       currentLevel.gems.forEach((item) => {
         if (item.collected) return;
-
         const dx = player.x + player.w * 0.5 - item.x;
         const dy = player.y + player.h * 0.5 - item.y;
         if (dx * dx + dy * dy < 30 * 30) {
@@ -710,10 +654,10 @@
         }
       });
 
-      if (!changed) return;
-
-      updateHud();
-      setMessage(allGemsCollected() ? "All gems collected. Go to the flag." : "Gem collected.", 90);
+      if (changed) {
+        updateHud();
+        setMessage(allGemsCollected() ? "All gems collected. Reach the flag." : "Gem collected.", 90);
+      }
     }
 
     function checkHazards() {
@@ -733,53 +677,25 @@
     }
 
     function checkExit() {
-      if (!allGemsCollected()) return;
-      if (rectsOverlap(player, currentLevel.exit)) completeLevel();
-    }
-
-    function drawBackground() {
-      ctx.fillStyle = "#4c3946";
-      ctx.fillRect(0, 0, W, H);
-
-      ctx.fillStyle = "#c5e8f4";
-      ctx.fillRect(28, 28, W - 56, H - 56);
-
-      ctx.fillStyle = "#dbeff6";
-      for (let y = 70; y < H - 80; y += 34) {
-        for (let x = 56; x < W - 56; x += 42) {
-          ctx.fillRect(x, y, 20, 16);
-        }
+      if (allGemsCollected() && rectsOverlap(player, currentLevel.exit)) {
+        completeLevel();
       }
-
-      ctx.fillStyle = "#bad0db";
-      ctx.fillRect(28, H * 0.5, W - 56, H * 0.5 - 28);
-
-      drawBrickStrip(0, 0, W, 28, true);
-      drawBrickStrip(0, H - 28, W, 28, true);
-      drawBrickStrip(0, 0, 28, H, false);
-      drawBrickStrip(W - 28, 0, 28, H, false);
-
-      ctx.fillStyle = "#5db66e";
-      ctx.fillRect(748, 28, 58, 18);
-      ctx.fillRect(770, 40, 24, 20);
-      ctx.fillRect(760, 54, 40, 10);
     }
 
     function drawBrickStrip(x, y, w, h, horizontal) {
-      ctx.fillStyle = "#4c3946";
+      ctx.fillStyle = "#4b3946";
       ctx.fillRect(x, y, w, h);
-
-      ctx.fillStyle = "#ddd7c9";
+      ctx.fillStyle = "#dfdacd";
 
       if (horizontal) {
-        for (let yy = y + 6; yy < y + h - 4; yy += 10) {
+        for (let yy = y + 6; yy < y + h - 3; yy += 10) {
           const offset = ((yy - y) / 10) % 2 === 0 ? 0 : 9;
           for (let xx = x + offset; xx < x + w; xx += 18) {
             ctx.fillRect(xx, yy, 14, 8);
           }
         }
       } else {
-        for (let xx = x + 6; xx < x + w - 4; xx += 10) {
+        for (let xx = x + 6; xx < x + w - 3; xx += 10) {
           const offset = ((xx - x) / 10) % 2 === 0 ? 0 : 9;
           for (let yy = y + offset; yy < y + h; yy += 18) {
             ctx.fillRect(xx, yy, 8, 14);
@@ -788,22 +704,43 @@
       }
     }
 
+    function drawBackground() {
+      ctx.fillStyle = "#4b3946";
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = "#c5e8f4";
+      ctx.fillRect(28, 28, W - 56, H - 56);
+
+      ctx.fillStyle = "#dbeef6";
+      for (let y = 66; y < H - 90; y += 36) {
+        for (let x = 50; x < W - 50; x += 44) {
+          ctx.fillRect(x, y, 20, 16);
+        }
+      }
+
+      ctx.fillStyle = "#b9cad9";
+      ctx.fillRect(28, H * 0.48, W - 56, H * 0.52 - 28);
+
+      drawBrickStrip(0, 0, W, 28, true);
+      drawBrickStrip(0, H - 28, W, 28, true);
+      drawBrickStrip(0, 0, 28, H, false);
+      drawBrickStrip(W - 28, 0, 28, H, false);
+
+      ctx.fillStyle = "#89c279";
+      ctx.fillRect(760, 28, 56, 18);
+      ctx.fillRect(780, 42, 22, 18);
+      ctx.fillRect(770, 56, 42, 10);
+    }
+
     function drawPlatforms() {
       currentLevel.platforms.forEach((plat) => {
-        if (plat.x === 0 && plat.y === 0) return;
-        if (plat.x === 0 && plat.w === 28) return;
-        if (plat.x === W - 28) return;
-        if (plat.y === H - 28) return;
-
-        if (plat.h >= 40) {
-          ctx.fillStyle = "#4c3946";
-          ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
-          drawBrickStrip(plat.x, plat.y, plat.w, Math.min(28, plat.h), true);
-        } else {
-          ctx.fillStyle = "#4c3946";
-          ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
-          drawBrickStrip(plat.x, plat.y, plat.w, plat.h, true);
+        if ((plat.x === 0 && plat.y === 0) || (plat.x === 0 && plat.w === 28) || plat.x === W - 28 || plat.y === H - 28) {
+          return;
         }
+
+        ctx.fillStyle = "#4b3946";
+        ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+        drawBrickStrip(plat.x, plat.y, plat.w, Math.min(28, plat.h), true);
       });
     }
 
@@ -811,7 +748,7 @@
       currentLevel.seesaws.forEach((item) => {
         const g = getSeesawGeometry(item);
 
-        ctx.fillStyle = "#d56745";
+        ctx.fillStyle = "#d56c47";
         ctx.beginPath();
         ctx.moveTo(item.pivotX, item.pivotY - 6);
         ctx.lineTo(item.pivotX - 18, item.pivotY + 30);
@@ -819,10 +756,10 @@
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = "#4c3946";
+        ctx.fillStyle = "#4b3946";
         ctx.fillRect(item.pivotX - 10, item.pivotY + 24, 20, 8);
 
-        ctx.strokeStyle = "#4c3946";
+        ctx.strokeStyle = "#4b3946";
         ctx.lineWidth = item.thickness + 4;
         ctx.lineCap = "round";
         ctx.beginPath();
@@ -830,19 +767,19 @@
         ctx.lineTo(g.x2, g.y2);
         ctx.stroke();
 
-        ctx.strokeStyle = "#d56745";
+        ctx.strokeStyle = "#d56c47";
         ctx.lineWidth = item.thickness - 2;
         ctx.beginPath();
         ctx.moveTo(g.x1, g.y1);
         ctx.lineTo(g.x2, g.y2);
         ctx.stroke();
 
-        ctx.fillStyle = "#4c3946";
+        ctx.fillStyle = "#4b3946";
         ctx.beginPath();
         ctx.arc(item.pivotX, item.pivotY, 11, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = "#d56745";
+        ctx.fillStyle = "#d56c47";
         ctx.beginPath();
         ctx.arc(item.pivotX, item.pivotY, 6, 0, Math.PI * 2);
         ctx.fill();
@@ -853,13 +790,12 @@
       currentLevel.spikes.forEach((hazard) => {
         const count = Math.max(2, Math.floor(hazard.w / 24));
         const step = hazard.w / count;
-
         for (let i = 0; i < count; i++) {
           const left = hazard.x + i * step;
           const right = left + step;
           const mid = (left + right) * 0.5;
 
-          ctx.fillStyle = "#4c3946";
+          ctx.fillStyle = "#4b3946";
           ctx.beginPath();
           ctx.moveTo(left, hazard.y + hazard.h);
           ctx.lineTo(mid, hazard.y);
@@ -867,7 +803,7 @@
           ctx.closePath();
           ctx.fill();
 
-          ctx.fillStyle = "#d56745";
+          ctx.fillStyle = "#d56c47";
           ctx.beginPath();
           ctx.moveTo(left + 2, hazard.y + hazard.h - 2);
           ctx.lineTo(mid, hazard.y + 4);
@@ -880,15 +816,12 @@
 
     function drawSnakes() {
       currentLevel.snakes.forEach((enemy) => {
-        ctx.fillStyle = "#4c3946";
+        ctx.fillStyle = "#4b3946";
         ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
-
-        ctx.fillStyle = "#58a86a";
+        ctx.fillStyle = "#59a96a";
         ctx.fillRect(enemy.x + 2, enemy.y + 2, enemy.w - 4, enemy.h - 4);
-
-        ctx.fillStyle = "#2b5636";
+        ctx.fillStyle = "#2d5b39";
         ctx.fillRect(enemy.x + 4, enemy.y + 6, enemy.w - 8, 4);
-
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(enemy.x + enemy.w - 12, enemy.y + 4, 3, 3);
         ctx.fillRect(enemy.x + enemy.w - 20, enemy.y + 4, 3, 3);
@@ -898,8 +831,7 @@
     function drawGems() {
       currentLevel.gems.forEach((item) => {
         if (item.collected) return;
-
-        ctx.fillStyle = "#4c3946";
+        ctx.fillStyle = "#4b3946";
         ctx.beginPath();
         ctx.moveTo(item.x, item.y - 14);
         ctx.lineTo(item.x + 12, item.y);
@@ -908,7 +840,7 @@
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = "#8cc7ff";
+        ctx.fillStyle = "#8dc8ff";
         ctx.beginPath();
         ctx.moveTo(item.x, item.y - 11);
         ctx.lineTo(item.x + 9, item.y);
@@ -922,32 +854,25 @@
     function drawExit() {
       const active = allGemsCollected();
       const door = currentLevel.exit;
-
-      ctx.fillStyle = "#f0e7ea";
+      ctx.fillStyle = "#f2e7ea";
       ctx.fillRect(door.x, door.y, door.w, door.h);
-
-      ctx.fillStyle = active ? "#71d991" : "#f3b0bd";
+      ctx.fillStyle = active ? "#72da92" : "#f2b4bf";
       ctx.fillRect(door.x + 4, door.y + 6, door.w - 8, 22);
-
-      ctx.fillStyle = "#4c3946";
+      ctx.fillStyle = "#4b3946";
       ctx.fillRect(door.x + 6, door.y + 30, door.w - 12, door.h - 36);
-
-      ctx.fillStyle = active ? "#71d991" : "#f3b0bd";
+      ctx.fillStyle = active ? "#72da92" : "#f2b4bf";
       ctx.fillRect(door.x + 12, door.y + 10, 4, 10);
       ctx.fillRect(door.x + 9, door.y + 13, 10, 4);
     }
 
     function drawPlayer() {
-      ctx.fillStyle = "#4c3946";
+      ctx.fillStyle = "#4b3946";
       ctx.fillRect(player.x, player.y, player.w, player.h);
-
-      ctx.fillStyle = "#ffd85e";
+      ctx.fillStyle = "#ffda5f";
       ctx.fillRect(player.x + 3, player.y + 4, player.w - 6, player.h - 7);
-
       ctx.fillRect(player.x + 4, player.y - 4, 6, 10);
       ctx.fillRect(player.x + player.w - 10, player.y - 4, 6, 10);
-
-      ctx.fillStyle = "#4c3946";
+      ctx.fillStyle = "#4b3946";
       ctx.fillRect(player.x + 8, player.y + 12, 4, 4);
       ctx.fillRect(player.x + 16, player.y + 12, 4, 4);
       ctx.fillRect(player.x + 11, player.y + 22, 6, 3);
@@ -982,14 +907,8 @@
     }
 
     window.addEventListener("keydown", (event) => {
-      if (event.code === "ArrowLeft" || event.code === "KeyA") {
-        input.left = true;
-      }
-
-      if (event.code === "ArrowRight" || event.code === "KeyD") {
-        input.right = true;
-      }
-
+      if (event.code === "ArrowLeft" || event.code === "KeyA") input.left = true;
+      if (event.code === "ArrowRight" || event.code === "KeyD") input.right = true;
       if (event.code === "ArrowUp" || event.code === "Space" || event.code === "KeyW") {
         jumpBuffer = 10;
         event.preventDefault();
@@ -997,13 +916,8 @@
     });
 
     window.addEventListener("keyup", (event) => {
-      if (event.code === "ArrowLeft" || event.code === "KeyA") {
-        input.left = false;
-      }
-
-      if (event.code === "ArrowRight" || event.code === "KeyD") {
-        input.right = false;
-      }
+      if (event.code === "ArrowLeft" || event.code === "KeyA") input.left = false;
+      if (event.code === "ArrowRight" || event.code === "KeyD") input.right = false;
     });
 
     prevBtn.addEventListener("click", () => {
@@ -1020,6 +934,7 @@
       }
     });
 
+    unlockedLevel = clamp(unlockedLevel, 1, TOTAL_LEVELS);
     loadLevel(0);
     loop();
   </script>
