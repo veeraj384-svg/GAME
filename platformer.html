@@ -3,17 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gemrise-Style Adventure | Game Hub</title>
+  <title>Gemrise Adventure | Game Hub</title>
   <link rel="stylesheet" href="style.css" />
   <style>
     .platformer-note {
-      margin-top: 18px;
-      color: var(--text-soft);
-      line-height: 1.6;
-      text-align: center;
+      margin: 18px auto 0;
       max-width: 760px;
-      margin-left: auto;
-      margin-right: auto;
+      text-align: center;
+      color: var(--text-soft);
+      line-height: 1.65;
     }
 
     .platformer-note strong {
@@ -27,10 +25,10 @@
       <section class="game-panel">
         <div class="game-topbar">
           <div class="game-header-left">
-            <p class="eyebrow">Seesaw Quest</p>
+            <p class="eyebrow">Adventure Platformer</p>
             <h1>Gemrise Adventure</h1>
             <p class="game-subtext">
-              Collect every gem, turn the red flag green, and use seesaws to launch yourself through a sprawling platform world while avoiding spikes and snakes.
+              Search each stage for every gem, turn the red flag green, and use seesaws to launch across cliffs, snakes, and spike pits.
             </p>
           </div>
           <a href="index.html" class="back-link">&larr; Home</a>
@@ -39,12 +37,12 @@
         <div class="info-row">
           <div class="status-box">Move: Arrows / A D</div>
           <div class="status-box">Jump: Space / Up / W</div>
-          <div class="status-box" id="levelBox">Level: 1</div>
+          <div class="status-box" id="levelBox">Level 1</div>
           <div class="status-box is-accent" id="gemBox">Gems: 0 / 0</div>
           <div class="status-box" id="flagBox">Flag: Red</div>
         </div>
 
-        <div class="message-banner" id="noticeBox">Collect all the gems and reach the green flag.</div>
+        <div class="message-banner" id="noticeBox">Collect every gem, then reach the flag.</div>
 
         <div class="canvas-stage">
           <canvas id="gameCanvas" class="game-canvas" width="960" height="520"></canvas>
@@ -57,7 +55,7 @@
         </div>
 
         <p class="platformer-note">
-          <strong>Tip:</strong> The farther you stand from the middle of a seesaw, the more force it creates. Some seesaws only tilt a little. Others can swing nearly vertical.
+          <strong>Tip:</strong> Seesaws throw harder when you stand farther from the center. Use small swings to set up the big ones.
         </p>
       </section>
     </main>
@@ -79,233 +77,233 @@
     const VIEW_W = canvas.width;
     const VIEW_H = canvas.height;
 
-    const MOVE_ACCEL = 0.68;
-    const MOVE_FRICTION = 0.84;
-    const MAX_SPEED = 5.4;
+    const MOVE_ACCEL = 0.7;
+    const FRICTION = 0.84;
+    const MAX_SPEED = 5.6;
     const GRAVITY = 0.48;
     const JUMP_VELOCITY = -10.8;
     const MAX_FALL = 14;
 
     const LEVELS = [
       {
-        title: "Level 1: Training Meadow",
-        hint: "Learn the seesaws. Collect 4 gems, avoid the spikes, and reach the flag.",
+        title: "Level 1: Meadow Steps",
+        hint: "Learn the seesaws. Collect 4 gems and reach the flag.",
         worldWidth: 2100,
         worldHeight: 760,
-        spawn: { x: 76, y: 394 },
+        spawn: { x: 72, y: 394 },
         platforms: [
           { x: 0, y: 430, w: 250, h: 90 },
-          { x: 270, y: 346, w: 120, h: 18 },
-          { x: 590, y: 430, w: 230, h: 90 },
-          { x: 860, y: 318, w: 128, h: 18 },
-          { x: 1040, y: 430, w: 220, h: 90 },
-          { x: 1280, y: 276, w: 140, h: 18 },
-          { x: 1460, y: 430, w: 230, h: 90 },
-          { x: 1710, y: 210, w: 150, h: 18 },
-          { x: 1870, y: 430, w: 230, h: 90 }
+          { x: 288, y: 352, w: 110, h: 18 },
+          { x: 608, y: 430, w: 235, h: 90 },
+          { x: 884, y: 318, w: 122, h: 18 },
+          { x: 1064, y: 430, w: 214, h: 90 },
+          { x: 1302, y: 278, w: 136, h: 18 },
+          { x: 1476, y: 430, w: 230, h: 90 },
+          { x: 1734, y: 214, w: 146, h: 18 },
+          { x: 1888, y: 430, w: 220, h: 90 }
         ],
         seesaws: [
-          { pivotX: 480, pivotY: 388, length: 190, maxAngle: 0.42, spring: 0.011, damping: 0.992, weight: 0.0016, startAngle: -0.05 },
-          { pivotX: 920, pivotY: 354, length: 180, maxAngle: 0.58, spring: 0.010, damping: 0.992, weight: 0.0018, startAngle: 0.02 },
-          { pivotX: 1538, pivotY: 348, length: 200, maxAngle: 0.62, spring: 0.0095, damping: 0.992, weight: 0.0019, startAngle: -0.03 }
+          { pivotX: 486, pivotY: 390, length: 188, maxAngle: 0.44, spring: 0.011, damping: 0.992, weight: 0.0016, startAngle: -0.05 },
+          { pivotX: 930, pivotY: 358, length: 180, maxAngle: 0.58, spring: 0.0102, damping: 0.992, weight: 0.0018, startAngle: 0.03 },
+          { pivotX: 1546, pivotY: 350, length: 198, maxAngle: 0.64, spring: 0.0098, damping: 0.9918, weight: 0.00195, startAngle: -0.02 }
         ],
         spikes: [
-          { x: 530, y: 412, w: 46, h: 18 },
-          { x: 1000, y: 412, w: 32, h: 18 },
-          { x: 1430, y: 412, w: 26, h: 18 }
+          { x: 542, y: 412, w: 42, h: 18 },
+          { x: 1016, y: 412, w: 30, h: 18 },
+          { x: 1450, y: 412, w: 24, h: 18 }
         ],
         snakes: [
-          { x: 1112, y: 412, w: 40, h: 18, minX: 1075, maxX: 1205, speed: 1.2 }
+          { x: 1130, y: 412, w: 42, h: 18, minX: 1088, maxX: 1220, speed: 1.15 }
         ],
         gems: [
-          { x: 330, y: 304 },
-          { x: 905, y: 274 },
-          { x: 1330, y: 234 },
-          { x: 1760, y: 168 }
+          { x: 344, y: 312 },
+          { x: 924, y: 276 },
+          { x: 1368, y: 238 },
+          { x: 1776, y: 172 }
         ],
-        exit: { x: 1995, y: 360, w: 28, h: 70 }
+        exit: { x: 2000, y: 360, w: 28, h: 70 }
       },
       {
-        title: "Level 2: Canyon Springs",
-        hint: "These seesaws swing harder. Search the whole map for 5 gems.",
-        worldWidth: 2450,
+        title: "Level 2: Canyon Lift",
+        hint: "Search upward. Some launches need a second seesaw to line them up.",
+        worldWidth: 2420,
         worldHeight: 860,
-        spawn: { x: 72, y: 434 },
+        spawn: { x: 76, y: 434 },
         platforms: [
           { x: 0, y: 470, w: 220, h: 90 },
-          { x: 295, y: 392, w: 110, h: 18 },
-          { x: 650, y: 470, w: 180, h: 90 },
-          { x: 890, y: 318, w: 120, h: 18 },
-          { x: 1100, y: 236, w: 110, h: 18 },
-          { x: 1280, y: 470, w: 200, h: 90 },
-          { x: 1510, y: 332, w: 122, h: 18 },
-          { x: 1700, y: 255, w: 110, h: 18 },
-          { x: 1865, y: 470, w: 180, h: 90 },
-          { x: 2050, y: 182, w: 126, h: 18 },
-          { x: 2240, y: 470, w: 210, h: 90 }
+          { x: 294, y: 394, w: 108, h: 18 },
+          { x: 654, y: 470, w: 176, h: 90 },
+          { x: 902, y: 326, w: 116, h: 18 },
+          { x: 1092, y: 238, w: 110, h: 18 },
+          { x: 1290, y: 470, w: 192, h: 90 },
+          { x: 1520, y: 340, w: 126, h: 18 },
+          { x: 1710, y: 248, w: 106, h: 18 },
+          { x: 1876, y: 470, w: 182, h: 90 },
+          { x: 2068, y: 186, w: 124, h: 18 },
+          { x: 2238, y: 470, w: 182, h: 90 }
         ],
         seesaws: [
-          { pivotX: 540, pivotY: 415, length: 210, maxAngle: 0.68, spring: 0.0095, damping: 0.9915, weight: 0.0021, startAngle: 0.08 },
-          { pivotX: 1015, pivotY: 281, length: 170, maxAngle: 0.58, spring: 0.011, damping: 0.992, weight: 0.0018, startAngle: -0.07 },
-          { pivotX: 1400, pivotY: 405, length: 205, maxAngle: 0.78, spring: 0.009, damping: 0.991, weight: 0.0022, startAngle: -0.03 },
-          { pivotX: 1928, pivotY: 395, length: 210, maxAngle: 0.78, spring: 0.009, damping: 0.991, weight: 0.0022, startAngle: 0.05 }
+          { pivotX: 540, pivotY: 414, length: 210, maxAngle: 0.72, spring: 0.0093, damping: 0.9913, weight: 0.00215, startAngle: 0.08 },
+          { pivotX: 1012, pivotY: 284, length: 176, maxAngle: 0.56, spring: 0.0106, damping: 0.992, weight: 0.00185, startAngle: -0.05 },
+          { pivotX: 1408, pivotY: 406, length: 210, maxAngle: 0.82, spring: 0.0088, damping: 0.9908, weight: 0.00225, startAngle: -0.04 },
+          { pivotX: 1940, pivotY: 406, length: 214, maxAngle: 0.84, spring: 0.0086, damping: 0.9906, weight: 0.0023, startAngle: 0.05 }
         ],
         spikes: [
-          { x: 598, y: 452, w: 44, h: 18 },
-          { x: 845, y: 452, w: 34, h: 18 },
-          { x: 1818, y: 452, w: 38, h: 18 },
-          { x: 2210, y: 452, w: 24, h: 18 }
+          { x: 600, y: 452, w: 42, h: 18 },
+          { x: 846, y: 452, w: 34, h: 18 },
+          { x: 1828, y: 452, w: 36, h: 18 },
+          { x: 2208, y: 452, w: 26, h: 18 }
         ],
         snakes: [
-          { x: 1324, y: 452, w: 40, h: 18, minX: 1305, maxX: 1430, speed: 1.35 },
-          { x: 2280, y: 452, w: 40, h: 18, minX: 2260, maxX: 2380, speed: 1.55 }
+          { x: 1328, y: 452, w: 42, h: 18, minX: 1304, maxX: 1432, speed: 1.4 },
+          { x: 2282, y: 452, w: 42, h: 18, minX: 2260, maxX: 2374, speed: 1.55 }
         ],
         gems: [
-          { x: 350, y: 352 },
-          { x: 945, y: 278 },
-          { x: 1145, y: 196 },
-          { x: 1748, y: 214 },
-          { x: 2108, y: 140 }
+          { x: 348, y: 354 },
+          { x: 958, y: 286 },
+          { x: 1138, y: 198 },
+          { x: 1764, y: 208 },
+          { x: 2130, y: 142 }
         ],
-        exit: { x: 2365, y: 400, w: 28, h: 70 }
+        exit: { x: 2338, y: 398, w: 28, h: 72 }
       },
       {
-        title: "Level 3: Snake Ridge",
-        hint: "Use the small seesaws to line up the big launch. Watch the snakes on the lower lanes.",
+        title: "Level 3: Ridge of Snakes",
+        hint: "The safe path is not always the fast path. Clear all 5 gems to wake the flag.",
         worldWidth: 2550,
         worldHeight: 920,
         spawn: { x: 82, y: 454 },
         platforms: [
-          { x: 0, y: 488, w: 240, h: 110 },
-          { x: 270, y: 408, w: 100, h: 18 },
-          { x: 590, y: 488, w: 190, h: 110 },
-          { x: 870, y: 354, w: 118, h: 18 },
-          { x: 1060, y: 280, w: 108, h: 18 },
-          { x: 1210, y: 488, w: 170, h: 110 },
-          { x: 1450, y: 345, w: 120, h: 18 },
-          { x: 1635, y: 232, w: 100, h: 18 },
-          { x: 1795, y: 488, w: 175, h: 110 },
-          { x: 2010, y: 360, w: 116, h: 18 },
-          { x: 2185, y: 262, w: 116, h: 18 },
-          { x: 2360, y: 488, w: 190, h: 110 }
+          { x: 0, y: 488, w: 242, h: 110 },
+          { x: 278, y: 410, w: 102, h: 18 },
+          { x: 600, y: 488, w: 186, h: 110 },
+          { x: 880, y: 356, w: 118, h: 18 },
+          { x: 1068, y: 282, w: 108, h: 18 },
+          { x: 1220, y: 488, w: 170, h: 110 },
+          { x: 1460, y: 346, w: 120, h: 18 },
+          { x: 1642, y: 234, w: 102, h: 18 },
+          { x: 1802, y: 488, w: 180, h: 110 },
+          { x: 2026, y: 364, w: 114, h: 18 },
+          { x: 2202, y: 264, w: 114, h: 18 },
+          { x: 2364, y: 488, w: 186, h: 110 }
         ],
         seesaws: [
-          { pivotX: 495, pivotY: 430, length: 180, maxAngle: 0.48, spring: 0.0105, damping: 0.992, weight: 0.0018, startAngle: -0.04 },
-          { pivotX: 960, pivotY: 320, length: 175, maxAngle: 0.58, spring: 0.0105, damping: 0.9918, weight: 0.00195, startAngle: 0.04 },
-          { pivotX: 1388, pivotY: 420, length: 220, maxAngle: 0.84, spring: 0.0088, damping: 0.9905, weight: 0.00235, startAngle: 0.03 },
-          { pivotX: 1940, pivotY: 420, length: 215, maxAngle: 0.84, spring: 0.0088, damping: 0.9905, weight: 0.00235, startAngle: -0.02 }
+          { pivotX: 492, pivotY: 432, length: 180, maxAngle: 0.48, spring: 0.0106, damping: 0.992, weight: 0.00185, startAngle: -0.04 },
+          { pivotX: 968, pivotY: 322, length: 176, maxAngle: 0.58, spring: 0.0102, damping: 0.9918, weight: 0.00195, startAngle: 0.04 },
+          { pivotX: 1398, pivotY: 422, length: 224, maxAngle: 0.88, spring: 0.0086, damping: 0.9903, weight: 0.00235, startAngle: 0.03 },
+          { pivotX: 1946, pivotY: 422, length: 218, maxAngle: 0.88, spring: 0.0085, damping: 0.9903, weight: 0.00235, startAngle: -0.03 }
         ],
         spikes: [
-          { x: 548, y: 470, w: 32, h: 18 },
-          { x: 800, y: 470, w: 48, h: 18 },
-          { x: 1406, y: 470, w: 34, h: 18 },
-          { x: 1978, y: 470, w: 34, h: 18 },
-          { x: 2324, y: 470, w: 30, h: 18 }
+          { x: 550, y: 470, w: 34, h: 18 },
+          { x: 804, y: 470, w: 46, h: 18 },
+          { x: 1412, y: 470, w: 34, h: 18 },
+          { x: 1986, y: 470, w: 34, h: 18 },
+          { x: 2328, y: 470, w: 24, h: 18 }
         ],
         snakes: [
-          { x: 1260, y: 470, w: 40, h: 18, minX: 1234, maxX: 1336, speed: 1.45 },
-          { x: 2420, y: 470, w: 40, h: 18, minX: 2390, maxX: 2500, speed: 1.7 }
+          { x: 1256, y: 470, w: 42, h: 18, minX: 1236, maxX: 1336, speed: 1.48 },
+          { x: 2420, y: 470, w: 42, h: 18, minX: 2394, maxX: 2498, speed: 1.7 }
         ],
         gems: [
-          { x: 318, y: 368 },
-          { x: 920, y: 312 },
-          { x: 1114, y: 238 },
-          { x: 1678, y: 190 },
-          { x: 2226, y: 220 }
+          { x: 332, y: 372 },
+          { x: 926, y: 316 },
+          { x: 1118, y: 242 },
+          { x: 1682, y: 192 },
+          { x: 2240, y: 222 }
         ],
-        exit: { x: 2468, y: 416, w: 28, h: 72 }
+        exit: { x: 2472, y: 416, w: 28, h: 72 }
       },
       {
-        title: "Level 4: Vertical Vault",
-        hint: "This map is taller. Search upward, not just to the right.",
+        title: "Level 4: Vault of Air",
+        hint: "This stage climbs higher. Use the tall launchers and keep your landings clean.",
         worldWidth: 2320,
         worldHeight: 1080,
         spawn: { x: 88, y: 574 },
         platforms: [
-          { x: 0, y: 610, w: 230, h: 110 },
-          { x: 286, y: 524, w: 110, h: 18 },
-          { x: 470, y: 446, w: 110, h: 18 },
+          { x: 0, y: 610, w: 232, h: 110 },
+          { x: 288, y: 526, w: 110, h: 18 },
+          { x: 470, y: 448, w: 110, h: 18 },
           { x: 640, y: 610, w: 180, h: 110 },
-          { x: 898, y: 520, w: 114, h: 18 },
-          { x: 1080, y: 418, w: 106, h: 18 },
-          { x: 1268, y: 320, w: 112, h: 18 },
-          { x: 1455, y: 610, w: 170, h: 110 },
-          { x: 1688, y: 470, w: 115, h: 18 },
-          { x: 1865, y: 350, w: 110, h: 18 },
-          { x: 2038, y: 235, w: 116, h: 18 },
+          { x: 898, y: 524, w: 114, h: 18 },
+          { x: 1084, y: 420, w: 108, h: 18 },
+          { x: 1272, y: 322, w: 114, h: 18 },
+          { x: 1458, y: 610, w: 172, h: 110 },
+          { x: 1692, y: 474, w: 118, h: 18 },
+          { x: 1870, y: 352, w: 112, h: 18 },
+          { x: 2046, y: 238, w: 116, h: 18 },
           { x: 2160, y: 610, w: 160, h: 110 }
         ],
         seesaws: [
-          { pivotX: 576, pivotY: 550, length: 220, maxAngle: 0.90, spring: 0.0084, damping: 0.9902, weight: 0.00245, startAngle: -0.09 },
-          { pivotX: 1014, pivotY: 465, length: 170, maxAngle: 0.52, spring: 0.011, damping: 0.992, weight: 0.00185, startAngle: 0.06 },
-          { pivotX: 1502, pivotY: 540, length: 220, maxAngle: 0.92, spring: 0.0082, damping: 0.9898, weight: 0.0025, startAngle: 0.08 }
+          { pivotX: 580, pivotY: 552, length: 222, maxAngle: 0.92, spring: 0.0082, damping: 0.9898, weight: 0.0025, startAngle: -0.08 },
+          { pivotX: 1018, pivotY: 468, length: 170, maxAngle: 0.52, spring: 0.011, damping: 0.992, weight: 0.00185, startAngle: 0.05 },
+          { pivotX: 1506, pivotY: 542, length: 224, maxAngle: 0.94, spring: 0.0081, damping: 0.9898, weight: 0.00255, startAngle: 0.07 }
         ],
         spikes: [
-          { x: 594, y: 592, w: 38, h: 18 },
+          { x: 596, y: 592, w: 36, h: 18 },
           { x: 840, y: 592, w: 38, h: 18 },
-          { x: 1430, y: 592, w: 24, h: 18 },
-          { x: 2130, y: 592, w: 26, h: 18 }
+          { x: 1432, y: 592, w: 22, h: 18 },
+          { x: 2132, y: 592, w: 24, h: 18 }
         ],
         snakes: [
-          { x: 1526, y: 592, w: 40, h: 18, minX: 1482, maxX: 1585, speed: 1.6 }
+          { x: 1528, y: 592, w: 42, h: 18, minX: 1486, maxX: 1588, speed: 1.62 }
         ],
         gems: [
-          { x: 346, y: 486 },
-          { x: 514, y: 408 },
-          { x: 1128, y: 378 },
-          { x: 1318, y: 280 },
-          { x: 2074, y: 196 }
+          { x: 346, y: 490 },
+          { x: 514, y: 410 },
+          { x: 1132, y: 380 },
+          { x: 1322, y: 282 },
+          { x: 2080, y: 198 }
         ],
-        exit: { x: 2222, y: 540, w: 28, h: 70 }
+        exit: { x: 2226, y: 540, w: 28, h: 72 }
       },
       {
         title: "Level 5: Summit Swing",
-        hint: "Everything you learned matters here. Big swings, tight landings, full clear.",
+        hint: "Everything matters here. Chain the seesaws, avoid the patrols, and finish the climb.",
         worldWidth: 2700,
         worldHeight: 1120,
         spawn: { x: 88, y: 594 },
         platforms: [
-          { x: 0, y: 630, w: 220, h: 120 },
-          { x: 280, y: 548, w: 100, h: 18 },
-          { x: 445, y: 470, w: 95, h: 18 },
-          { x: 615, y: 630, w: 170, h: 120 },
-          { x: 850, y: 520, w: 108, h: 18 },
-          { x: 1015, y: 412, w: 102, h: 18 },
-          { x: 1175, y: 300, w: 100, h: 18 },
-          { x: 1370, y: 630, w: 165, h: 120 },
-          { x: 1595, y: 470, w: 116, h: 18 },
-          { x: 1775, y: 346, w: 110, h: 18 },
-          { x: 1955, y: 248, w: 104, h: 18 },
-          { x: 2125, y: 630, w: 172, h: 120 },
-          { x: 2338, y: 430, w: 116, h: 18 },
-          { x: 2525, y: 298, w: 110, h: 18 }
+          { x: 0, y: 630, w: 224, h: 120 },
+          { x: 286, y: 548, w: 100, h: 18 },
+          { x: 448, y: 470, w: 96, h: 18 },
+          { x: 620, y: 630, w: 170, h: 120 },
+          { x: 852, y: 522, w: 110, h: 18 },
+          { x: 1020, y: 414, w: 104, h: 18 },
+          { x: 1182, y: 302, w: 100, h: 18 },
+          { x: 1374, y: 630, w: 166, h: 120 },
+          { x: 1600, y: 472, w: 118, h: 18 },
+          { x: 1780, y: 348, w: 110, h: 18 },
+          { x: 1960, y: 250, w: 104, h: 18 },
+          { x: 2128, y: 630, w: 176, h: 120 },
+          { x: 2340, y: 432, w: 118, h: 18 },
+          { x: 2528, y: 300, w: 110, h: 18 }
         ],
         seesaws: [
-          { pivotX: 560, pivotY: 572, length: 230, maxAngle: 0.96, spring: 0.008, damping: 0.9895, weight: 0.00265, startAngle: -0.07 },
-          { pivotX: 975, pivotY: 470, length: 180, maxAngle: 0.60, spring: 0.0108, damping: 0.9916, weight: 0.00195, startAngle: 0.06 },
-          { pivotX: 1530, pivotY: 570, length: 232, maxAngle: 1.02, spring: 0.0078, damping: 0.9893, weight: 0.00275, startAngle: 0.05 },
-          { pivotX: 2295, pivotY: 570, length: 232, maxAngle: 1.02, spring: 0.0078, damping: 0.9893, weight: 0.00275, startAngle: -0.03 }
+          { pivotX: 564, pivotY: 572, length: 232, maxAngle: 0.98, spring: 0.0079, damping: 0.9892, weight: 0.0027, startAngle: -0.06 },
+          { pivotX: 978, pivotY: 472, length: 180, maxAngle: 0.62, spring: 0.0105, damping: 0.9915, weight: 0.00195, startAngle: 0.05 },
+          { pivotX: 1536, pivotY: 572, length: 234, maxAngle: 1.04, spring: 0.0077, damping: 0.989, weight: 0.0028, startAngle: 0.04 },
+          { pivotX: 2298, pivotY: 572, length: 234, maxAngle: 1.04, spring: 0.0077, damping: 0.989, weight: 0.0028, startAngle: -0.04 }
         ],
         spikes: [
-          { x: 585, y: 612, w: 26, h: 18 },
-          { x: 798, y: 612, w: 34, h: 18 },
-          { x: 1350, y: 612, w: 20, h: 18 },
+          { x: 588, y: 612, w: 24, h: 18 },
+          { x: 802, y: 612, w: 34, h: 18 },
+          { x: 1352, y: 612, w: 18, h: 18 },
           { x: 1568, y: 612, w: 24, h: 18 },
-          { x: 2104, y: 612, w: 18, h: 18 },
-          { x: 2322, y: 612, w: 28, h: 18 }
+          { x: 2106, y: 612, w: 18, h: 18 },
+          { x: 2324, y: 612, w: 28, h: 18 }
         ],
         snakes: [
-          { x: 1416, y: 612, w: 40, h: 18, minX: 1392, maxX: 1494, speed: 1.75 },
-          { x: 2180, y: 612, w: 40, h: 18, minX: 2145, maxX: 2260, speed: 1.95 }
+          { x: 1416, y: 612, w: 42, h: 18, minX: 1394, maxX: 1494, speed: 1.78 },
+          { x: 2180, y: 612, w: 42, h: 18, minX: 2148, maxX: 2264, speed: 1.95 }
         ],
         gems: [
-          { x: 330, y: 510 },
-          { x: 900, y: 480 },
-          { x: 1055, y: 372 },
-          { x: 1210, y: 260 },
-          { x: 1992, y: 208 }
+          { x: 334, y: 510 },
+          { x: 906, y: 482 },
+          { x: 1062, y: 374 },
+          { x: 1216, y: 262 },
+          { x: 1996, y: 210 }
         ],
-        exit: { x: 2604, y: 238, w: 28, h: 72 }
+        exit: { x: 2608, y: 240, w: 28, h: 72 }
       }
     ];
 
@@ -338,6 +336,21 @@
     let gameWon = false;
     let messageTimer = 0;
 
+    function drawRoundedRect(context, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      context.beginPath();
+      context.moveTo(x + r, y);
+      context.lineTo(x + width - r, y);
+      context.quadraticCurveTo(x + width, y, x + width, y + r);
+      context.lineTo(x + width, y + height - r);
+      context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      context.lineTo(x + r, y + height);
+      context.quadraticCurveTo(x, y + height, x, y + height - r);
+      context.lineTo(x, y + r);
+      context.quadraticCurveTo(x, y, x + r, y);
+      context.closePath();
+    }
+
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
     }
@@ -351,22 +364,8 @@
       messageTimer = duration;
     }
 
-    function updateAmbientMessage() {
-      if (messageTimer > 0) {
-        messageTimer--;
-        return;
-      }
-
-      if (gameWon) {
-        noticeBox.textContent = "You cleared every level. The whole mountain is yours.";
-        return;
-      }
-
-      if (allGemsCollected()) {
-        noticeBox.textContent = "All gems collected. The flag is green now.";
-      } else {
-        noticeBox.textContent = currentLevel.hint;
-      }
+    function allGemsCollected() {
+      return currentLevel.gems.every((gem) => gem.collected);
     }
 
     function updateHud() {
@@ -376,14 +375,10 @@
       levelBox.textContent = currentLevel.title;
       gemBox.textContent = "Gems: " + collected + " / " + total;
       flagBox.textContent = allGemsCollected() ? "Flag: Green" : "Flag: Red";
-      flagBox.style.color = allGemsCollected() ? "#74f4c7" : "#ff93a5";
+      flagBox.style.color = allGemsCollected() ? "#74f4c7" : "#ff96a8";
 
       prevBtn.disabled = levelIndex === 0;
       nextBtn.disabled = levelIndex === LEVELS.length - 1;
-    }
-
-    function allGemsCollected() {
-      return currentLevel.gems.every((gem) => gem.collected);
     }
 
     function resetPlayer() {
@@ -428,16 +423,15 @@
     }
 
     function restartLevel(reason) {
-      const preserveMessage = reason || currentLevel.hint;
       loadLevel(levelIndex);
-      setMessage(preserveMessage, 180);
+      setMessage(reason || currentLevel.hint, 180);
     }
 
     function completeLevel() {
       if (levelIndex === LEVELS.length - 1) {
         gameWon = true;
-        setMessage("You collected every gem and conquered the mountain.", 999999);
         updateHud();
+        setMessage("You cleared every stage and reached the summit.", 999999);
         return;
       }
 
@@ -463,21 +457,15 @@
       const dx = g.x2 - g.x1;
       const dy = g.y2 - g.y1;
 
-      if (Math.abs(dx) < 18) {
-        return null;
-      }
+      if (Math.abs(dx) < 16) return null;
 
       const minX = Math.min(g.x1, g.x2);
       const maxX = Math.max(g.x1, g.x2);
 
-      if (sampleX < minX - 8 || sampleX > maxX + 8) {
-        return null;
-      }
+      if (sampleX < minX - 8 || sampleX > maxX + 8) return null;
 
       const t = (sampleX - g.x1) / dx;
-      if (t < -0.08 || t > 1.08) {
-        return null;
-      }
+      if (t < -0.08 || t > 1.08) return null;
 
       return {
         y: g.y1 + dy * t - seesaw.thickness * 0.5,
@@ -493,6 +481,22 @@
         a.y < b.y + b.h &&
         a.y + a.h > b.y
       );
+    }
+
+    function updateAmbientMessage() {
+      if (messageTimer > 0) {
+        messageTimer--;
+        return;
+      }
+
+      if (gameWon) {
+        noticeBox.textContent = "You reached the summit. Replay any level whenever you want.";
+        return;
+      }
+
+      noticeBox.textContent = allGemsCollected()
+        ? "All gems collected. The flag is green now."
+        : currentLevel.hint;
     }
 
     function updateSeesaws() {
@@ -604,11 +608,7 @@
     function updatePlayer() {
       const previousSupport = player.support;
 
-      if (
-        previousSupport &&
-        previousSupport.type === "seesaw" &&
-        player.onGround
-      ) {
+      if (previousSupport && previousSupport.type === "seesaw" && player.onGround) {
         const seesaw = previousSupport.ref;
         const offset = player.x + player.w * 0.5 - seesaw.pivotX;
         player.x += seesaw.angularVelocity * offset * 0.12;
@@ -624,7 +624,7 @@
 
       if (input.left) player.vx -= MOVE_ACCEL;
       if (input.right) player.vx += MOVE_ACCEL;
-      if (!input.left && !input.right) player.vx *= MOVE_FRICTION;
+      if (!input.left && !input.right) player.vx *= FRICTION;
 
       player.vx = clamp(player.vx, -MAX_SPEED, MAX_SPEED);
 
@@ -667,7 +667,7 @@
       resolveSeesawLanding();
 
       if (player.y > currentLevel.worldHeight + 80) {
-        restartLevel("You fell. Try hitting the seesaw farther from the center.");
+        restartLevel("You fell. Try hitting the seesaw farther from the middle.");
       }
     }
 
@@ -692,14 +692,14 @@
       if (allGemsCollected()) {
         setMessage("All gems collected. The flag turned green.", 220);
       } else {
-        setMessage("Gem collected. Keep searching.", 90);
+        setMessage("Gem collected. Keep going.", 90);
       }
     }
 
     function checkHazards() {
       for (const spike of currentLevel.spikes) {
         if (rectsOverlap(player, spike)) {
-          restartLevel("You hit the spikes. Try a cleaner launch.");
+          restartLevel("You hit the spikes. Try a cleaner line.");
           return;
         }
       }
@@ -714,10 +714,7 @@
 
     function checkExit() {
       if (!allGemsCollected() || gameWon) return;
-
-      if (rectsOverlap(player, currentLevel.exit)) {
-        completeLevel();
-      }
+      if (rectsOverlap(player, currentLevel.exit)) completeLevel();
     }
 
     function updateCamera() {
@@ -805,15 +802,6 @@
         const g = getSeesawGeometry(seesaw);
         const cx = seesaw.pivotX - camera.x;
         const cy = seesaw.pivotY - camera.y;
-
-        ctx.strokeStyle = "#7a4d2d";
-        ctx.lineWidth = 8;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy - 2);
-        ctx.lineTo(cx - 18, cy + 34);
-        ctx.lineTo(cx + 18, cy + 34);
-        ctx.closePath();
-        ctx.stroke();
 
         ctx.fillStyle = "#9a6036";
         ctx.beginPath();
@@ -965,13 +953,6 @@
 
       ctx.fillStyle = active ? "#d8ffe7" : "#ffd7dc";
       ctx.fillRect(x + 10, y + 15, 8, 2);
-
-      ctx.strokeStyle = "rgba(255,255,255,0.55)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(x - 10, y + exit.h + 5);
-      ctx.lineTo(x + exit.w + 8, y + exit.h + 5);
-      ctx.stroke();
     }
 
     function drawPlayer() {
@@ -1010,26 +991,11 @@
 
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 36px Arial";
-      ctx.fillText("Mountain Cleared!", 338, 215);
+      ctx.fillText("Summit Cleared!", 348, 215);
 
       ctx.font = "20px Arial";
       ctx.fillText("Every gem was collected and every flag was reached.", 255, 254);
-      ctx.fillText("Use Previous Level if you want to replay your favorite run.", 236, 286);
-    }
-
-    function drawRoundedRect(context, x, y, width, height, radius) {
-      const r = Math.min(radius, width / 2, height / 2);
-      context.beginPath();
-      context.moveTo(x + r, y);
-      context.lineTo(x + width - r, y);
-      context.quadraticCurveTo(x + width, y, x + width, y + r);
-      context.lineTo(x + width, y + height - r);
-      context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
-      context.lineTo(x + r, y + height);
-      context.quadraticCurveTo(x, y + height, x, y + height - r);
-      context.lineTo(x, y + r);
-      context.quadraticCurveTo(x, y, x + r, y);
-      context.closePath();
+      ctx.fillText("Use Previous Level if you want to replay a favorite stage.", 240, 286);
     }
 
     function update() {
@@ -1064,6 +1030,7 @@
       drawPlayer();
 
       ctx.restore();
+
       drawOverlay();
     }
 
@@ -1082,11 +1049,7 @@
         input.right = true;
       }
 
-      if (
-        event.code === "ArrowUp" ||
-        event.code === "Space" ||
-        event.code === "KeyW"
-      ) {
+      if (event.code === "ArrowUp" || event.code === "Space" || event.code === "KeyW") {
         jumpBuffer = 10;
         event.preventDefault();
       }
