@@ -3,67 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Neon Platformer | Game Hub</title>
+  <title>Neon Trail | Game Hub</title>
   <link rel="stylesheet" href="style.css" />
   <style>
     .neon-panel {
-      background: linear-gradient(180deg, rgba(7, 12, 28, 0.96), rgba(9, 13, 24, 0.94));
+      background: linear-gradient(180deg, rgba(8, 13, 32, 0.97), rgba(8, 10, 24, 0.96));
       border: 1px solid rgba(137, 247, 255, 0.18);
-      box-shadow:
-        0 30px 80px rgba(0, 0, 0, 0.45),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.03);
       border-radius: 22px;
       padding: 18px;
+      box-shadow:
+        0 28px 80px rgba(0, 0, 0, 0.42),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.03);
     }
 
-    .neon-levels {
+    .level-select-wrap {
       margin-top: 18px;
     }
 
-    .neon-levels h2 {
+    .level-select-wrap h2 {
       margin: 0 0 12px;
       font-size: 1rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
-    .neon-level-grid {
+    .level-grid-neon {
       display: grid;
-      grid-template-columns: repeat(6, minmax(80px, 1fr));
+      grid-template-columns: repeat(4, minmax(88px, 1fr));
       gap: 12px;
     }
 
-    .neon-level-btn {
-      border: 1px solid rgba(137, 247, 255, 0.22);
+    .level-chip {
+      border: 1px solid rgba(137, 247, 255, 0.2);
       border-radius: 16px;
       padding: 14px 10px;
-      background: linear-gradient(180deg, rgba(137, 247, 255, 0.14), rgba(255, 110, 209, 0.08));
-      color: #f5fbff;
+      background: linear-gradient(180deg, rgba(137, 247, 255, 0.12), rgba(255, 110, 209, 0.08));
+      color: #f3fbff;
       font: 800 1rem/1 "Trebuchet MS", sans-serif;
       cursor: pointer;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
       transition: transform 0.15s ease, border-color 0.15s ease;
     }
 
-    .neon-level-btn:hover {
+    .level-chip:hover {
       transform: translateY(-2px);
-      border-color: rgba(137, 247, 255, 0.4);
+      border-color: rgba(137, 247, 255, 0.42);
     }
 
-    .neon-level-btn.current {
-      background: linear-gradient(180deg, rgba(137, 247, 255, 0.26), rgba(137, 247, 255, 0.12));
-      color: #06111f;
-      border-color: rgba(137, 247, 255, 0.6);
-      box-shadow: 0 0 22px rgba(137, 247, 255, 0.28);
+    .level-chip.current {
+      color: #08131f;
+      border-color: rgba(137, 247, 255, 0.64);
+      background: linear-gradient(180deg, rgba(137, 247, 255, 0.28), rgba(137, 247, 255, 0.12));
+      box-shadow: 0 0 20px rgba(137, 247, 255, 0.24);
     }
 
-    .neon-level-btn.locked {
+    .level-chip.locked {
       opacity: 0.45;
       cursor: not-allowed;
       transform: none;
     }
 
-    .neon-note {
+    .trail-note {
       margin: 18px auto 0;
       max-width: 760px;
       text-align: center;
@@ -71,13 +70,13 @@
       line-height: 1.65;
     }
 
-    .neon-note strong {
+    .trail-note strong {
       color: var(--text-main);
     }
 
-    @media (max-width: 720px) {
-      .neon-level-grid {
-        grid-template-columns: repeat(3, minmax(80px, 1fr));
+    @media (max-width: 760px) {
+      .level-grid-neon {
+        grid-template-columns: repeat(2, minmax(88px, 1fr));
       }
     }
   </style>
@@ -89,9 +88,9 @@
         <div class="game-topbar">
           <div class="game-header-left">
             <p class="eyebrow">Neon Platformer</p>
-            <h1>Neon Rift</h1>
+            <h1>Neon Trail</h1>
             <p class="game-subtext">
-              Collect every energy core to unlock the exit gate. Each level is handcrafted, longer than the last, and pushes the movement and platform timing a little harder.
+              A fresh platformer with eight handcrafted levels, forgiving movement, mid-level checkpoints, and enough scenery to make the run feel like a journey instead of a test.
             </p>
           </div>
           <a href="index.html" class="back-link">&larr; Home</a>
@@ -100,30 +99,31 @@
         <div class="info-row">
           <div class="status-box">Move: Arrows / A D</div>
           <div class="status-box">Jump: Space / Up / W</div>
-          <div class="status-box" id="levelLabel">Level 1</div>
-          <div class="status-box is-accent" id="coreLabel">Cores: 0 / 0</div>
-          <div class="status-box" id="gateLabel">Gate: Locked</div>
+          <div class="status-box" id="levelBox">Level 1</div>
+          <div class="status-box is-accent" id="shardBox">Shards: 0 / 0</div>
+          <div class="status-box" id="checkpointBox">Checkpoint: Start</div>
+          <div class="status-box" id="gateBox">Gate: Locked</div>
         </div>
 
-        <div class="message-banner" id="messageBox">Collect every core, then enter the gate.</div>
+        <div class="message-banner" id="messageBox">Collect every shard, touch checkpoints, and head for the gate.</div>
 
         <div class="canvas-stage neon-panel">
           <canvas id="gameCanvas" class="game-canvas" width="960" height="540"></canvas>
         </div>
 
         <div class="bottom-actions">
-          <button class="secondary-button" id="prevBtn">Previous Level</button>
+          <button class="secondary-button" id="prevLevelBtn">Previous Level</button>
           <button class="secondary-button" id="restartBtn">Restart Level</button>
-          <button class="secondary-button" id="nextBtn">Next Level</button>
+          <button class="secondary-button" id="nextLevelBtn">Next Level</button>
         </div>
 
-        <div class="neon-levels neon-panel">
+        <div class="level-select-wrap neon-panel">
           <h2>Level Select</h2>
-          <div class="neon-level-grid" id="levelGrid"></div>
+          <div class="level-grid-neon" id="levelGrid"></div>
         </div>
 
-        <p class="neon-note">
-          <strong>Flow:</strong> Levels 1-2 are easier on purpose. Levels 3-4 add moving platforms and hazard pressure. Levels 5-6 are longer, more vertical, and demand cleaner execution.
+        <p class="trail-note">
+          <strong>Design:</strong> The early levels are short and readable, and the later ones get much longer and more distinct without turning into punishment. Dying sends you back to your latest checkpoint, not the beginning.
         </p>
       </section>
     </main>
@@ -133,39 +133,33 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    const levelLabel = document.getElementById("levelLabel");
-    const coreLabel = document.getElementById("coreLabel");
-    const gateLabel = document.getElementById("gateLabel");
+    const levelBox = document.getElementById("levelBox");
+    const shardBox = document.getElementById("shardBox");
+    const checkpointBox = document.getElementById("checkpointBox");
+    const gateBox = document.getElementById("gateBox");
     const messageBox = document.getElementById("messageBox");
     const levelGrid = document.getElementById("levelGrid");
 
-    const prevBtn = document.getElementById("prevBtn");
+    const prevLevelBtn = document.getElementById("prevLevelBtn");
+    const nextLevelBtn = document.getElementById("nextLevelBtn");
     const restartBtn = document.getElementById("restartBtn");
-    const nextBtn = document.getElementById("nextBtn");
 
     const VIEW_W = canvas.width;
     const VIEW_H = canvas.height;
 
     const physics = {
-      accel: 0.72,
+      accel: 0.7,
       friction: 0.84,
-      gravity: 0.52,
-      jump: -11.2,
+      gravity: 0.46,
+      jump: -13.2,
       maxSpeed: 6,
       maxFall: 15,
-      coyote: 6,
-      jumpBuffer: 8
+      coyoteFrames: 8,
+      jumpBufferFrames: 10
     };
 
-    const input = {
-      left: false,
-      right: false
-    };
-
-    const camera = {
-      x: 0,
-      y: 0
-    };
+    const input = { left: false, right: false };
+    const camera = { x: 0, y: 0 };
 
     const player = {
       x: 0,
@@ -177,326 +171,766 @@
       prevX: 0,
       prevY: 0,
       onGround: false,
-      support: null,
-      coyoteFrames: 0
+      coyote: 0,
+      support: null
     };
 
-    let jumpBufferFrames = 0;
-    let levelIndex = 0;
     let currentLevel = null;
+    let levelIndex = 0;
+    let unlockedLevel = Number(localStorage.getItem("neonTrailUnlocked") || 1);
+    let jumpBuffer = 0;
+    let frameCount = 0;
     let messageTimer = 0;
-    let unlockedLevel = Number(localStorage.getItem("neonRiftUnlocked") || 1);
+    let respawnPoint = { x: 0, y: 0, name: "Start" };
 
-    function plat(x, y, w, h) {
-      return { x, y, w, h, kind: "static" };
-    }
-
-    function movingPlat(x, y, w, h, axis, range, speed, phase) {
-      return {
-        x,
-        y,
-        w,
-        h,
-        baseX: x,
-        baseY: y,
-        dx: 0,
-        dy: 0,
-        axis,
-        range,
-        speed,
-        phase,
-        kind: "moving"
-      };
+    function rect(x, y, w, h) {
+      return { x, y, w, h };
     }
 
     function spike(x, y, w, h) {
       return { x, y, w, h };
     }
 
-    function boost(x, y, w, h, power) {
+    function movingPlatform(x, y, w, h, axis, range, speed, phase = 0) {
+      return {
+        x,
+        y,
+        w,
+        h,
+        axis,
+        range,
+        speed,
+        phase,
+        baseX: x,
+        baseY: y,
+        dx: 0,
+        dy: 0,
+        kind: "moving"
+      };
+    }
+
+    function pad(x, y, w, h, power) {
       return { x, y, w, h, power };
     }
 
-    function drone(x, y, axis, min, max, speed, phase) {
-      return { x, y, axis, min, max, speed, phase, r: 16 };
+    function checkpoint(x, y, name) {
+      return { x, y, w: 26, h: 66, name, active: false };
     }
 
-    function core(x, y) {
-      return { x, y, collected: false, r: 10 };
+    function shard(x, y) {
+      return { x, y, r: 10, collected: false };
     }
 
     const LEVELS = [
       {
-        title: "Level 1: Glow Start",
-        hint: "Learn the movement. The first room is short and forgiving.",
-        worldWidth: 1700,
+        title: "Level 1: Lantern Walk",
+        hint: "A long introductory run with one checkpoint and easy jumps.",
+        worldWidth: 1900,
         worldHeight: 760,
         spawn: { x: 90, y: 570 },
-        goal: { x: 1510, y: 510, w: 34, h: 82 },
+        goal: rect(1598, 478, 34, 82),
         platforms: [
-          plat(0, 640, 300, 120),
-          plat(360, 590, 170, 22),
-          plat(610, 640, 300, 120),
-          plat(980, 540, 180, 22),
-          plat(1240, 640, 260, 120),
-          plat(1450, 590, 140, 22)
+          rect(0, 640, 280, 120),
+          rect(360, 590, 180, 22),
+          rect(620, 640, 240, 120),
+          rect(940, 560, 190, 22),
+          rect(1210, 640, 230, 120),
+          rect(1490, 560, 170, 22),
+          rect(1680, 640, 220, 120)
         ],
-        movingPlatforms: [],
-        spikes: [],
-        boosts: [
-          boost(730, 616, 72, 18, -14)
-        ],
-        drones: [],
-        cores: [
-          core(448, 548),
-          core(1058, 498)
-        ]
-      },
-      {
-        title: "Level 2: Split Path",
-        hint: "A little longer. Use the boost to choose the high route.",
-        worldWidth: 2100,
-        worldHeight: 780,
-        spawn: { x: 96, y: 570 },
-        goal: { x: 1900, y: 488, w: 34, h: 82 },
-        platforms: [
-          plat(0, 640, 280, 120),
-          plat(350, 582, 140, 22),
-          plat(560, 640, 230, 120),
-          plat(860, 510, 160, 22),
-          plat(1100, 640, 240, 120),
-          plat(1420, 560, 170, 22),
-          plat(1680, 640, 250, 120),
-          plat(1840, 538, 130, 22)
-        ],
-        movingPlatforms: [],
         spikes: [
-          spike(796, 618, 58, 22)
+          spike(884, 618, 44, 22)
         ],
-        boosts: [
-          boost(640, 616, 70, 18, -14),
-          boost(1480, 536, 68, 18, -13)
+        movingPlatforms: [],
+        pads: [
+          pad(740, 616, 74, 18, -14)
         ],
-        drones: [],
-        cores: [
-          core(420, 540),
-          core(930, 468),
-          core(1888, 496)
-        ]
+        checkpoints: [
+          checkpoint(1288, 574, "Midway"),
+          checkpoint(1540, 494, "Final Step")
+        ],
+        shards: [
+          shard(446, 548),
+          shard(1018, 518),
+          shard(1550, 518)
+        ],
+        decor: "skyline"
       },
       {
-        title: "Level 3: Pulse Transit",
-        hint: "Moving platforms start here. Wait for the safe cycle.",
+        title: "Level 2: Glass Tunnels",
+        hint: "This one is longer, with a tunnel feel and two friendly checkpoints.",
         worldWidth: 2500,
         worldHeight: 860,
-        spawn: { x: 96, y: 650 },
-        goal: { x: 2280, y: 394, w: 34, h: 82 },
+        spawn: { x: 90, y: 650 },
+        goal: rect(2290, 520, 34, 82),
         platforms: [
-          plat(0, 720, 260, 140),
-          plat(320, 650, 130, 22),
-          plat(540, 720, 220, 140),
-          plat(980, 610, 140, 22),
-          plat(1220, 720, 210, 140),
-          plat(1510, 556, 150, 22),
-          plat(1750, 720, 240, 140),
-          plat(2060, 486, 170, 22),
-          plat(2240, 720, 260, 140)
-        ],
-        movingPlatforms: [
-          movingPlat(812, 655, 116, 20, "y", 90, 0.028, 0),
-          movingPlat(1640, 610, 120, 20, "x", 80, 0.026, 1.7)
+          rect(0, 720, 270, 140),
+          rect(350, 660, 170, 22),
+          rect(600, 580, 150, 22),
+          rect(830, 720, 220, 140),
+          rect(1130, 640, 170, 22),
+          rect(1380, 560, 150, 22),
+          rect(1610, 720, 240, 140),
+          rect(1910, 620, 170, 22),
+          rect(2140, 560, 150, 22),
+          rect(2260, 720, 240, 140)
         ],
         spikes: [
-          spike(770, 698, 40, 22),
-          spike(1440, 698, 60, 22),
-          spike(2006, 698, 46, 22)
+          spike(1070, 698, 40, 22),
+          spike(1858, 698, 48, 22)
         ],
-        boosts: [
-          boost(620, 696, 72, 18, -15),
-          boost(1815, 696, 70, 18, -15)
+        movingPlatforms: [],
+        pads: [
+          pad(690, 556, 70, 18, -14),
+          pad(1720, 696, 74, 18, -14)
         ],
-        drones: [
-          drone(1350, 450, "y", 420, 620, 0.028, 0.6)
+        checkpoints: [
+          checkpoint(1185, 654, "Tunnel"),
+          checkpoint(2010, 574, "Bridge")
         ],
-        cores: [
-          core(360, 608),
-          core(1040, 568),
-          core(2122, 444)
-        ]
+        shards: [
+          shard(430, 618),
+          shard(920, 678),
+          shard(1458, 518),
+          shard(2210, 518)
+        ],
+        decor: "tunnels"
       },
       {
-        title: "Level 4: Prism Wells",
-        hint: "More vertical movement. Use the lifts and dodge the drones.",
-        worldWidth: 2900,
+        title: "Level 3: Aurora Steps",
+        hint: "A taller level with soft vertical climbs and lots of safe staging spots.",
+        worldWidth: 3200,
         worldHeight: 980,
-        spawn: { x: 100, y: 760 },
-        goal: { x: 2650, y: 302, w: 34, h: 82 },
+        spawn: { x: 90, y: 780 },
+        goal: rect(2960, 430, 34, 82),
         platforms: [
-          plat(0, 830, 260, 150),
-          plat(340, 742, 140, 22),
-          plat(550, 660, 120, 22),
-          plat(760, 830, 220, 150),
-          plat(1050, 560, 130, 22),
-          plat(1260, 480, 120, 22),
-          plat(1500, 830, 210, 150),
-          plat(1770, 618, 150, 22),
-          plat(1980, 510, 130, 22),
-          plat(2200, 830, 240, 150),
-          plat(2450, 410, 170, 22),
-          plat(2620, 830, 280, 150)
-        ],
-        movingPlatforms: [
-          movingPlat(890, 700, 116, 20, "y", 130, 0.028, 0.4),
-          movingPlat(1600, 700, 120, 20, "x", 110, 0.024, 1.4),
-          movingPlat(2300, 620, 120, 20, "y", 120, 0.026, 2.1)
+          rect(0, 840, 260, 140),
+          rect(330, 760, 160, 22),
+          rect(560, 680, 150, 22),
+          rect(790, 600, 150, 22),
+          rect(1030, 840, 220, 140),
+          rect(1260, 730, 150, 22),
+          rect(1490, 640, 150, 22),
+          rect(1730, 560, 160, 22),
+          rect(1960, 840, 240, 140),
+          rect(2230, 700, 150, 22),
+          rect(2480, 610, 170, 22),
+          rect(2740, 520, 170, 22),
+          rect(2910, 840, 290, 140)
         ],
         spikes: [
-          spike(706, 808, 52, 22),
-          spike(1450, 808, 48, 22),
-          spike(2144, 808, 52, 22)
+          spike(967, 818, 44, 22),
+          spike(2204, 818, 44, 22)
         ],
-        boosts: [
-          boost(136, 806, 74, 18, -15),
-          boost(1576, 806, 74, 18, -16),
-          boost(2730, 806, 74, 18, -16)
+        movingPlatforms: [],
+        pads: [
+          pad(1120, 816, 76, 18, -15),
+          pad(2070, 816, 76, 18, -15)
         ],
-        drones: [
-          drone(1180, 390, "y", 350, 590, 0.03, 0.2),
-          drone(2050, 450, "x", 1940, 2140, 0.028, 1.5)
+        checkpoints: [
+          checkpoint(1360, 744, "Rise"),
+          checkpoint(2540, 624, "Glow Arch")
         ],
-        cores: [
-          core(610, 618),
-          core(1320, 438),
-          core(2510, 368)
-        ]
+        shards: [
+          shard(410, 718),
+          shard(840, 558),
+          shard(1560, 598),
+          shard(2310, 658),
+          shard(2800, 478)
+        ],
+        decor: "garden"
       },
       {
-        title: "Level 5: Voltage Run",
-        hint: "This level is much longer. Expect tighter landings and more active hazards.",
-        worldWidth: 3500,
+        title: "Level 4: Starlight Causeway",
+        hint: "A broad scenic run with a lot of breathing room and several safe checkpoints.",
+        worldWidth: 3900,
         worldHeight: 1040,
-        spawn: { x: 96, y: 820 },
-        goal: { x: 3250, y: 270, w: 34, h: 82 },
+        spawn: { x: 90, y: 860 },
+        goal: rect(3528, 688, 34, 82),
         platforms: [
-          plat(0, 890, 250, 150),
-          plat(320, 800, 120, 22),
-          plat(520, 720, 120, 22),
-          plat(740, 890, 200, 150),
-          plat(1010, 650, 130, 22),
-          plat(1230, 550, 130, 22),
-          plat(1450, 890, 200, 150),
-          plat(1700, 710, 150, 22),
-          plat(1950, 590, 140, 22),
-          plat(2200, 890, 220, 150),
-          plat(2480, 690, 150, 22),
-          plat(2740, 570, 140, 22),
-          plat(3000, 890, 220, 150),
-          plat(3200, 380, 150, 22),
-          plat(3330, 890, 170, 150)
-        ],
-        movingPlatforms: [
-          movingPlat(880, 760, 120, 20, "y", 140, 0.029, 0.2),
-          movingPlat(1590, 790, 120, 20, "x", 120, 0.024, 1.2),
-          movingPlat(2360, 760, 120, 20, "y", 130, 0.027, 2.3),
-          movingPlat(3090, 620, 120, 20, "x", 100, 0.025, 0.9)
+          rect(0, 900, 260, 140),
+          rect(340, 820, 170, 22),
+          rect(590, 740, 160, 22),
+          rect(820, 900, 220, 140),
+          rect(1090, 780, 160, 22),
+          rect(1320, 690, 170, 22),
+          rect(1590, 900, 230, 140),
+          rect(1860, 780, 160, 22),
+          rect(2090, 700, 170, 22),
+          rect(2360, 900, 250, 140),
+          rect(2640, 780, 160, 22),
+          rect(2880, 690, 180, 22),
+          rect(3160, 900, 250, 140),
+          rect(3420, 770, 170, 22),
+          rect(3710, 900, 190, 140)
         ],
         spikes: [
-          spike(660, 868, 74, 22),
-          spike(1380, 868, 60, 22),
-          spike(2140, 868, 56, 22),
-          spike(2940, 868, 58, 22)
+          spike(768, 878, 42, 22),
+          spike(1540, 878, 42, 22),
+          spike(2310, 878, 42, 22),
+          spike(3110, 878, 42, 22)
         ],
-        boosts: [
-          boost(120, 866, 76, 18, -15),
-          boost(1500, 866, 76, 18, -16),
-          boost(3040, 866, 76, 18, -16)
+        movingPlatforms: [],
+        pads: [
+          pad(160, 876, 76, 18, -14),
+          pad(1688, 876, 76, 18, -14),
+          pad(3270, 876, 76, 18, -14)
         ],
-        drones: [
-          drone(1120, 470, "y", 430, 700, 0.032, 0.4),
-          drone(2000, 520, "x", 1860, 2140, 0.03, 1.1),
-          drone(2820, 490, "y", 450, 690, 0.03, 2.2)
+        checkpoints: [
+          checkpoint(1150, 794, "Vista"),
+          checkpoint(2480, 794, "Causeway"),
+          checkpoint(3490, 784, "Crown")
         ],
-        cores: [
-          core(390, 758),
-          core(1295, 508),
-          core(2545, 648),
-          core(3260, 338)
-        ]
+        shards: [
+          shard(426, 778),
+          shard(1162, 738),
+          shard(1910, 738),
+          shard(2710, 738),
+          shard(3470, 728),
+          shard(3556, 728)
+        ],
+        decor: "causeway"
       },
       {
-        title: "Level 6: Neon Crown",
-        hint: "Final stage. Long routes, stacked hazards, and no wasted jumps.",
-        worldWidth: 4300,
-        worldHeight: 1160,
-        spawn: { x: 110, y: 930 },
-        goal: { x: 4010, y: 248, w: 34, h: 82 },
+        title: "Level 5: Neon Harbor",
+        hint: "A long dockside route with low bridges, broad ledges, and relaxed pacing.",
+        worldWidth: 4700,
+        worldHeight: 980,
+        spawn: { x: 90, y: 820 },
+        goal: rect(4510, 778, 34, 82),
         platforms: [
-          plat(0, 1000, 260, 160),
-          plat(330, 910, 120, 22),
-          plat(520, 820, 120, 22),
-          plat(740, 730, 120, 22),
-          plat(920, 1000, 220, 160),
-          plat(1200, 780, 140, 22),
-          plat(1450, 670, 140, 22),
-          plat(1710, 1000, 240, 160),
-          plat(1980, 790, 150, 22),
-          plat(2230, 650, 150, 22),
-          plat(2510, 1000, 250, 160),
-          plat(2810, 720, 150, 22),
-          plat(3070, 600, 150, 22),
-          plat(3350, 1000, 240, 160),
-          plat(3610, 760, 150, 22),
-          plat(3860, 520, 170, 22),
-          plat(4100, 1000, 200, 160)
-        ],
-        movingPlatforms: [
-          movingPlat(1120, 890, 120, 20, "y", 170, 0.03, 0.1),
-          movingPlat(1840, 900, 126, 20, "x", 140, 0.024, 1.7),
-          movingPlat(2660, 860, 126, 20, "y", 160, 0.028, 2.5),
-          movingPlat(3480, 860, 126, 20, "x", 150, 0.025, 0.8),
-          movingPlat(3910, 680, 116, 20, "y", 140, 0.026, 1.1)
+          rect(0, 860, 280, 120),
+          rect(350, 800, 170, 22),
+          rect(600, 860, 240, 120),
+          rect(900, 780, 180, 22),
+          rect(1160, 860, 250, 120),
+          rect(1450, 750, 180, 22),
+          rect(1710, 860, 260, 120),
+          rect(2000, 790, 180, 22),
+          rect(2270, 860, 250, 120),
+          rect(2550, 730, 180, 22),
+          rect(2820, 860, 250, 120),
+          rect(3110, 790, 180, 22),
+          rect(3380, 860, 260, 120),
+          rect(3680, 740, 180, 22),
+          rect(3940, 860, 260, 120),
+          rect(4240, 780, 190, 22),
+          rect(4410, 860, 290, 120)
         ],
         spikes: [
-          spike(670, 978, 66, 22),
-          spike(1650, 978, 58, 22),
-          spike(2460, 978, 66, 22),
-          spike(3300, 978, 62, 22),
-          spike(4040, 978, 54, 22)
+          spike(1090, 838, 40, 22),
+          spike(1980, 838, 40, 22),
+          spike(3070, 838, 40, 22),
+          spike(4210, 838, 40, 22)
         ],
-        boosts: [
-          boost(150, 976, 80, 18, -16),
-          boost(1820, 976, 80, 18, -16),
-          boost(3380, 976, 80, 18, -17)
+        movingPlatforms: [],
+        pads: [
+          pad(720, 836, 76, 18, -14),
+          pad(1820, 836, 76, 18, -14),
+          pad(3500, 836, 76, 18, -14)
         ],
-        drones: [
-          drone(1340, 620, "y", 560, 860, 0.034, 0.2),
-          drone(2320, 560, "x", 2180, 2460, 0.03, 1.2),
-          drone(3180, 500, "y", 460, 820, 0.032, 2.1),
-          drone(3880, 420, "x", 3740, 4040, 0.03, 0.5)
+        checkpoints: [
+          checkpoint(1240, 800, "Pier"),
+          checkpoint(2920, 800, "Harbor"),
+          checkpoint(4300, 720, "Lighthouse")
         ],
-        cores: [
-          core(570, 778),
-          core(1520, 628),
-          core(2295, 608),
-          core(3135, 558),
-          core(3970, 478)
-        ]
+        shards: [
+          shard(430, 758),
+          shard(970, 738),
+          shard(1530, 708),
+          shard(2360, 818),
+          shard(3180, 748),
+          shard(4020, 818),
+          shard(4470, 818)
+        ],
+        decor: "harbor"
+      },
+      {
+        title: "Level 6: Prism Terraces",
+        hint: "A long climb across gentle terraces with launch pads that keep the route flowing.",
+        worldWidth: 5600,
+        worldHeight: 1180,
+        spawn: { x: 90, y: 920 },
+        goal: rect(5230, 498, 34, 82),
+        platforms: [
+          rect(0, 980, 280, 140),
+          rect(340, 900, 170, 22),
+          rect(580, 820, 170, 22),
+          rect(820, 740, 170, 22),
+          rect(1090, 980, 230, 140),
+          rect(1350, 860, 170, 22),
+          rect(1600, 770, 170, 22),
+          rect(1850, 680, 170, 22),
+          rect(2130, 980, 240, 140),
+          rect(2400, 850, 170, 22),
+          rect(2650, 740, 170, 22),
+          rect(2920, 630, 180, 22),
+          rect(3220, 980, 240, 140),
+          rect(3470, 840, 180, 22),
+          rect(3730, 720, 180, 22),
+          rect(4010, 600, 190, 22),
+          rect(4320, 980, 250, 140),
+          rect(4610, 820, 180, 22),
+          rect(4890, 700, 190, 22),
+          rect(5170, 580, 190, 22),
+          rect(5380, 980, 220, 140)
+        ],
+        spikes: [
+          spike(1040, 958, 40, 22),
+          spike(2080, 958, 40, 22),
+          spike(4270, 958, 40, 22)
+        ],
+        movingPlatforms: [],
+        pads: [
+          pad(1160, 956, 76, 18, -15),
+          pad(2250, 956, 76, 18, -15),
+          pad(4440, 956, 76, 18, -15)
+        ],
+        checkpoints: [
+          checkpoint(1420, 860, "Terrace One"),
+          checkpoint(3030, 630, "Terrace Two"),
+          checkpoint(4700, 820, "Terrace Three")
+        ],
+        shards: [
+          shard(420, 858),
+          shard(650, 778),
+          shard(930, 698),
+          shard(1660, 728),
+          shard(2460, 808),
+          shard(2990, 588),
+          shard(3770, 678),
+          shard(5250, 538)
+        ],
+        decor: "terraces"
+      },
+      {
+        title: "Level 7: Twin Route Loop",
+        hint: "A very long level with upper and lower route choices that keep the run feeling new.",
+        worldWidth: 6500,
+        worldHeight: 1120,
+        spawn: { x: 90, y: 880 },
+        goal: rect(6270, 858, 34, 82),
+        platforms: [
+          rect(0, 940, 260, 140),
+          rect(330, 860, 170, 22),
+          rect(580, 780, 170, 22),
+          rect(730, 700, 110, 22),
+          rect(850, 940, 240, 140),
+          rect(1120, 820, 170, 22),
+          rect(1360, 700, 190, 22),
+          rect(1650, 940, 250, 140),
+          rect(1940, 820, 170, 22),
+          rect(2200, 940, 260, 140),
+          rect(2480, 760, 180, 22),
+          rect(2740, 650, 190, 22),
+          rect(3040, 940, 250, 140),
+          rect(3320, 820, 180, 22),
+          rect(3470, 760, 110, 22),
+          rect(3580, 700, 180, 22),
+          rect(3720, 620, 110, 22),
+          rect(3850, 940, 260, 140),
+          rect(4090, 860, 120, 22),
+          rect(4140, 800, 180, 22),
+          rect(4300, 730, 110, 22),
+          rect(4400, 680, 180, 22),
+          rect(4680, 940, 270, 140),
+          rect(4990, 780, 180, 22),
+          rect(5260, 660, 190, 22),
+          rect(5450, 590, 110, 22),
+          rect(5560, 940, 270, 140),
+          rect(5920, 780, 200, 22),
+          rect(6200, 940, 300, 140)
+        ],
+        spikes: [
+          spike(810, 918, 42, 22),
+          spike(2170, 918, 42, 22),
+          spike(5520, 918, 42, 22)
+        ],
+        movingPlatforms: [],
+        pads: [
+          pad(1010, 916, 76, 18, -14),
+          pad(3120, 916, 76, 18, -14),
+          pad(3920, 916, 76, 18, -15),
+          pad(4740, 916, 76, 18, -14)
+        ],
+        checkpoints: [
+          checkpoint(1710, 860, "Fork"),
+          checkpoint(3380, 820, "Loop"),
+          checkpoint(5030, 780, "Overlook"),
+          checkpoint(6100, 780, "Finish Lane")
+        ],
+        shards: [
+          shard(420, 818),
+          shard(1450, 658),
+          shard(2570, 718),
+          shard(3670, 658),
+          shard(4470, 638),
+          shard(5330, 618),
+          shard(6140, 738)
+        ],
+        decor: "loop"
+      },
+      {
+        title: "Level 8: Moonline Parade",
+        hint: "The longest route in the game. It is huge, scenic, and checkpoint-heavy rather than brutal.",
+        worldWidth: 7600,
+        worldHeight: 1180,
+        spawn: { x: 90, y: 920 },
+        goal: rect(7340, 918, 34, 82),
+        platforms: [
+          rect(0, 1000, 280, 160),
+          rect(340, 920, 180, 22),
+          rect(600, 840, 180, 22),
+          rect(860, 760, 180, 22),
+          rect(1180, 1000, 250, 160),
+          rect(1480, 860, 180, 22),
+          rect(1740, 740, 180, 22),
+          rect(2050, 620, 200, 22),
+          rect(2380, 1000, 260, 160),
+          rect(2680, 870, 180, 22),
+          rect(2950, 760, 180, 22),
+          rect(3240, 650, 190, 22),
+          rect(3570, 1000, 260, 160),
+          rect(3860, 850, 190, 22),
+          rect(4140, 720, 190, 22),
+          rect(4430, 600, 200, 22),
+          rect(4760, 1000, 280, 160),
+          rect(5080, 860, 190, 22),
+          rect(5360, 740, 190, 22),
+          rect(5650, 620, 200, 22),
+          rect(5980, 1000, 280, 160),
+          rect(6300, 840, 190, 22),
+          rect(6580, 700, 200, 22),
+          rect(6880, 560, 220, 22),
+          rect(7200, 1000, 400, 160)
+        ],
+        spikes: [
+          spike(1130, 978, 42, 22),
+          spike(2350, 978, 42, 22),
+          spike(4720, 978, 42, 22),
+          spike(5940, 978, 42, 22)
+        ],
+        movingPlatforms: [],
+        pads: [
+          pad(1300, 976, 76, 18, -15),
+          pad(2500, 976, 76, 18, -15),
+          pad(4850, 976, 76, 18, -15),
+          pad(6120, 976, 76, 18, -15)
+        ],
+        checkpoints: [
+          checkpoint(1600, 860, "Parade One"),
+          checkpoint(3300, 650, "Parade Two"),
+          checkpoint(5000, 860, "Parade Three"),
+          checkpoint(6900, 560, "Parade Four")
+        ],
+        shards: [
+          shard(430, 878),
+          shard(920, 718),
+          shard(1550, 818),
+          shard(2120, 578),
+          shard(2990, 718),
+          shard(3890, 808),
+          shard(4530, 558),
+          shard(5430, 698),
+          shard(6660, 658),
+          shard(7270, 958)
+        ],
+        decor: "parade"
+      },
+      {
+        title: "Level 9: Drift Garden",
+        hint: "Wide, slow lifts drift across open gaps. The moving parts are here to carry you, not trick you.",
+        worldWidth: 8600,
+        worldHeight: 1180,
+        spawn: { x: 90, y: 920 },
+        goal: rect(8300, 898, 34, 82),
+        platforms: [
+          rect(0, 1000, 280, 160),
+          rect(380, 920, 180, 22),
+          rect(670, 1000, 250, 160),
+          rect(1050, 890, 190, 22),
+          rect(1350, 1000, 260, 160),
+          rect(1690, 900, 180, 22),
+          rect(2000, 1000, 260, 160),
+          rect(2390, 870, 190, 22),
+          rect(2710, 1000, 260, 160),
+          rect(3090, 910, 200, 22),
+          rect(3420, 1000, 260, 160),
+          rect(3800, 870, 200, 22),
+          rect(4150, 1000, 260, 160),
+          rect(4530, 900, 200, 22),
+          rect(4860, 1000, 280, 160),
+          rect(5250, 870, 210, 22),
+          rect(5600, 1000, 280, 160),
+          rect(6010, 910, 220, 22),
+          rect(6380, 1000, 290, 160),
+          rect(6790, 870, 220, 22),
+          rect(7150, 1000, 300, 160),
+          rect(7590, 900, 220, 22),
+          rect(7970, 1000, 630, 160)
+        ],
+        spikes: [
+          spike(972, 978, 40, 22),
+          spike(2340, 978, 40, 22),
+          spike(4470, 978, 40, 22),
+          spike(6740, 978, 40, 22)
+        ],
+        movingPlatforms: [
+          movingPlatform(840, 930, 180, 20, "x", 70, 0.012),
+          movingPlatform(2190, 930, 190, 20, "x", 70, 0.013, 1),
+          movingPlatform(4300, 930, 180, 20, "x", 80, 0.012, 2),
+          movingPlatform(6550, 930, 190, 20, "x", 80, 0.013, 0.8)
+        ],
+        pads: [
+          pad(1450, 976, 76, 18, -14),
+          pad(4960, 976, 76, 18, -14)
+        ],
+        checkpoints: [
+          checkpoint(1760, 914, "Garden One"),
+          checkpoint(3900, 884, "Garden Two"),
+          checkpoint(6070, 924, "Garden Three")
+        ],
+        shards: [
+          shard(480, 878),
+          shard(1130, 848),
+          shard(2470, 828),
+          shard(3880, 828),
+          shard(5400, 828),
+          shard(6940, 828),
+          shard(8210, 958)
+        ],
+        decor: "garden"
+      },
+      {
+        title: "Level 10: Skyline Ferries",
+        hint: "Large vertical ferries float up and down beside easy ledges. Ride them like elevators.",
+        worldWidth: 9400,
+        worldHeight: 1320,
+        spawn: { x: 90, y: 1060 },
+        goal: rect(9040, 598, 34, 82),
+        platforms: [
+          rect(0, 1140, 300, 180),
+          rect(420, 1040, 190, 22),
+          rect(720, 1140, 250, 180),
+          rect(1100, 980, 200, 22),
+          rect(1420, 1140, 260, 180),
+          rect(1620, 1020, 140, 22),
+          rect(1800, 900, 210, 22),
+          rect(2140, 1140, 260, 180),
+          rect(2520, 980, 210, 22),
+          rect(2860, 1140, 270, 180),
+          rect(3240, 870, 220, 22),
+          rect(3600, 1140, 270, 180),
+          rect(4000, 980, 210, 22),
+          rect(4360, 1140, 280, 180),
+          rect(4760, 840, 220, 22),
+          rect(5140, 1140, 280, 180),
+          rect(5530, 980, 210, 22),
+          rect(5920, 1140, 290, 180),
+          rect(6320, 820, 230, 22),
+          rect(6720, 1140, 300, 180),
+          rect(7130, 980, 220, 22),
+          rect(7540, 1140, 300, 180),
+          rect(7970, 760, 230, 22),
+          rect(8390, 1140, 300, 180),
+          rect(8800, 980, 230, 22),
+          rect(9000, 1140, 400, 180)
+        ],
+        spikes: [
+          spike(1030, 1118, 40, 22),
+          spike(2480, 1118, 40, 22),
+          spike(4720, 1118, 40, 22),
+          spike(7080, 1118, 40, 22)
+        ],
+        movingPlatforms: [
+          movingPlatform(930, 1080, 170, 20, "y", 120, 0.012),
+          movingPlatform(2270, 1090, 180, 20, "y", 170, 0.011, 0.35),
+          movingPlatform(2980, 1080, 180, 20, "y", 130, 0.012, 1.2),
+          movingPlatform(4540, 1080, 190, 20, "y", 210, 0.011, 1.6),
+          movingPlatform(5650, 1080, 180, 20, "y", 140, 0.012, 2.1),
+          movingPlatform(6100, 1090, 190, 20, "y", 190, 0.011, 0.9),
+          movingPlatform(7800, 1040, 200, 20, "y", 220, 0.011, 2.6),
+          movingPlatform(8200, 1080, 190, 20, "y", 150, 0.012, 0.7),
+          movingPlatform(8920, 960, 220, 20, "y", 320, 0.01, 1.3)
+        ],
+        pads: [
+          pad(2240, 1116, 76, 18, -14),
+          pad(6780, 1116, 76, 18, -14)
+        ],
+        checkpoints: [
+          checkpoint(1180, 994, "Ferry One"),
+          checkpoint(1880, 914, "Upper Deck"),
+          checkpoint(4880, 854, "Ferry Two"),
+          checkpoint(8000, 774, "Ferry Three")
+        ],
+        shards: [
+          shard(500, 998),
+          shard(1180, 938),
+          shard(3330, 828),
+          shard(4860, 798),
+          shard(6430, 778),
+          shard(8100, 718),
+          shard(9060, 1098)
+        ],
+        decor: "skyline"
+      },
+      {
+        title: "Level 11: Ribbon Crossing",
+        hint: "Slow ribbon platforms slide across wide plazas. They are broad enough that you can wait comfortably.",
+        worldWidth: 10400,
+        worldHeight: 1260,
+        spawn: { x: 90, y: 1000 },
+        goal: rect(9980, 918, 34, 82),
+        platforms: [
+          rect(0, 1080, 280, 180),
+          rect(380, 1000, 180, 22),
+          rect(660, 1080, 250, 180),
+          rect(1030, 930, 190, 22),
+          rect(1330, 1080, 260, 180),
+          rect(1690, 900, 190, 22),
+          rect(2010, 1080, 260, 180),
+          rect(2390, 940, 200, 22),
+          rect(2720, 1080, 270, 180),
+          rect(3110, 900, 210, 22),
+          rect(3460, 1080, 280, 180),
+          rect(3860, 960, 200, 22),
+          rect(4210, 1080, 280, 180),
+          rect(4610, 900, 220, 22),
+          rect(5000, 1080, 290, 180),
+          rect(5410, 940, 210, 22),
+          rect(5800, 1080, 300, 180),
+          rect(6230, 900, 220, 22),
+          rect(6640, 1080, 300, 180),
+          rect(7080, 940, 220, 22),
+          rect(7510, 1080, 300, 180),
+          rect(7940, 900, 220, 22),
+          rect(8370, 1080, 300, 180),
+          rect(8810, 940, 220, 22),
+          rect(9240, 1080, 1160, 180)
+        ],
+        spikes: [
+          spike(980, 1058, 40, 22),
+          spike(2350, 1058, 40, 22),
+          spike(4550, 1058, 40, 22),
+          spike(7040, 1058, 40, 22)
+        ],
+        movingPlatforms: [
+          movingPlatform(890, 970, 200, 20, "x", 90, 0.012),
+          movingPlatform(4340, 970, 210, 20, "x", 100, 0.012, 1.6),
+          movingPlatform(6900, 970, 220, 20, "x", 100, 0.012, 0.7),
+          movingPlatform(9660, 980, 220, 20, "y", 130, 0.011, 0.5)
+        ],
+        pads: [
+          pad(1410, 1056, 76, 18, -14),
+          pad(5150, 1056, 76, 18, -14),
+          pad(8480, 1056, 76, 18, -14)
+        ],
+        checkpoints: [
+          checkpoint(1810, 914, "Ribbon One"),
+          checkpoint(4740, 914, "Ribbon Two"),
+          checkpoint(8010, 914, "Ribbon Three")
+        ],
+        shards: [
+          shard(460, 958),
+          shard(1110, 888),
+          shard(2490, 898),
+          shard(3910, 918),
+          shard(5280, 898),
+          shard(7130, 898),
+          shard(8990, 898),
+          shard(10020, 1038)
+        ],
+        decor: "loop"
+      },
+      {
+        title: "Level 12: Crown Promenade",
+        hint: "The final route is huge, but the moving bridges are extra slow and every section gives you a safe reset point.",
+        worldWidth: 11600,
+        worldHeight: 1360,
+        spawn: { x: 90, y: 1100 },
+        goal: rect(11140, 998, 34, 82),
+        platforms: [
+          rect(0, 1180, 300, 180),
+          rect(420, 1090, 190, 22),
+          rect(700, 1180, 260, 180),
+          rect(1080, 1020, 200, 22),
+          rect(1380, 1180, 280, 180),
+          rect(1760, 930, 210, 22),
+          rect(2100, 1180, 280, 180),
+          rect(2500, 1030, 210, 22),
+          rect(2860, 1180, 290, 180),
+          rect(3270, 920, 220, 22),
+          rect(3660, 1180, 300, 180),
+          rect(4080, 1040, 220, 22),
+          rect(4460, 1180, 300, 180),
+          rect(4890, 900, 230, 22),
+          rect(5310, 1180, 300, 180),
+          rect(5740, 1020, 230, 22),
+          rect(6160, 1180, 320, 180),
+          rect(6610, 900, 230, 22),
+          rect(7050, 1180, 320, 180),
+          rect(7490, 1030, 230, 22),
+          rect(7920, 1180, 320, 180),
+          rect(8380, 900, 230, 22),
+          rect(8840, 1180, 330, 180),
+          rect(9240, 1040, 240, 22),
+          rect(9500, 1000, 220, 22),
+          rect(9750, 1180, 330, 180),
+          rect(9800, 940, 340, 22),
+          rect(10720, 1180, 880, 180)
+        ],
+        spikes: [
+          spike(1030, 1158, 40, 22),
+          spike(2460, 1158, 40, 22),
+          spike(4860, 1158, 40, 22),
+          spike(7440, 1158, 40, 22),
+          spike(9720, 1158, 40, 22)
+        ],
+        movingPlatforms: [
+          movingPlatform(980, 1070, 210, 20, "x", 100, 0.011),
+          movingPlatform(1690, 1060, 220, 20, "y", 180, 0.011, 0.4),
+          movingPlatform(3030, 1070, 220, 20, "y", 110, 0.011, 1.1),
+          movingPlatform(4820, 1060, 220, 20, "y", 200, 0.011, 1.9),
+          movingPlatform(5510, 1070, 220, 20, "x", 110, 0.011, 2.2),
+          movingPlatform(8310, 1060, 230, 20, "y", 210, 0.011, 0.1),
+          movingPlatform(8180, 1070, 230, 20, "y", 120, 0.011, 0.6),
+          movingPlatform(9560, 1090, 240, 20, "y", 210, 0.0105, 0.55),
+          movingPlatform(10380, 1060, 230, 20, "y", 180, 0.011, 1.8),
+          movingPlatform(11020, 1080, 240, 20, "y", 170, 0.01, 0.9)
+        ],
+        pads: [
+          pad(1470, 1156, 76, 18, -14),
+          pad(3790, 1156, 76, 18, -14),
+          pad(6210, 1156, 76, 18, -14),
+          pad(8950, 1156, 76, 18, -14)
+        ],
+        checkpoints: [
+          checkpoint(1880, 944, "Promenade One"),
+          checkpoint(4970, 914, "Promenade Two"),
+          checkpoint(8460, 914, "Promenade Three"),
+          checkpoint(10820, 944, "Promenade Four")
+        ],
+        shards: [
+          shard(500, 1048),
+          shard(1180, 968),
+          shard(2600, 988),
+          shard(3390, 878),
+          shard(5000, 858),
+          shard(6760, 878),
+          shard(8550, 858),
+          shard(9990, 898),
+          shard(11220, 1118)
+        ],
+        decor: "causeway"
       }
     ];
 
-    function drawRoundedRect(context, x, y, width, height, radius) {
-      const r = Math.min(radius, width / 2, height / 2);
-      context.beginPath();
-      context.moveTo(x + r, y);
-      context.lineTo(x + width - r, y);
-      context.quadraticCurveTo(x + width, y, x + width, y + r);
-      context.lineTo(x + width, y + height - r);
-      context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
-      context.lineTo(x + r, y + height);
-      context.quadraticCurveTo(x, y + height, x, y + height - r);
-      context.lineTo(x, y + r);
-      context.quadraticCurveTo(x, y, x + r, y);
-      context.closePath();
+    function deepClone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
     }
 
     function setMessage(text, duration = 0) {
@@ -504,29 +938,24 @@
       messageTimer = duration;
     }
 
-    function updateHud() {
-      const collected = currentLevel.cores.filter((core) => core.collected).length;
-      levelLabel.textContent = currentLevel.title;
-      coreLabel.textContent = "Cores: " + collected + " / " + currentLevel.cores.length;
-      gateLabel.textContent = allCoresCollected() ? "Gate: Open" : "Gate: Locked";
-      gateLabel.style.color = allCoresCollected() ? "#7cf1ca" : "#ff9cbf";
-
-      prevBtn.disabled = levelIndex === 0;
-      nextBtn.disabled = levelIndex + 1 >= unlockedLevel || levelIndex === LEVELS.length - 1;
-
-      rebuildLevelGrid();
+    function allShardsCollected() {
+      return currentLevel.shards.every((item) => item.collected);
     }
 
-    function deepCloneLevel(level) {
-      return JSON.parse(JSON.stringify(level));
+    function getAllPlatforms() {
+      return currentLevel.platforms.concat(currentLevel.movingPlatforms || []);
     }
 
-    function rebuildLevelGrid() {
+    function saveProgress() {
+      localStorage.setItem("neonTrailUnlocked", String(unlockedLevel));
+    }
+
+    function rebuildLevelButtons() {
       levelGrid.innerHTML = "";
 
       for (let i = 0; i < LEVELS.length; i++) {
         const button = document.createElement("button");
-        button.className = "neon-level-btn";
+        button.className = "level-chip";
         button.textContent = i + 1;
 
         if (i === levelIndex) {
@@ -544,66 +973,73 @@
       }
     }
 
-    function loadLevel(index) {
-      levelIndex = clamp(index, 0, LEVELS.length - 1);
-      currentLevel = deepCloneLevel(LEVELS[levelIndex]);
+    function updateHud() {
+      const collected = currentLevel.shards.filter((item) => item.collected).length;
+      levelBox.textContent = currentLevel.title;
+      shardBox.textContent = "Shards: " + collected + " / " + currentLevel.shards.length;
+      checkpointBox.textContent = "Checkpoint: " + respawnPoint.name;
+      gateBox.textContent = allShardsCollected() ? "Gate: Open" : "Gate: Locked";
+      gateBox.style.color = allShardsCollected() ? "#7cf1ca" : "#ff9dbf";
 
-      currentLevel.movingPlatforms = currentLevel.movingPlatforms.map((platform) => ({
-        ...platform,
-        baseX: platform.x,
-        baseY: platform.y,
-        dx: 0,
-        dy: 0
-      }));
+      prevLevelBtn.disabled = levelIndex === 0;
+      nextLevelBtn.disabled = levelIndex + 1 >= unlockedLevel || levelIndex === LEVELS.length - 1;
 
-      currentLevel.cores = currentLevel.cores.map((item) => ({
-        ...item,
-        collected: false
-      }));
+      rebuildLevelButtons();
+    }
 
-      player.x = currentLevel.spawn.x;
-      player.y = currentLevel.spawn.y;
+    function spawnAt(point) {
+      player.x = point.x;
+      player.y = point.y;
       player.vx = 0;
       player.vy = 0;
       player.prevX = player.x;
       player.prevY = player.y;
       player.onGround = false;
+      player.coyote = 0;
       player.support = null;
-      player.coyoteFrames = 0;
-      jumpBufferFrames = 0;
+    }
 
+    function loadLevel(index) {
+      levelIndex = clamp(index, 0, LEVELS.length - 1);
+      currentLevel = deepClone(LEVELS[levelIndex]);
+      currentLevel.movingPlatforms = (currentLevel.movingPlatforms || []).map((platform) => ({
+        ...platform,
+        baseX: platform.x,
+        baseY: platform.y,
+        dx: 0,
+        dy: 0,
+        kind: "moving"
+      }));
+      respawnPoint = { ...currentLevel.spawn, name: "Start" };
+      spawnAt(respawnPoint);
       camera.x = 0;
-      camera.y = 0;
-
+      camera.y = Math.max(0, currentLevel.worldHeight - VIEW_H);
       updateHud();
       setMessage(currentLevel.hint, 180);
     }
 
-    function restartLevel(message) {
+    function restartLevel() {
       loadLevel(levelIndex);
-      setMessage(message || currentLevel.hint, 180);
+      setMessage("Level restarted from the beginning.", 150);
+    }
+
+    function respawnPlayer(reason) {
+      spawnAt(respawnPoint);
+      setMessage(reason + " Respawned at " + respawnPoint.name + ".", 120);
     }
 
     function completeLevel() {
       unlockedLevel = Math.max(unlockedLevel, Math.min(LEVELS.length, levelIndex + 2));
-      localStorage.setItem("neonRiftUnlocked", String(unlockedLevel));
+      saveProgress();
 
       if (levelIndex === LEVELS.length - 1) {
-        setMessage("You cleared all handcrafted levels.", 999999);
         updateHud();
+        setMessage("You finished Neon Trail.", 999999);
         return;
       }
 
       loadLevel(levelIndex + 1);
-      setMessage("Level cleared. Next level unlocked.", 220);
-    }
-
-    function allCoresCollected() {
-      return currentLevel.cores.every((item) => item.collected);
-    }
-
-    function getPlatforms() {
-      return currentLevel.platforms.concat(currentLevel.movingPlatforms);
+      setMessage("Level cleared. Next route unlocked.", 180);
     }
 
     function rectsOverlap(a, b) {
@@ -615,29 +1051,42 @@
       );
     }
 
-    function circleRectCollision(circle, rect) {
-      const closestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.w));
-      const closestY = Math.max(rect.y, Math.min(circle.y, rect.y + rect.h));
+    function circleRectOverlap(circle, target) {
+      const closestX = Math.max(target.x, Math.min(circle.x, target.x + target.w));
+      const closestY = Math.max(target.y, Math.min(circle.y, target.y + target.h));
       const dx = circle.x - closestX;
       const dy = circle.y - closestY;
       return dx * dx + dy * dy <= circle.r * circle.r;
     }
 
-    function updateAmbientMessage() {
-      if (messageTimer > 0) {
-        messageTimer--;
-        return;
-      }
+    function getCheckpointLayout(node) {
+      const checkpointCenter = node.x + node.w * 0.5;
+      let support = null;
 
-      if (allCoresCollected()) {
-        messageBox.textContent = "All cores collected. Reach the gate.";
-      } else {
-        messageBox.textContent = currentLevel.hint;
-      }
+      getAllPlatforms().forEach((platform) => {
+        const coversCheckpoint =
+          checkpointCenter >= platform.x - 6 &&
+          checkpointCenter <= platform.x + platform.w + 6;
+
+        if (!coversCheckpoint) return;
+
+        if (!support || Math.abs(platform.y - node.y) < Math.abs(support.y - node.y)) {
+          support = platform;
+        }
+      });
+
+      const surfaceY = support ? support.y : node.y + node.h;
+      return {
+        x: node.x,
+        y: surfaceY - node.h,
+        w: node.w,
+        h: node.h,
+        surfaceY
+      };
     }
 
     function updateMovingPlatforms(frame) {
-      currentLevel.movingPlatforms.forEach((platform) => {
+      (currentLevel.movingPlatforms || []).forEach((platform) => {
         const prevX = platform.x;
         const prevY = platform.y;
         const offset = Math.sin(frame * platform.speed + platform.phase) * platform.range;
@@ -655,21 +1104,21 @@
       });
     }
 
-    function updateDrones(frame) {
-      currentLevel.drones.forEach((enemy) => {
-        const offset = Math.sin(frame * enemy.speed + enemy.phase) * (enemy.max - enemy.min) * 0.5;
-        const midpoint = (enemy.max + enemy.min) * 0.5;
+    function updateAmbientMessage() {
+      if (messageTimer > 0) {
+        messageTimer--;
+        return;
+      }
 
-        if (enemy.axis === "x") {
-          enemy.x = midpoint + offset;
-        } else {
-          enemy.y = midpoint + offset;
-        }
-      });
+      if (allShardsCollected()) {
+        messageBox.textContent = "All shards collected. Head to the gate.";
+      } else {
+        messageBox.textContent = currentLevel.hint;
+      }
     }
 
     function resolveHorizontal() {
-      getPlatforms().forEach((platform) => {
+      getAllPlatforms().forEach((platform) => {
         if (!rectsOverlap(player, platform)) return;
 
         if (player.prevX + player.w <= platform.x) {
@@ -683,7 +1132,7 @@
     }
 
     function resolveVertical() {
-      getPlatforms().forEach((platform) => {
+      getAllPlatforms().forEach((platform) => {
         if (!rectsOverlap(player, platform)) return;
 
         if (player.prevY + player.h <= platform.y && player.vy >= 0) {
@@ -713,14 +1162,13 @@
 
       player.vx = clamp(player.vx, -physics.maxSpeed, physics.maxSpeed);
 
-      if (jumpBufferFrames > 0 && player.coyoteFrames > 0) {
+      if (jumpBuffer > 0 && player.coyote > 0) {
         player.vy = physics.jump;
         player.onGround = false;
-        player.support = null;
-        player.coyoteFrames = 0;
-        jumpBufferFrames = 0;
-      } else if (jumpBufferFrames > 0) {
-        jumpBufferFrames--;
+        player.coyote = 0;
+        jumpBuffer = 0;
+      } else if (jumpBuffer > 0) {
+        jumpBuffer--;
       }
 
       player.vy += physics.gravity;
@@ -735,12 +1183,12 @@
       resolveVertical();
 
       if (player.onGround) {
-        player.coyoteFrames = physics.coyote;
+        player.coyote = physics.coyoteFrames;
       } else {
-        player.coyoteFrames = Math.max(0, player.coyoteFrames - 1);
+        player.coyote = Math.max(0, player.coyote - 1);
       }
 
-      for (const pad of currentLevel.boosts) {
+      for (const booster of currentLevel.pads) {
         const feet = {
           x: player.x + 2,
           y: player.y + player.h - 4,
@@ -748,31 +1196,23 @@
           h: 6
         };
 
-        if (rectsOverlap(feet, pad) && player.vy >= 0) {
-          player.vy = pad.power;
+        if (rectsOverlap(feet, booster) && player.vy >= 0) {
+          player.vy = booster.power;
           player.onGround = false;
-          player.support = null;
         }
       }
 
       if (player.y > currentLevel.worldHeight + 120) {
-        restartLevel("You fell into the rift.");
+        respawnPlayer("You fell off the route.");
       }
     }
 
-    function collectCores() {
+    function updateShards() {
       let changed = false;
 
-      currentLevel.cores.forEach((item) => {
+      currentLevel.shards.forEach((item) => {
         if (item.collected) return;
-
-        const circle = {
-          x: item.x,
-          y: item.y,
-          r: item.r
-        };
-
-        if (circleRectCollision(circle, player)) {
+        if (circleRectOverlap(item, player)) {
           item.collected = true;
           changed = true;
         }
@@ -780,136 +1220,182 @@
 
       if (changed) {
         updateHud();
-        setMessage(allCoresCollected() ? "All cores collected. Gate unlocked." : "Core collected.", 100);
+        setMessage(allShardsCollected() ? "All shards collected. Gate unlocked." : "Shard collected.", 90);
       }
+    }
+
+    function updateCheckpoints() {
+      currentLevel.checkpoints.forEach((node) => {
+        const layout = getCheckpointLayout(node);
+        if (!rectsOverlap(player, layout)) return;
+        if (respawnPoint.name === node.name) return;
+
+        currentLevel.checkpoints.forEach((other) => {
+          other.active = false;
+        });
+
+        node.active = true;
+        respawnPoint = {
+          x: node.x - 2,
+          y: layout.surfaceY - player.h,
+          name: node.name
+        };
+
+        updateHud();
+        setMessage("Checkpoint reached: " + node.name + ".", 120);
+      });
     }
 
     function checkHazards() {
       for (const hazard of currentLevel.spikes) {
         if (rectsOverlap(player, hazard)) {
-          restartLevel("You hit the neon spikes.");
-          return;
-        }
-      }
-
-      for (const enemy of currentLevel.drones) {
-        const circle = {
-          x: enemy.x,
-          y: enemy.y,
-          r: enemy.r
-        };
-
-        if (circleRectCollision(circle, player)) {
-          restartLevel("A drone knocked you out.");
+          respawnPlayer("You hit the spikes.");
           return;
         }
       }
     }
 
     function checkGoal() {
-      if (!allCoresCollected()) return;
-      if (rectsOverlap(player, currentLevel.goal)) completeLevel();
+      if (!allShardsCollected()) return;
+      if (rectsOverlap(player, currentLevel.goal)) {
+        completeLevel();
+      }
     }
 
     function updateCamera() {
       const maxX = Math.max(0, currentLevel.worldWidth - VIEW_W);
       const maxY = Math.max(0, currentLevel.worldHeight - VIEW_H);
-
-      const targetX = clamp(player.x - VIEW_W * 0.35, 0, maxX);
-      const targetY = clamp(player.y - VIEW_H * 0.5, 0, maxY);
+      const targetX = clamp(player.x - VIEW_W * 0.34, 0, maxX);
+      const targetY = clamp(player.y - VIEW_H * 0.55, 0, maxY);
 
       camera.x += (targetX - camera.x) * 0.12;
       camera.y += (targetY - camera.y) * 0.12;
     }
 
+    function drawRoundedRect(context, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      context.beginPath();
+      context.moveTo(x + r, y);
+      context.lineTo(x + width - r, y);
+      context.quadraticCurveTo(x + width, y, x + width, y + r);
+      context.lineTo(x + width, y + height - r);
+      context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      context.lineTo(x + r, y + height);
+      context.quadraticCurveTo(x, y + height, x, y + height - r);
+      context.lineTo(x, y + r);
+      context.quadraticCurveTo(x, y, x + r, y);
+      context.closePath();
+    }
+
     function drawBackground() {
-      const bg = ctx.createLinearGradient(0, 0, 0, VIEW_H);
-      bg.addColorStop(0, "#081527");
-      bg.addColorStop(0.6, "#0c1731");
-      bg.addColorStop(1, "#07111f");
-      ctx.fillStyle = bg;
+      const sky = ctx.createLinearGradient(0, 0, 0, VIEW_H);
+      sky.addColorStop(0, "#0a1430");
+      sky.addColorStop(0.38, "#131d46");
+      sky.addColorStop(0.72, "#24134a");
+      sky.addColorStop(1, "#091220");
+      ctx.fillStyle = sky;
       ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 
-      ctx.strokeStyle = "rgba(137, 247, 255, 0.08)";
+      const haze = ctx.createLinearGradient(0, 0, VIEW_W, VIEW_H);
+      haze.addColorStop(0, "rgba(137, 247, 255, 0.08)");
+      haze.addColorStop(0.5, "rgba(159, 148, 255, 0.06)");
+      haze.addColorStop(1, "rgba(255, 110, 209, 0.08)");
+      ctx.fillStyle = haze;
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+
+      ctx.strokeStyle = "rgba(137, 247, 255, 0.1)";
       ctx.lineWidth = 1;
 
-      for (let x = -camera.x % 40; x < VIEW_W; x += 40) {
+      for (let x = -camera.x % 48; x < VIEW_W; x += 48) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, VIEW_H);
         ctx.stroke();
       }
 
-      for (let y = -camera.y % 40; y < VIEW_H; y += 40) {
+      for (let y = -camera.y % 48; y < VIEW_H; y += 48) {
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(VIEW_W, y);
         ctx.stroke();
       }
 
-      ctx.fillStyle = "rgba(255, 110, 209, 0.18)";
+      const colors = {
+        skyline: ["rgba(137, 247, 255, 0.22)", "rgba(255, 110, 209, 0.2)"],
+        tunnels: ["rgba(124, 241, 202, 0.2)", "rgba(137, 247, 255, 0.18)"],
+        garden: ["rgba(124, 241, 202, 0.2)", "rgba(255, 227, 107, 0.16)"],
+        causeway: ["rgba(255, 110, 209, 0.2)", "rgba(137, 247, 255, 0.22)"],
+        harbor: ["rgba(124, 241, 202, 0.16)", "rgba(137, 247, 255, 0.22)"],
+        terraces: ["rgba(255, 227, 107, 0.18)", "rgba(124, 241, 202, 0.2)"],
+        loop: ["rgba(255, 110, 209, 0.18)", "rgba(124, 241, 202, 0.2)"],
+        parade: ["rgba(255, 227, 107, 0.2)", "rgba(255, 110, 209, 0.2)"]
+      };
+
+      const pair = colors[currentLevel.decor] || colors.skyline;
+
+      ctx.fillStyle = pair[0];
       ctx.beginPath();
-      ctx.arc(760, 100, 70, 0, Math.PI * 2);
+      ctx.arc(190, 100, 72, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "rgba(137, 247, 255, 0.16)";
+      ctx.fillStyle = pair[1];
       ctx.beginPath();
-      ctx.arc(160, 90, 46, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function drawWorldRect(obj, fillStyle, strokeStyle = null) {
-      const x = obj.x - camera.x;
-      const y = obj.y - camera.y;
-
-      ctx.fillStyle = fillStyle;
-      drawRoundedRect(ctx, x, y, obj.w, obj.h, 10);
+      ctx.arc(820, 90, 104, 0, Math.PI * 2);
       ctx.fill();
 
-      if (strokeStyle) {
-        ctx.strokeStyle = strokeStyle;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
+      ctx.fillStyle = "rgba(137, 247, 255, 0.06)";
+      ctx.beginPath();
+      ctx.arc(520, 40, 140, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     function drawPlatforms() {
       currentLevel.platforms.forEach((platform) => {
-        drawWorldRect(platform, "rgba(13, 25, 51, 0.96)", "rgba(137, 247, 255, 0.18)");
+        const x = platform.x - camera.x;
+        const y = platform.y - camera.y;
 
-        ctx.fillStyle = "rgba(137, 247, 255, 0.18)";
-        drawRoundedRect(ctx, platform.x - camera.x + 6, platform.y - camera.y + 6, platform.w - 12, 6, 4);
+        ctx.fillStyle = "rgba(11, 23, 46, 0.98)";
+        drawRoundedRect(ctx, x, y, platform.w, platform.h, 10);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(137, 247, 255, 0.2)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(137, 247, 255, 0.14)";
+        drawRoundedRect(ctx, x + 6, y + 6, platform.w - 12, Math.min(6, platform.h - 10), 4);
         ctx.fill();
       });
 
-      currentLevel.movingPlatforms.forEach((platform) => {
-        drawWorldRect(platform, "rgba(24, 34, 70, 0.98)", "rgba(255, 110, 209, 0.34)");
+      (currentLevel.movingPlatforms || []).forEach((platform) => {
+        const x = platform.x - camera.x;
+        const y = platform.y - camera.y;
 
-        ctx.fillStyle = "rgba(255, 110, 209, 0.22)";
-        drawRoundedRect(ctx, platform.x - camera.x + 6, platform.y - camera.y + 6, platform.w - 12, 6, 4);
+        ctx.fillStyle = "rgba(27, 30, 72, 0.98)";
+        drawRoundedRect(ctx, x, y, platform.w, platform.h, 10);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(255, 110, 209, 0.34)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(255, 110, 209, 0.18)";
+        drawRoundedRect(ctx, x + 6, y + 6, platform.w - 12, 6, 4);
         ctx.fill();
       });
     }
 
-    function drawBoosts() {
-      currentLevel.boosts.forEach((pad) => {
-        const x = pad.x - camera.x;
-        const y = pad.y - camera.y;
+    function drawPads() {
+      currentLevel.pads.forEach((booster) => {
+        const x = booster.x - camera.x;
+        const y = booster.y - camera.y;
 
-        ctx.fillStyle = "rgba(11, 24, 35, 0.96)";
-        drawRoundedRect(ctx, x, y, pad.w, pad.h, 8);
+        ctx.fillStyle = "#0d1c28";
+        drawRoundedRect(ctx, x, y, booster.w, booster.h, 8);
         ctx.fill();
 
         ctx.fillStyle = "#7cf1ca";
-        drawRoundedRect(ctx, x + 4, y + 4, pad.w - 8, pad.h - 8, 4);
-        ctx.fill();
-
-        ctx.fillStyle = "#0c1a22";
-        ctx.beginPath();
-        ctx.moveTo(x + pad.w * 0.5, y + 4);
-        ctx.lineTo(x + pad.w - 10, y + pad.h - 5);
-        ctx.lineTo(x + 10, y + pad.h - 5);
-        ctx.closePath();
+        drawRoundedRect(ctx, x + 4, y + 4, booster.w - 8, booster.h - 8, 4);
         ctx.fill();
       });
     }
@@ -922,42 +1408,40 @@
         for (let i = 0; i < count; i++) {
           const left = hazard.x + i * step - camera.x;
           const right = left + step;
-          const tip = (left + right) * 0.5;
+          const mid = (left + right) * 0.5;
+          const baseY = hazard.y + hazard.h - camera.y;
+          const tipY = hazard.y - camera.y;
 
           ctx.fillStyle = "#ff6ed1";
           ctx.beginPath();
-          ctx.moveTo(left, hazard.y + hazard.h - camera.y);
-          ctx.lineTo(tip, hazard.y - camera.y);
-          ctx.lineTo(right, hazard.y + hazard.h - camera.y);
+          ctx.moveTo(left, baseY);
+          ctx.lineTo(mid, tipY);
+          ctx.lineTo(right, baseY);
           ctx.closePath();
           ctx.fill();
         }
       });
     }
 
-    function drawDrones() {
-      currentLevel.drones.forEach((enemy) => {
-        const x = enemy.x - camera.x;
-        const y = enemy.y - camera.y;
+    function drawCheckpoints() {
+      currentLevel.checkpoints.forEach((node) => {
+        const layout = getCheckpointLayout(node);
+        const x = layout.x - camera.x;
+        const y = layout.y - camera.y;
+        const active = node.active;
 
-        ctx.save();
-        ctx.shadowColor = "#ff6ed1";
-        ctx.shadowBlur = 18;
-        ctx.fillStyle = "#ff6ed1";
-        ctx.beginPath();
-        ctx.arc(x, y, enemy.r, 0, Math.PI * 2);
+        ctx.fillStyle = active ? "#7cf1ca" : "rgba(245, 247, 255, 0.95)";
+        drawRoundedRect(ctx, x, y, 6, layout.h, 3);
         ctx.fill();
-        ctx.restore();
 
-        ctx.fillStyle = "#0b0f1c";
-        ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = active ? "#7cf1ca" : "#f5b7d5";
+        drawRoundedRect(ctx, x + 6, y + 8, 20, 14, 4);
         ctx.fill();
       });
     }
 
-    function drawCores() {
-      currentLevel.cores.forEach((item) => {
+    function drawShards() {
+      currentLevel.shards.forEach((item) => {
         if (item.collected) return;
 
         const x = item.x - camera.x;
@@ -975,14 +1459,6 @@
         ctx.closePath();
         ctx.fill();
         ctx.restore();
-
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.moveTo(x, y - 8);
-        ctx.lineTo(x + 4, y - 1);
-        ctx.lineTo(x - 1, y + 4);
-        ctx.closePath();
-        ctx.fill();
       });
     }
 
@@ -990,17 +1466,17 @@
       const gate = currentLevel.goal;
       const x = gate.x - camera.x;
       const y = gate.y - camera.y;
-      const active = allCoresCollected();
+      const isOpen = allShardsCollected();
 
-      ctx.fillStyle = "rgba(245, 247, 255, 0.96)";
+      ctx.fillStyle = "rgba(240, 244, 255, 0.96)";
       drawRoundedRect(ctx, x, y, gate.w, gate.h, 10);
       ctx.fill();
 
-      ctx.fillStyle = active ? "#7cf1ca" : "#f3afc8";
+      ctx.fillStyle = isOpen ? "#7cf1ca" : "#f4afc7";
       drawRoundedRect(ctx, x + 4, y + 6, gate.w - 8, 18, 4);
       ctx.fill();
 
-      ctx.fillStyle = "#111529";
+      ctx.fillStyle = "#101528";
       drawRoundedRect(ctx, x + 7, y + 28, gate.w - 14, gate.h - 35, 6);
       ctx.fill();
     }
@@ -1009,7 +1485,7 @@
       const x = player.x - camera.x;
       const y = player.y - camera.y;
 
-      ctx.fillStyle = "#10162a";
+      ctx.fillStyle = "#0f1528";
       drawRoundedRect(ctx, x, y, player.w, player.h, 8);
       ctx.fill();
 
@@ -1017,7 +1493,7 @@
       drawRoundedRect(ctx, x + 3, y + 4, player.w - 6, player.h - 7, 6);
       ctx.fill();
 
-      ctx.fillStyle = "#10162a";
+      ctx.fillStyle = "#0f1528";
       drawRoundedRect(ctx, x + 4, y - 4, 6, 10, 3);
       ctx.fill();
       drawRoundedRect(ctx, x + player.w - 10, y - 4, 6, 10, 3);
@@ -1028,11 +1504,12 @@
       ctx.fillRect(x + 11, y + 22, 6, 3);
     }
 
-    function update(frame) {
-      updateMovingPlatforms(frame);
-      updateDrones(frame);
+    function update() {
+      frameCount++;
+      updateMovingPlatforms(frameCount);
       updatePlayer();
-      collectCores();
+      updateShards();
+      updateCheckpoints();
       checkHazards();
       checkGoal();
       updateCamera();
@@ -1043,21 +1520,21 @@
     function draw() {
       drawBackground();
       drawPlatforms();
-      drawBoosts();
+      drawPads();
       drawSpikes();
-      drawDrones();
-      drawCores();
+      drawCheckpoints();
+      drawShards();
       drawGoal();
       drawPlayer();
     }
 
-    function loop(frame) {
-      update(frame);
+    function loop() {
+      update();
       draw();
       requestAnimationFrame(loop);
     }
 
-    window.addEventListener("keydown", (event) => {
+    document.addEventListener("keydown", (event) => {
       if (event.code === "ArrowLeft" || event.code === "KeyA") {
         input.left = true;
       }
@@ -1067,12 +1544,12 @@
       }
 
       if (event.code === "ArrowUp" || event.code === "Space" || event.code === "KeyW") {
-        jumpBufferFrames = physics.jumpBuffer;
+        jumpBuffer = physics.jumpBufferFrames;
         event.preventDefault();
       }
     });
 
-    window.addEventListener("keyup", (event) => {
+    document.addEventListener("keyup", (event) => {
       if (event.code === "ArrowLeft" || event.code === "KeyA") {
         input.left = false;
       }
@@ -1082,23 +1559,25 @@
       }
     });
 
-    prevBtn.addEventListener("click", () => {
-      if (levelIndex > 0) loadLevel(levelIndex - 1);
+    prevLevelBtn.addEventListener("click", () => {
+      if (levelIndex > 0) {
+        loadLevel(levelIndex - 1);
+      }
     });
 
-    restartBtn.addEventListener("click", () => {
-      restartLevel("Level restarted.");
-    });
-
-    nextBtn.addEventListener("click", () => {
+    nextLevelBtn.addEventListener("click", () => {
       if (levelIndex + 1 < unlockedLevel && levelIndex < LEVELS.length - 1) {
         loadLevel(levelIndex + 1);
       }
     });
 
+    restartBtn.addEventListener("click", () => {
+      restartLevel();
+    });
+
     unlockedLevel = clamp(unlockedLevel, 1, LEVELS.length);
     loadLevel(0);
-    requestAnimationFrame(loop);
+    loop();
   </script>
 </body>
 </html>
