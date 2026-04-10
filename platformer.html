@@ -3,8 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Platformer Quest | Game Hub</title>
+  <title>Gemrise-Style Adventure | Game Hub</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .platformer-note {
+      margin-top: 18px;
+      color: var(--text-soft);
+      line-height: 1.6;
+      text-align: center;
+      max-width: 760px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .platformer-note strong {
+      color: var(--text-main);
+    }
+  </style>
 </head>
 <body class="theme-adventure">
   <div class="page-shell">
@@ -12,304 +27,463 @@
       <section class="game-panel">
         <div class="game-topbar">
           <div class="game-header-left">
-            <p class="eyebrow">Adventure Run</p>
-            <h1>Platformer Quest</h1>
+            <p class="eyebrow">Seesaw Quest</p>
+            <h1>Gemrise Adventure</h1>
             <p class="game-subtext">
-              Run, jump, collect coins, avoid spikes, and clear all 100 levels across a brighter, more polished world.
+              Collect every gem, turn the red flag green, and use seesaws to launch yourself through a sprawling platform world while avoiding spikes and snakes.
             </p>
           </div>
           <a href="index.html" class="back-link">&larr; Home</a>
         </div>
 
         <div class="info-row">
-          <div class="status-box">Move: Left / Right</div>
-          <div class="status-box">Jump: Space / Up</div>
+          <div class="status-box">Move: Arrows / A D</div>
+          <div class="status-box">Jump: Space / Up / W</div>
           <div class="status-box" id="levelBox">Level: 1</div>
-          <div class="status-box is-accent" id="coinBox">Coins: 0</div>
-          <div class="status-box" id="livesBox">Lives: 3</div>
-          <div class="status-box" id="unlockBox">Unlocked: 1</div>
+          <div class="status-box is-accent" id="gemBox">Gems: 0 / 0</div>
+          <div class="status-box" id="flagBox">Flag: Red</div>
         </div>
 
+        <div class="message-banner" id="noticeBox">Collect all the gems and reach the green flag.</div>
+
         <div class="canvas-stage">
-          <canvas id="platformerCanvas" class="game-canvas" width="900" height="420"></canvas>
+          <canvas id="gameCanvas" class="game-canvas" width="960" height="520"></canvas>
         </div>
 
         <div class="bottom-actions">
-          <button class="secondary-button" id="prevLevelBtn">Previous Level</button>
+          <button class="secondary-button" id="prevBtn">Previous Level</button>
           <button class="secondary-button" id="restartBtn">Restart Level</button>
-          <button class="secondary-button" id="nextLevelBtn">Next Level</button>
-          <button class="secondary-button" id="resetProgressBtn">Reset Progress</button>
+          <button class="secondary-button" id="nextBtn">Next Level</button>
         </div>
 
-        <div class="message-banner" id="messageBox">Beat each level to unlock the next one.</div>
-
-        <div class="level-panel">
-          <h2 class="level-panel-title">Level Select</h2>
-          <div class="level-grid" id="levelGrid"></div>
-        </div>
+        <p class="platformer-note">
+          <strong>Tip:</strong> The farther you stand from the middle of a seesaw, the more force it creates. Some seesaws only tilt a little. Others can swing nearly vertical.
+        </p>
       </section>
     </main>
   </div>
 
   <script>
-    const canvas = document.getElementById("platformerCanvas");
+    const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
     const levelBox = document.getElementById("levelBox");
-    const coinBox = document.getElementById("coinBox");
-    const livesBox = document.getElementById("livesBox");
-    const unlockBox = document.getElementById("unlockBox");
-    const messageBox = document.getElementById("messageBox");
-    const levelGrid = document.getElementById("levelGrid");
+    const gemBox = document.getElementById("gemBox");
+    const flagBox = document.getElementById("flagBox");
+    const noticeBox = document.getElementById("noticeBox");
 
-    const prevLevelBtn = document.getElementById("prevLevelBtn");
-    const nextLevelBtn = document.getElementById("nextLevelBtn");
+    const prevBtn = document.getElementById("prevBtn");
     const restartBtn = document.getElementById("restartBtn");
-    const resetProgressBtn = document.getElementById("resetProgressBtn");
+    const nextBtn = document.getElementById("nextBtn");
 
-    const gravity = 0.6;
-    const friction = 0.82;
-    const moveSpeed = 0.85;
-    const maxSpeed = 6.2;
-    const jumpPower = -12;
-    const TOTAL_LEVELS = 100;
-    const GROUND_Y = 380;
+    const VIEW_W = canvas.width;
+    const VIEW_H = canvas.height;
 
-    let keys = {
+    const MOVE_ACCEL = 0.68;
+    const MOVE_FRICTION = 0.84;
+    const MAX_SPEED = 5.4;
+    const GRAVITY = 0.48;
+    const JUMP_VELOCITY = -10.8;
+    const MAX_FALL = 14;
+
+    const LEVELS = [
+      {
+        title: "Level 1: Training Meadow",
+        hint: "Learn the seesaws. Collect 4 gems, avoid the spikes, and reach the flag.",
+        worldWidth: 2100,
+        worldHeight: 760,
+        spawn: { x: 76, y: 394 },
+        platforms: [
+          { x: 0, y: 430, w: 250, h: 90 },
+          { x: 270, y: 346, w: 120, h: 18 },
+          { x: 590, y: 430, w: 230, h: 90 },
+          { x: 860, y: 318, w: 128, h: 18 },
+          { x: 1040, y: 430, w: 220, h: 90 },
+          { x: 1280, y: 276, w: 140, h: 18 },
+          { x: 1460, y: 430, w: 230, h: 90 },
+          { x: 1710, y: 210, w: 150, h: 18 },
+          { x: 1870, y: 430, w: 230, h: 90 }
+        ],
+        seesaws: [
+          { pivotX: 480, pivotY: 388, length: 190, maxAngle: 0.42, spring: 0.011, damping: 0.992, weight: 0.0016, startAngle: -0.05 },
+          { pivotX: 920, pivotY: 354, length: 180, maxAngle: 0.58, spring: 0.010, damping: 0.992, weight: 0.0018, startAngle: 0.02 },
+          { pivotX: 1538, pivotY: 348, length: 200, maxAngle: 0.62, spring: 0.0095, damping: 0.992, weight: 0.0019, startAngle: -0.03 }
+        ],
+        spikes: [
+          { x: 530, y: 412, w: 46, h: 18 },
+          { x: 1000, y: 412, w: 32, h: 18 },
+          { x: 1430, y: 412, w: 26, h: 18 }
+        ],
+        snakes: [
+          { x: 1112, y: 412, w: 40, h: 18, minX: 1075, maxX: 1205, speed: 1.2 }
+        ],
+        gems: [
+          { x: 330, y: 304 },
+          { x: 905, y: 274 },
+          { x: 1330, y: 234 },
+          { x: 1760, y: 168 }
+        ],
+        exit: { x: 1995, y: 360, w: 28, h: 70 }
+      },
+      {
+        title: "Level 2: Canyon Springs",
+        hint: "These seesaws swing harder. Search the whole map for 5 gems.",
+        worldWidth: 2450,
+        worldHeight: 860,
+        spawn: { x: 72, y: 434 },
+        platforms: [
+          { x: 0, y: 470, w: 220, h: 90 },
+          { x: 295, y: 392, w: 110, h: 18 },
+          { x: 650, y: 470, w: 180, h: 90 },
+          { x: 890, y: 318, w: 120, h: 18 },
+          { x: 1100, y: 236, w: 110, h: 18 },
+          { x: 1280, y: 470, w: 200, h: 90 },
+          { x: 1510, y: 332, w: 122, h: 18 },
+          { x: 1700, y: 255, w: 110, h: 18 },
+          { x: 1865, y: 470, w: 180, h: 90 },
+          { x: 2050, y: 182, w: 126, h: 18 },
+          { x: 2240, y: 470, w: 210, h: 90 }
+        ],
+        seesaws: [
+          { pivotX: 540, pivotY: 415, length: 210, maxAngle: 0.68, spring: 0.0095, damping: 0.9915, weight: 0.0021, startAngle: 0.08 },
+          { pivotX: 1015, pivotY: 281, length: 170, maxAngle: 0.58, spring: 0.011, damping: 0.992, weight: 0.0018, startAngle: -0.07 },
+          { pivotX: 1400, pivotY: 405, length: 205, maxAngle: 0.78, spring: 0.009, damping: 0.991, weight: 0.0022, startAngle: -0.03 },
+          { pivotX: 1928, pivotY: 395, length: 210, maxAngle: 0.78, spring: 0.009, damping: 0.991, weight: 0.0022, startAngle: 0.05 }
+        ],
+        spikes: [
+          { x: 598, y: 452, w: 44, h: 18 },
+          { x: 845, y: 452, w: 34, h: 18 },
+          { x: 1818, y: 452, w: 38, h: 18 },
+          { x: 2210, y: 452, w: 24, h: 18 }
+        ],
+        snakes: [
+          { x: 1324, y: 452, w: 40, h: 18, minX: 1305, maxX: 1430, speed: 1.35 },
+          { x: 2280, y: 452, w: 40, h: 18, minX: 2260, maxX: 2380, speed: 1.55 }
+        ],
+        gems: [
+          { x: 350, y: 352 },
+          { x: 945, y: 278 },
+          { x: 1145, y: 196 },
+          { x: 1748, y: 214 },
+          { x: 2108, y: 140 }
+        ],
+        exit: { x: 2365, y: 400, w: 28, h: 70 }
+      },
+      {
+        title: "Level 3: Snake Ridge",
+        hint: "Use the small seesaws to line up the big launch. Watch the snakes on the lower lanes.",
+        worldWidth: 2550,
+        worldHeight: 920,
+        spawn: { x: 82, y: 454 },
+        platforms: [
+          { x: 0, y: 488, w: 240, h: 110 },
+          { x: 270, y: 408, w: 100, h: 18 },
+          { x: 590, y: 488, w: 190, h: 110 },
+          { x: 870, y: 354, w: 118, h: 18 },
+          { x: 1060, y: 280, w: 108, h: 18 },
+          { x: 1210, y: 488, w: 170, h: 110 },
+          { x: 1450, y: 345, w: 120, h: 18 },
+          { x: 1635, y: 232, w: 100, h: 18 },
+          { x: 1795, y: 488, w: 175, h: 110 },
+          { x: 2010, y: 360, w: 116, h: 18 },
+          { x: 2185, y: 262, w: 116, h: 18 },
+          { x: 2360, y: 488, w: 190, h: 110 }
+        ],
+        seesaws: [
+          { pivotX: 495, pivotY: 430, length: 180, maxAngle: 0.48, spring: 0.0105, damping: 0.992, weight: 0.0018, startAngle: -0.04 },
+          { pivotX: 960, pivotY: 320, length: 175, maxAngle: 0.58, spring: 0.0105, damping: 0.9918, weight: 0.00195, startAngle: 0.04 },
+          { pivotX: 1388, pivotY: 420, length: 220, maxAngle: 0.84, spring: 0.0088, damping: 0.9905, weight: 0.00235, startAngle: 0.03 },
+          { pivotX: 1940, pivotY: 420, length: 215, maxAngle: 0.84, spring: 0.0088, damping: 0.9905, weight: 0.00235, startAngle: -0.02 }
+        ],
+        spikes: [
+          { x: 548, y: 470, w: 32, h: 18 },
+          { x: 800, y: 470, w: 48, h: 18 },
+          { x: 1406, y: 470, w: 34, h: 18 },
+          { x: 1978, y: 470, w: 34, h: 18 },
+          { x: 2324, y: 470, w: 30, h: 18 }
+        ],
+        snakes: [
+          { x: 1260, y: 470, w: 40, h: 18, minX: 1234, maxX: 1336, speed: 1.45 },
+          { x: 2420, y: 470, w: 40, h: 18, minX: 2390, maxX: 2500, speed: 1.7 }
+        ],
+        gems: [
+          { x: 318, y: 368 },
+          { x: 920, y: 312 },
+          { x: 1114, y: 238 },
+          { x: 1678, y: 190 },
+          { x: 2226, y: 220 }
+        ],
+        exit: { x: 2468, y: 416, w: 28, h: 72 }
+      },
+      {
+        title: "Level 4: Vertical Vault",
+        hint: "This map is taller. Search upward, not just to the right.",
+        worldWidth: 2320,
+        worldHeight: 1080,
+        spawn: { x: 88, y: 574 },
+        platforms: [
+          { x: 0, y: 610, w: 230, h: 110 },
+          { x: 286, y: 524, w: 110, h: 18 },
+          { x: 470, y: 446, w: 110, h: 18 },
+          { x: 640, y: 610, w: 180, h: 110 },
+          { x: 898, y: 520, w: 114, h: 18 },
+          { x: 1080, y: 418, w: 106, h: 18 },
+          { x: 1268, y: 320, w: 112, h: 18 },
+          { x: 1455, y: 610, w: 170, h: 110 },
+          { x: 1688, y: 470, w: 115, h: 18 },
+          { x: 1865, y: 350, w: 110, h: 18 },
+          { x: 2038, y: 235, w: 116, h: 18 },
+          { x: 2160, y: 610, w: 160, h: 110 }
+        ],
+        seesaws: [
+          { pivotX: 576, pivotY: 550, length: 220, maxAngle: 0.90, spring: 0.0084, damping: 0.9902, weight: 0.00245, startAngle: -0.09 },
+          { pivotX: 1014, pivotY: 465, length: 170, maxAngle: 0.52, spring: 0.011, damping: 0.992, weight: 0.00185, startAngle: 0.06 },
+          { pivotX: 1502, pivotY: 540, length: 220, maxAngle: 0.92, spring: 0.0082, damping: 0.9898, weight: 0.0025, startAngle: 0.08 }
+        ],
+        spikes: [
+          { x: 594, y: 592, w: 38, h: 18 },
+          { x: 840, y: 592, w: 38, h: 18 },
+          { x: 1430, y: 592, w: 24, h: 18 },
+          { x: 2130, y: 592, w: 26, h: 18 }
+        ],
+        snakes: [
+          { x: 1526, y: 592, w: 40, h: 18, minX: 1482, maxX: 1585, speed: 1.6 }
+        ],
+        gems: [
+          { x: 346, y: 486 },
+          { x: 514, y: 408 },
+          { x: 1128, y: 378 },
+          { x: 1318, y: 280 },
+          { x: 2074, y: 196 }
+        ],
+        exit: { x: 2222, y: 540, w: 28, h: 70 }
+      },
+      {
+        title: "Level 5: Summit Swing",
+        hint: "Everything you learned matters here. Big swings, tight landings, full clear.",
+        worldWidth: 2700,
+        worldHeight: 1120,
+        spawn: { x: 88, y: 594 },
+        platforms: [
+          { x: 0, y: 630, w: 220, h: 120 },
+          { x: 280, y: 548, w: 100, h: 18 },
+          { x: 445, y: 470, w: 95, h: 18 },
+          { x: 615, y: 630, w: 170, h: 120 },
+          { x: 850, y: 520, w: 108, h: 18 },
+          { x: 1015, y: 412, w: 102, h: 18 },
+          { x: 1175, y: 300, w: 100, h: 18 },
+          { x: 1370, y: 630, w: 165, h: 120 },
+          { x: 1595, y: 470, w: 116, h: 18 },
+          { x: 1775, y: 346, w: 110, h: 18 },
+          { x: 1955, y: 248, w: 104, h: 18 },
+          { x: 2125, y: 630, w: 172, h: 120 },
+          { x: 2338, y: 430, w: 116, h: 18 },
+          { x: 2525, y: 298, w: 110, h: 18 }
+        ],
+        seesaws: [
+          { pivotX: 560, pivotY: 572, length: 230, maxAngle: 0.96, spring: 0.008, damping: 0.9895, weight: 0.00265, startAngle: -0.07 },
+          { pivotX: 975, pivotY: 470, length: 180, maxAngle: 0.60, spring: 0.0108, damping: 0.9916, weight: 0.00195, startAngle: 0.06 },
+          { pivotX: 1530, pivotY: 570, length: 232, maxAngle: 1.02, spring: 0.0078, damping: 0.9893, weight: 0.00275, startAngle: 0.05 },
+          { pivotX: 2295, pivotY: 570, length: 232, maxAngle: 1.02, spring: 0.0078, damping: 0.9893, weight: 0.00275, startAngle: -0.03 }
+        ],
+        spikes: [
+          { x: 585, y: 612, w: 26, h: 18 },
+          { x: 798, y: 612, w: 34, h: 18 },
+          { x: 1350, y: 612, w: 20, h: 18 },
+          { x: 1568, y: 612, w: 24, h: 18 },
+          { x: 2104, y: 612, w: 18, h: 18 },
+          { x: 2322, y: 612, w: 28, h: 18 }
+        ],
+        snakes: [
+          { x: 1416, y: 612, w: 40, h: 18, minX: 1392, maxX: 1494, speed: 1.75 },
+          { x: 2180, y: 612, w: 40, h: 18, minX: 2145, maxX: 2260, speed: 1.95 }
+        ],
+        gems: [
+          { x: 330, y: 510 },
+          { x: 900, y: 480 },
+          { x: 1055, y: 372 },
+          { x: 1210, y: 260 },
+          { x: 1992, y: 208 }
+        ],
+        exit: { x: 2604, y: 238, w: 28, h: 72 }
+      }
+    ];
+
+    const input = {
       left: false,
       right: false
     };
 
-    let totalCoins = Number(localStorage.getItem("platformerTotalCoins") || 0);
-    let lives = 3;
-    let currentLevelIndex = Number(localStorage.getItem("platformerCurrentLevel") || 0);
-    let highestUnlockedLevel = Number(localStorage.getItem("platformerHighestUnlocked") || 0);
-    let levelCompleteTimer = 0;
-    let gameWon = false;
-
-    const player = {
-      x: 40,
-      y: 300,
-      w: 28,
-      h: 34,
-      vx: 0,
-      vy: 0,
-      onGround: false
+    const camera = {
+      x: 0,
+      y: 0
     };
 
-    let activeLevel = null;
+    const player = {
+      x: 0,
+      y: 0,
+      w: 28,
+      h: 36,
+      vx: 0,
+      vy: 0,
+      prevX: 0,
+      prevY: 0,
+      onGround: false,
+      support: null
+    };
 
-    function saveProgress() {
-      localStorage.setItem("platformerHighestUnlocked", highestUnlockedLevel);
-      localStorage.setItem("platformerCurrentLevel", currentLevelIndex);
-      localStorage.setItem("platformerTotalCoins", totalCoins);
-    }
+    let levelIndex = 0;
+    let currentLevel = null;
+    let jumpBuffer = 0;
+    let gameWon = false;
+    let messageTimer = 0;
 
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
     }
 
-    function drawRoundedRect(ctx, x, y, width, height, radius) {
-      const r = Math.min(radius, width / 2, height / 2);
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + width - r, y);
-      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
-      ctx.lineTo(x + width, y + height - r);
-      ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
-      ctx.lineTo(x + r, y + height);
-      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
-      ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
+    function cloneLevel(level) {
+      return JSON.parse(JSON.stringify(level));
     }
 
-    function buildFlag(platforms, levelNumber) {
-      const standOn = platforms[platforms.length - 1];
-      const poleHeight = 60;
-      const poleX = clamp(standOn.x + standOn.w - 18, 40, 860);
-
-      return {
-        x: poleX,
-        y: standOn.y - poleHeight,
-        w: 18,
-        h: poleHeight,
-        platformTop: standOn.y
-      };
+    function setMessage(text, duration = 0) {
+      noticeBox.textContent = text;
+      messageTimer = duration;
     }
 
-    function generateLevel(levelNumber) {
-      const idx = levelNumber - 1;
-      const platforms = [{ x: 0, y: GROUND_Y, w: 900, h: 40 }];
-      const spikes = [];
-      const coins = [];
-
-      const playerStart = { x: 40, y: 300 };
-
-      let x = 100;
-      let y = 330 - (idx % 3) * 8;
-      const extraPlatforms = 4 + Math.min(6, Math.floor(idx / 10));
-      const swing = 20 + (idx % 4) * 8;
-
-      for (let i = 0; i < extraPlatforms; i++) {
-        const width = 90 + ((idx + i * 11) % 3) * 20;
-        y += ((idx + i) % 2 === 0 ? -1 : 1) * swing;
-        y = clamp(y, 150, 330);
-
-        if (x > 760) break;
-
-        platforms.push({
-          x,
-          y,
-          w: width,
-          h: 16
-        });
-
-        coins.push({
-          x: x + Math.floor(width / 2),
-          y: y - 24,
-          r: 8,
-          taken: false
-        });
-
-        x += 115 + ((idx + i * 13) % 3) * 28;
-      }
-
-      if (platforms[platforms.length - 1].x < 720) {
-        const last = platforms[platforms.length - 1];
-        const finalY = clamp(last.y + (((idx % 2) === 0) ? -20 : 20), 160, 320);
-
-        platforms.push({
-          x: 760,
-          y: finalY,
-          w: 95,
-          h: 16
-        });
-
-        coins.push({
-          x: 807,
-          y: finalY - 24,
-          r: 8,
-          taken: false
-        });
-      }
-
-      const spikeCount = Math.min(6, 1 + Math.floor(idx / 15));
-      for (let i = 0; i < spikeCount; i++) {
-        const sx = 180 + ((idx * 71 + i * 117) % 600);
-        spikes.push({
-          x: sx,
-          y: GROUND_Y - 16,
-          w: 30 + ((idx + i) % 3) * 10,
-          h: 16
-        });
-      }
-
-      const flag = buildFlag(platforms, levelNumber);
-
-      return {
-        playerStart,
-        platforms,
-        spikes,
-        coins,
-        flag
-      };
-    }
-
-    function loadLevel(index) {
-      index = clamp(index, 0, TOTAL_LEVELS - 1);
-
-      currentLevelIndex = index;
-      activeLevel = generateLevel(index + 1);
-
-      player.x = activeLevel.playerStart.x;
-      player.y = activeLevel.playerStart.y;
-      player.vx = 0;
-      player.vy = 0;
-      player.onGround = false;
-
-      levelCompleteTimer = 0;
-      gameWon = false;
-
-      updateUI();
-      renderLevelButtons();
-      saveProgress();
-    }
-
-    function updateUI() {
-      levelBox.textContent = "Level: " + (currentLevelIndex + 1);
-      coinBox.textContent = "Coins: " + totalCoins;
-      livesBox.textContent = "Lives: " + lives;
-      unlockBox.textContent = "Unlocked: " + (highestUnlockedLevel + 1);
-
-      if (currentLevelIndex === TOTAL_LEVELS - 1) {
-        messageBox.textContent = "Final level. Beat it to finish all 100 levels.";
-      } else {
-        messageBox.textContent = "Beat level " + (currentLevelIndex + 1) + " to unlock level " + (currentLevelIndex + 2) + ".";
-      }
-    }
-
-    function renderLevelButtons() {
-      levelGrid.innerHTML = "";
-
-      for (let i = 0; i < TOTAL_LEVELS; i++) {
-        const btn = document.createElement("button");
-        btn.className = "level-btn";
-        btn.textContent = i + 1;
-
-        if (i === currentLevelIndex) {
-          btn.classList.add("current");
-        }
-
-        if (i > highestUnlockedLevel) {
-          btn.classList.add("locked");
-          btn.disabled = true;
-        } else {
-          btn.addEventListener("click", () => loadLevel(i));
-        }
-
-        levelGrid.appendChild(btn);
-      }
-    }
-
-    function restartLevel() {
-      loadLevel(currentLevelIndex);
-    }
-
-    function resetProgress() {
-      totalCoins = 0;
-      lives = 3;
-      currentLevelIndex = 0;
-      highestUnlockedLevel = 0;
-      localStorage.removeItem("platformerHighestUnlocked");
-      localStorage.removeItem("platformerCurrentLevel");
-      localStorage.removeItem("platformerTotalCoins");
-      loadLevel(0);
-    }
-
-    function goPrevLevel() {
-      if (currentLevelIndex > 0) {
-        loadLevel(currentLevelIndex - 1);
-      }
-    }
-
-    function goNextLevel() {
-      if (currentLevelIndex < highestUnlockedLevel && currentLevelIndex < TOTAL_LEVELS - 1) {
-        loadLevel(currentLevelIndex + 1);
-      }
-    }
-
-    function loseLife() {
-      lives--;
-      updateUI();
-
-      if (lives <= 0) {
-        lives = 3;
-        restartLevel();
+    function updateAmbientMessage() {
+      if (messageTimer > 0) {
+        messageTimer--;
         return;
       }
 
-      restartLevel();
+      if (gameWon) {
+        noticeBox.textContent = "You cleared every level. The whole mountain is yours.";
+        return;
+      }
+
+      if (allGemsCollected()) {
+        noticeBox.textContent = "All gems collected. The flag is green now.";
+      } else {
+        noticeBox.textContent = currentLevel.hint;
+      }
+    }
+
+    function updateHud() {
+      const collected = currentLevel.gems.filter((gem) => gem.collected).length;
+      const total = currentLevel.gems.length;
+
+      levelBox.textContent = currentLevel.title;
+      gemBox.textContent = "Gems: " + collected + " / " + total;
+      flagBox.textContent = allGemsCollected() ? "Flag: Green" : "Flag: Red";
+      flagBox.style.color = allGemsCollected() ? "#74f4c7" : "#ff93a5";
+
+      prevBtn.disabled = levelIndex === 0;
+      nextBtn.disabled = levelIndex === LEVELS.length - 1;
+    }
+
+    function allGemsCollected() {
+      return currentLevel.gems.every((gem) => gem.collected);
+    }
+
+    function resetPlayer() {
+      player.x = currentLevel.spawn.x;
+      player.y = currentLevel.spawn.y;
+      player.vx = 0;
+      player.vy = 0;
+      player.prevX = player.x;
+      player.prevY = player.y;
+      player.onGround = false;
+      player.support = null;
+      jumpBuffer = 0;
+    }
+
+    function loadLevel(index) {
+      levelIndex = clamp(index, 0, LEVELS.length - 1);
+      currentLevel = cloneLevel(LEVELS[levelIndex]);
+
+      currentLevel.seesaws = currentLevel.seesaws.map((seesaw) => ({
+        ...seesaw,
+        angle: seesaw.startAngle || 0,
+        angularVelocity: 0,
+        thickness: 14
+      }));
+
+      currentLevel.snakes = currentLevel.snakes.map((snake) => ({
+        ...snake,
+        dir: 1
+      }));
+
+      currentLevel.gems = currentLevel.gems.map((gem) => ({
+        ...gem,
+        collected: false
+      }));
+
+      gameWon = false;
+      camera.x = 0;
+      camera.y = 0;
+      resetPlayer();
+      updateHud();
+      setMessage(currentLevel.hint, 180);
+    }
+
+    function restartLevel(reason) {
+      const preserveMessage = reason || currentLevel.hint;
+      loadLevel(levelIndex);
+      setMessage(preserveMessage, 180);
+    }
+
+    function completeLevel() {
+      if (levelIndex === LEVELS.length - 1) {
+        gameWon = true;
+        setMessage("You collected every gem and conquered the mountain.", 999999);
+        updateHud();
+        return;
+      }
+
+      loadLevel(levelIndex + 1);
+      setMessage("Level cleared. Welcome to " + currentLevel.title + ".", 220);
+    }
+
+    function getSeesawGeometry(seesaw) {
+      const half = seesaw.length / 2;
+      const cos = Math.cos(seesaw.angle);
+      const sin = Math.sin(seesaw.angle);
+
+      return {
+        x1: seesaw.pivotX - cos * half,
+        y1: seesaw.pivotY - sin * half,
+        x2: seesaw.pivotX + cos * half,
+        y2: seesaw.pivotY + sin * half
+      };
+    }
+
+    function getSeesawSurface(seesaw, sampleX) {
+      const g = getSeesawGeometry(seesaw);
+      const dx = g.x2 - g.x1;
+      const dy = g.y2 - g.y1;
+
+      if (Math.abs(dx) < 18) {
+        return null;
+      }
+
+      const minX = Math.min(g.x1, g.x2);
+      const maxX = Math.max(g.x1, g.x2);
+
+      if (sampleX < minX - 8 || sampleX > maxX + 8) {
+        return null;
+      }
+
+      const t = (sampleX - g.x1) / dx;
+      if (t < -0.08 || t > 1.08) {
+        return null;
+      }
+
+      return {
+        y: g.y1 + dy * t - seesaw.thickness * 0.5,
+        minX,
+        maxX
+      };
     }
 
     function rectsOverlap(a, b) {
@@ -321,352 +495,627 @@
       );
     }
 
-    function circleRectOverlap(circle, rect) {
-      const closestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.w));
-      const closestY = Math.max(rect.y, Math.min(circle.y, rect.y + rect.h));
-      const dx = circle.x - closestX;
-      const dy = circle.y - closestY;
-      return dx * dx + dy * dy < circle.r * circle.r;
-    }
+    function updateSeesaws() {
+      currentLevel.seesaws.forEach((seesaw) => {
+        let riderForce = 0;
 
-    function updatePlayer() {
-      if (keys.left) player.vx -= moveSpeed;
-      if (keys.right) player.vx += moveSpeed;
-
-      player.vx *= friction;
-      player.vx = clamp(player.vx, -maxSpeed, maxSpeed);
-
-      player.vy += gravity;
-
-      player.x += player.vx;
-      resolvePlatformCollisions("x");
-
-      player.y += player.vy;
-      player.onGround = false;
-      resolvePlatformCollisions("y");
-
-      if (player.y > canvas.height + 100) {
-        loseLife();
-      }
-
-      if (player.x < 0) player.x = 0;
-      if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
-    }
-
-    function resolvePlatformCollisions(axis) {
-      for (const p of activeLevel.platforms) {
-        if (!rectsOverlap(player, p)) continue;
-
-        if (axis === "x") {
-          if (player.vx > 0) {
-            player.x = p.x - player.w;
-          } else if (player.vx < 0) {
-            player.x = p.x + p.w;
-          }
-          player.vx = 0;
+        if (
+          player.support &&
+          player.support.type === "seesaw" &&
+          player.support.ref === seesaw &&
+          player.onGround
+        ) {
+          const offset = clamp(
+            (player.x + player.w * 0.5 - seesaw.pivotX) / (seesaw.length * 0.5),
+            -1,
+            1
+          );
+          riderForce = offset * seesaw.weight;
         }
 
-        if (axis === "y") {
-          if (player.vy > 0) {
-            player.y = p.y - player.h;
-            player.vy = 0;
-            player.onGround = true;
-          } else if (player.vy < 0) {
-            player.y = p.y + p.h;
-            player.vy = 0;
-          }
-        }
-      }
-    }
+        seesaw.angularVelocity += -seesaw.angle * seesaw.spring + riderForce;
+        seesaw.angularVelocity *= seesaw.damping;
+        seesaw.angle += seesaw.angularVelocity;
 
-    function updateCoins() {
-      activeLevel.coins.forEach((coin) => {
-        if (!coin.taken && circleRectOverlap(coin, player)) {
-          coin.taken = true;
-          totalCoins++;
-          updateUI();
-          saveProgress();
+        if (seesaw.angle > seesaw.maxAngle) {
+          seesaw.angle = seesaw.maxAngle;
+          seesaw.angularVelocity *= -0.35;
+        }
+
+        if (seesaw.angle < -seesaw.maxAngle) {
+          seesaw.angle = -seesaw.maxAngle;
+          seesaw.angularVelocity *= -0.35;
         }
       });
     }
 
-    function updateSpikes() {
-      for (const spike of activeLevel.spikes) {
+    function updateSnakes() {
+      currentLevel.snakes.forEach((snake) => {
+        snake.x += snake.speed * snake.dir;
+
+        if (snake.x <= snake.minX) {
+          snake.x = snake.minX;
+          snake.dir = 1;
+        }
+
+        if (snake.x >= snake.maxX) {
+          snake.x = snake.maxX;
+          snake.dir = -1;
+        }
+      });
+    }
+
+    function resolvePlatformCollisionsX() {
+      currentLevel.platforms.forEach((platform) => {
+        if (!rectsOverlap(player, platform)) return;
+
+        if (player.prevX + player.w <= platform.x) {
+          player.x = platform.x - player.w;
+          player.vx = 0;
+        } else if (player.prevX >= platform.x + platform.w) {
+          player.x = platform.x + platform.w;
+          player.vx = 0;
+        }
+      });
+    }
+
+    function resolvePlatformCollisionsY() {
+      currentLevel.platforms.forEach((platform) => {
+        if (!rectsOverlap(player, platform)) return;
+
+        if (player.prevY + player.h <= platform.y && player.vy >= 0) {
+          player.y = platform.y - player.h;
+          player.vy = 0;
+          player.onGround = true;
+          player.support = { type: "platform", ref: platform };
+        } else if (player.prevY >= platform.y + platform.h && player.vy < 0) {
+          player.y = platform.y + platform.h;
+          player.vy = 0;
+        }
+      });
+    }
+
+    function resolveSeesawLanding() {
+      const footX = player.x + player.w * 0.5;
+
+      for (const seesaw of currentLevel.seesaws) {
+        const surface = getSeesawSurface(seesaw, footX);
+        if (!surface) continue;
+
+        const prevBottom = player.prevY + player.h;
+        const currentBottom = player.y + player.h;
+
+        if (
+          player.vy >= 0 &&
+          prevBottom <= surface.y + 8 &&
+          currentBottom >= surface.y &&
+          footX > surface.minX + 8 &&
+          footX < surface.maxX - 8
+        ) {
+          player.y = surface.y - player.h;
+          player.vy = 0;
+          player.onGround = true;
+          player.support = { type: "seesaw", ref: seesaw };
+          break;
+        }
+      }
+    }
+
+    function updatePlayer() {
+      const previousSupport = player.support;
+
+      if (
+        previousSupport &&
+        previousSupport.type === "seesaw" &&
+        player.onGround
+      ) {
+        const seesaw = previousSupport.ref;
+        const offset = player.x + player.w * 0.5 - seesaw.pivotX;
+        player.x += seesaw.angularVelocity * offset * 0.12;
+
+        const surface = getSeesawSurface(seesaw, player.x + player.w * 0.5);
+        if (surface && Math.abs(player.y + player.h - surface.y) < 24) {
+          player.y = surface.y - player.h;
+        }
+      }
+
+      player.prevX = player.x;
+      player.prevY = player.y;
+
+      if (input.left) player.vx -= MOVE_ACCEL;
+      if (input.right) player.vx += MOVE_ACCEL;
+      if (!input.left && !input.right) player.vx *= MOVE_FRICTION;
+
+      player.vx = clamp(player.vx, -MAX_SPEED, MAX_SPEED);
+
+      if (jumpBuffer > 0 && player.onGround) {
+        let bonusX = 0;
+        let bonusY = 0;
+
+        if (previousSupport && previousSupport.type === "seesaw") {
+          const seesaw = previousSupport.ref;
+          const offset = clamp(
+            (player.x + player.w * 0.5 - seesaw.pivotX) / (seesaw.length * 0.5),
+            -1,
+            1
+          );
+          const kick = seesaw.angularVelocity * seesaw.length * offset;
+          bonusX = kick * 0.18;
+          bonusY = Math.min(4.2, Math.abs(kick) * 0.08);
+        }
+
+        player.vy = JUMP_VELOCITY - bonusY;
+        player.vx += bonusX;
+        player.onGround = false;
+        player.support = null;
+        jumpBuffer = 0;
+      } else if (jumpBuffer > 0) {
+        jumpBuffer--;
+      }
+
+      player.vy += GRAVITY;
+      player.vy = Math.min(player.vy, MAX_FALL);
+
+      player.x += player.vx;
+      resolvePlatformCollisionsX();
+
+      player.y += player.vy;
+      player.onGround = false;
+      player.support = null;
+
+      resolvePlatformCollisionsY();
+      resolveSeesawLanding();
+
+      if (player.y > currentLevel.worldHeight + 80) {
+        restartLevel("You fell. Try hitting the seesaw farther from the center.");
+      }
+    }
+
+    function collectGems() {
+      let changed = false;
+
+      currentLevel.gems.forEach((gem) => {
+        if (gem.collected) return;
+
+        const dx = player.x + player.w * 0.5 - gem.x;
+        const dy = player.y + player.h * 0.5 - gem.y;
+        if (dx * dx + dy * dy < 28 * 28) {
+          gem.collected = true;
+          changed = true;
+        }
+      });
+
+      if (!changed) return;
+
+      updateHud();
+
+      if (allGemsCollected()) {
+        setMessage("All gems collected. The flag turned green.", 220);
+      } else {
+        setMessage("Gem collected. Keep searching.", 90);
+      }
+    }
+
+    function checkHazards() {
+      for (const spike of currentLevel.spikes) {
         if (rectsOverlap(player, spike)) {
-          loseLife();
+          restartLevel("You hit the spikes. Try a cleaner launch.");
+          return;
+        }
+      }
+
+      for (const snake of currentLevel.snakes) {
+        if (rectsOverlap(player, snake)) {
+          restartLevel("A snake got you. Time the crossing better.");
           return;
         }
       }
     }
 
-    function updateFlag() {
-      const poleRect = {
-        x: activeLevel.flag.x,
-        y: activeLevel.flag.y,
-        w: 10,
-        h: activeLevel.flag.h
-      };
+    function checkExit() {
+      if (!allGemsCollected() || gameWon) return;
 
-      const bannerRect = {
-        x: activeLevel.flag.x + 4,
-        y: activeLevel.flag.y + 6,
-        w: 22,
-        h: 14
-      };
-
-      if (rectsOverlap(player, poleRect) || rectsOverlap(player, bannerRect)) {
-        levelCompleteTimer++;
-
-        if (levelCompleteTimer > 18) {
-          if (currentLevelIndex < TOTAL_LEVELS - 1) {
-            if (currentLevelIndex + 1 > highestUnlockedLevel) {
-              highestUnlockedLevel = currentLevelIndex + 1;
-            }
-            loadLevel(currentLevelIndex + 1);
-          } else {
-            gameWon = true;
-            highestUnlockedLevel = TOTAL_LEVELS - 1;
-            updateUI();
-            renderLevelButtons();
-            saveProgress();
-          }
-        }
-      } else {
-        levelCompleteTimer = 0;
+      if (rectsOverlap(player, currentLevel.exit)) {
+        completeLevel();
       }
     }
 
-    function drawBackground() {
-      const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      sky.addColorStop(0, "#67cfff");
-      sky.addColorStop(0.7, "#def6ff");
-      sky.addColorStop(1, "#dff1c2");
-      ctx.fillStyle = sky;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    function updateCamera() {
+      const maxX = Math.max(0, currentLevel.worldWidth - VIEW_W);
+      const maxY = Math.max(0, currentLevel.worldHeight - VIEW_H);
 
-      ctx.fillStyle = "rgba(255, 214, 116, 0.36)";
+      const targetX = clamp(player.x - VIEW_W * 0.34, 0, maxX);
+      const targetY = clamp(player.y - VIEW_H * 0.44, 0, maxY);
+
+      camera.x += (targetX - camera.x) * 0.12;
+      camera.y += (targetY - camera.y) * 0.12;
+    }
+
+    function drawSky() {
+      const gradient = ctx.createLinearGradient(0, 0, 0, VIEW_H);
+      gradient.addColorStop(0, "#76d8ff");
+      gradient.addColorStop(0.62, "#dff8ff");
+      gradient.addColorStop(1, "#d8f3bf");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+
+      ctx.fillStyle = "rgba(255, 225, 124, 0.42)";
       ctx.beginPath();
-      ctx.arc(104, 68, 32, 0, Math.PI * 2);
+      ctx.arc(112, 86, 40, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "rgba(255,255,255,0.74)";
-      ctx.beginPath();
-      ctx.arc(250, 85, 18, 0, Math.PI * 2);
-      ctx.arc(272, 85, 16, 0, Math.PI * 2);
-      ctx.arc(292, 85, 14, 0, Math.PI * 2);
-      ctx.fill();
+      for (let i = 0; i < 8; i++) {
+        const px = ((i * 210) - camera.x * 0.15) % (VIEW_W + 180) - 90;
+        const py = 70 + (i % 3) * 48;
 
-      ctx.beginPath();
-      ctx.arc(640, 72, 17, 0, Math.PI * 2);
-      ctx.arc(662, 72, 15, 0, Math.PI * 2);
-      ctx.arc(682, 72, 13, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.beginPath();
+        ctx.arc(px, py, 18, 0, Math.PI * 2);
+        ctx.arc(px + 22, py - 6, 16, 0, Math.PI * 2);
+        ctx.arc(px + 44, py, 14, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
-      ctx.fillStyle = "#a7d7ad";
+      ctx.fillStyle = "#97d7ab";
       ctx.beginPath();
-      ctx.moveTo(0, 300);
-      ctx.quadraticCurveTo(130, 210, 270, 300);
-      ctx.quadraticCurveTo(400, 220, 540, 300);
-      ctx.quadraticCurveTo(650, 230, 900, 300);
-      ctx.lineTo(900, canvas.height);
-      ctx.lineTo(0, canvas.height);
+      ctx.moveTo(0, VIEW_H);
+      ctx.lineTo(0, 350);
+      for (let i = 0; i <= VIEW_W + 40; i += 120) {
+        ctx.quadraticCurveTo(i + 40, 290 + (i % 240 ? 30 : -5), i + 120, 350);
+      }
+      ctx.lineTo(VIEW_W, VIEW_H);
       ctx.closePath();
       ctx.fill();
 
-      ctx.fillStyle = "#7fc88c";
+      ctx.fillStyle = "#68b57d";
       ctx.beginPath();
-      ctx.moveTo(0, 332);
-      ctx.quadraticCurveTo(140, 262, 320, 332);
-      ctx.quadraticCurveTo(470, 272, 610, 332);
-      ctx.quadraticCurveTo(760, 272, 900, 332);
-      ctx.lineTo(900, canvas.height);
-      ctx.lineTo(0, canvas.height);
+      ctx.moveTo(0, VIEW_H);
+      ctx.lineTo(0, 410);
+      for (let i = 0; i <= VIEW_W + 40; i += 140) {
+        ctx.quadraticCurveTo(i + 60, 355 + (i % 280 ? 35 : -10), i + 140, 410);
+      }
+      ctx.lineTo(VIEW_W, VIEW_H);
       ctx.closePath();
       ctx.fill();
-
-      ctx.fillStyle = "#74bd60";
-      ctx.fillRect(0, canvas.height - 24, canvas.width, 24);
     }
 
     function drawPlatforms() {
-      const colors = ["#6b4eff", "#4f7bff", "#9459ff", "#4dc1ff", "#5e6dff"];
-      const color = colors[currentLevelIndex % colors.length];
+      currentLevel.platforms.forEach((platform) => {
+        const x = platform.x - camera.x;
+        const y = platform.y - camera.y;
 
-      activeLevel.platforms.forEach((p) => {
-        ctx.fillStyle = color;
-        drawRoundedRect(ctx, p.x, p.y, p.w, p.h, 8);
+        ctx.fillStyle = platform.h > 30 ? "#6da65f" : "#7050ff";
+        drawRoundedRect(ctx, x, y, platform.w, platform.h, 10);
         ctx.fill();
 
-        ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
-        drawRoundedRect(ctx, p.x + 4, p.y + 3, p.w - 8, 4, 2);
+        ctx.fillStyle = platform.h > 30 ? "#89cf75" : "#8f7dff";
+        drawRoundedRect(ctx, x + 4, y + 3, platform.w - 8, Math.min(7, platform.h - 6), 4);
         ctx.fill();
 
-        ctx.fillStyle = "rgba(18, 35, 84, 0.2)";
-        drawRoundedRect(ctx, p.x + 4, p.y + 8, p.w - 8, p.h - 10, 4);
+        if (platform.h > 30) {
+          ctx.fillStyle = "rgba(44, 84, 40, 0.25)";
+          drawRoundedRect(ctx, x + 8, y + 16, platform.w - 16, platform.h - 20, 5);
+          ctx.fill();
+        }
+      });
+    }
+
+    function drawSeesaws() {
+      currentLevel.seesaws.forEach((seesaw) => {
+        const g = getSeesawGeometry(seesaw);
+        const cx = seesaw.pivotX - camera.x;
+        const cy = seesaw.pivotY - camera.y;
+
+        ctx.strokeStyle = "#7a4d2d";
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 2);
+        ctx.lineTo(cx - 18, cy + 34);
+        ctx.lineTo(cx + 18, cy + 34);
+        ctx.closePath();
+        ctx.stroke();
+
+        ctx.fillStyle = "#9a6036";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 6);
+        ctx.lineTo(cx - 22, cy + 34);
+        ctx.lineTo(cx + 22, cy + 34);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = "#4a2d16";
+        ctx.lineWidth = seesaw.thickness;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(g.x1 - camera.x, g.y1 - camera.y);
+        ctx.lineTo(g.x2 - camera.x, g.y2 - camera.y);
+        ctx.stroke();
+
+        ctx.strokeStyle = "#d9b269";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(g.x1 - camera.x, g.y1 - camera.y - 2);
+        ctx.lineTo(g.x2 - camera.x, g.y2 - camera.y - 2);
+        ctx.stroke();
+
+        ctx.fillStyle = "#ffe08d";
+        ctx.beginPath();
+        ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#cc9f44";
+        ctx.beginPath();
+        ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
         ctx.fill();
       });
     }
 
     function drawSpikes() {
-      activeLevel.spikes.forEach((s) => {
-        const spikeCount = Math.floor(s.w / 10);
-        for (let i = 0; i < spikeCount; i++) {
-          ctx.fillStyle = "#ff5f8c";
+      currentLevel.spikes.forEach((spike) => {
+        const count = Math.max(2, Math.floor(spike.w / 12));
+        const baseW = spike.w / count;
+
+        for (let i = 0; i < count; i++) {
+          const left = spike.x + i * baseW - camera.x;
+          const right = left + baseW;
+          const tipX = (left + right) * 0.5;
+          const baseY = spike.y + spike.h - camera.y;
+          const tipY = spike.y - camera.y;
+
+          ctx.fillStyle = "#ff5878";
           ctx.beginPath();
-          ctx.moveTo(s.x + i * 10, s.y + s.h);
-          ctx.lineTo(s.x + i * 10 + 5, s.y);
-          ctx.lineTo(s.x + i * 10 + 10, s.y + s.h);
+          ctx.moveTo(left, baseY);
+          ctx.lineTo(tipX, tipY);
+          ctx.lineTo(right, baseY);
+          ctx.closePath();
           ctx.fill();
 
-          ctx.fillStyle = "rgba(255, 219, 230, 0.55)";
+          ctx.fillStyle = "rgba(255, 231, 237, 0.6)";
           ctx.beginPath();
-          ctx.moveTo(s.x + i * 10 + 2, s.y + s.h - 1);
-          ctx.lineTo(s.x + i * 10 + 5, s.y + 5);
-          ctx.lineTo(s.x + i * 10 + 8, s.y + s.h - 1);
+          ctx.moveTo(left + 2, baseY - 1);
+          ctx.lineTo(tipX, tipY + 5);
+          ctx.lineTo(right - 2, baseY - 1);
+          ctx.closePath();
           ctx.fill();
         }
       });
     }
 
-    function drawCoins() {
-      activeLevel.coins.forEach((coin) => {
-        if (coin.taken) return;
+    function drawSnakes() {
+      currentLevel.snakes.forEach((snake) => {
+        const x = snake.x - camera.x;
+        const y = snake.y - camera.y;
 
-        ctx.save();
-        ctx.shadowColor = "rgba(255, 213, 74, 0.5)";
-        ctx.shadowBlur = 16;
-        ctx.fillStyle = "#ffd54a";
-        ctx.beginPath();
-        ctx.arc(coin.x, coin.y, coin.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-
-        ctx.fillStyle = "#ffef9b";
-        ctx.beginPath();
-        ctx.arc(coin.x - 2, coin.y - 2, 3, 0, Math.PI * 2);
+        ctx.fillStyle = "#37a45d";
+        drawRoundedRect(ctx, x, y, snake.w, snake.h, 9);
         ctx.fill();
 
-        ctx.strokeStyle = "rgba(255, 245, 189, 0.65)";
-        ctx.lineWidth = 1.5;
+        ctx.fillStyle = "#68df92";
+        drawRoundedRect(ctx, x + 5, y + 4, snake.w - 10, 5, 3);
+        ctx.fill();
+
+        ctx.fillStyle = "#ffffff";
         ctx.beginPath();
-        ctx.arc(coin.x, coin.y, coin.r - 3, 0, Math.PI * 2);
+        ctx.arc(x + snake.w - 12, y + 6, 3, 0, Math.PI * 2);
+        ctx.arc(x + snake.w - 20, y + 6, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#111111";
+        ctx.beginPath();
+        ctx.arc(x + snake.w - 12, y + 6, 1.2, 0, Math.PI * 2);
+        ctx.arc(x + snake.w - 20, y + 6, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "#ff7c96";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x + snake.w, y + 11);
+        ctx.lineTo(x + snake.w + 7, y + 12);
         ctx.stroke();
       });
     }
 
-    function drawFlag() {
-      const f = activeLevel.flag;
-      ctx.fillStyle = "#5b3f2b";
-      drawRoundedRect(ctx, f.x, f.y, 4, f.h, 2);
+    function drawGems() {
+      currentLevel.gems.forEach((gem) => {
+        if (gem.collected) return;
+
+        const x = gem.x - camera.x;
+        const y = gem.y - camera.y;
+
+        ctx.save();
+        ctx.shadowColor = "rgba(107, 222, 255, 0.55)";
+        ctx.shadowBlur = 16;
+        ctx.fillStyle = "#73ebff";
+        ctx.beginPath();
+        ctx.moveTo(x, y - 14);
+        ctx.lineTo(x + 12, y);
+        ctx.lineTo(x, y + 14);
+        ctx.lineTo(x - 12, y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.moveTo(x, y - 9);
+        ctx.lineTo(x + 5, y - 1);
+        ctx.lineTo(x - 1, y + 4);
+        ctx.closePath();
+        ctx.fill();
+      });
+    }
+
+    function drawExit() {
+      const exit = currentLevel.exit;
+      const x = exit.x - camera.x;
+      const y = exit.y - camera.y;
+      const active = allGemsCollected();
+
+      ctx.fillStyle = "#6a4d34";
+      drawRoundedRect(ctx, x, y, 5, exit.h, 2);
       ctx.fill();
 
-      ctx.fillStyle = "#ff4d6d";
+      ctx.fillStyle = active ? "#5bf08f" : "#ff5d73";
       ctx.beginPath();
-      ctx.moveTo(f.x + 4, f.y + 6);
-      ctx.lineTo(f.x + 28, f.y + 13);
-      ctx.lineTo(f.x + 4, f.y + 20);
+      ctx.moveTo(x + 5, y + 8);
+      ctx.lineTo(x + exit.w, y + 17);
+      ctx.lineTo(x + 5, y + 28);
       ctx.closePath();
       ctx.fill();
+
+      ctx.fillStyle = active ? "#d8ffe7" : "#ffd7dc";
+      ctx.fillRect(x + 10, y + 15, 8, 2);
+
+      ctx.strokeStyle = "rgba(255,255,255,0.55)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y + exit.h + 5);
+      ctx.lineTo(x + exit.w + 8, y + exit.h + 5);
+      ctx.stroke();
     }
 
     function drawPlayer() {
+      const x = player.x - camera.x;
+      const y = player.y - camera.y;
+
       ctx.fillStyle = "#143e66";
-      drawRoundedRect(ctx, player.x, player.y, player.w, player.h, 8);
+      drawRoundedRect(ctx, x, y, player.w, player.h, 9);
       ctx.fill();
 
       ctx.fillStyle = "#8ee9ff";
-      drawRoundedRect(ctx, player.x + 4, player.y + 5, player.w - 8, player.h - 10, 6);
+      drawRoundedRect(ctx, x + 4, y + 5, player.w - 8, player.h - 10, 7);
       ctx.fill();
 
       ctx.fillStyle = "#ffcb68";
-      drawRoundedRect(ctx, player.x + 6, player.y + 3, player.w - 12, 6, 3);
+      drawRoundedRect(ctx, x + 6, y + 3, player.w - 12, 6, 3);
       ctx.fill();
 
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.arc(player.x + 19, player.y + 13, 4, 0, Math.PI * 2);
+      ctx.arc(x + 18.5, y + 14, 4, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = "#111111";
       ctx.beginPath();
-      ctx.arc(player.x + 20.5, player.y + 13, 1.8, 0, Math.PI * 2);
+      ctx.arc(x + 20, y + 14, 1.6, 0, Math.PI * 2);
       ctx.fill();
-    }
-
-    function drawLevelNumber() {
-      ctx.fillStyle = "rgba(20, 49, 79, 0.72)";
-      drawRoundedRect(ctx, 14, 14, 126, 38, 14);
-      ctx.fill();
-
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 20px Arial";
-      ctx.fillText("Level " + (currentLevelIndex + 1), 28, 39);
     }
 
     function drawOverlay() {
-      if (gameWon) {
-        ctx.fillStyle = "rgba(0,0,0,0.35)";
-        drawRoundedRect(ctx, 255, 110, 390, 138, 22);
-        ctx.fill();
+      if (!gameWon) return;
 
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 34px Arial";
-        ctx.fillText("100 Levels Complete!", 275, 160);
+      ctx.fillStyle = "rgba(4, 12, 20, 0.48)";
+      drawRoundedRect(ctx, 220, 160, 520, 148, 24);
+      ctx.fill();
 
-        ctx.font = "20px Arial";
-        ctx.fillText("Total Coins: " + totalCoins, 360, 195);
-        ctx.fillText("You beat Platformer Quest", 315, 226);
-      }
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 36px Arial";
+      ctx.fillText("Mountain Cleared!", 338, 215);
+
+      ctx.font = "20px Arial";
+      ctx.fillText("Every gem was collected and every flag was reached.", 255, 254);
+      ctx.fillText("Use Previous Level if you want to replay your favorite run.", 236, 286);
     }
 
-    function gameLoop() {
-      drawBackground();
+    function drawRoundedRect(context, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      context.beginPath();
+      context.moveTo(x + r, y);
+      context.lineTo(x + width - r, y);
+      context.quadraticCurveTo(x + width, y, x + width, y + r);
+      context.lineTo(x + width, y + height - r);
+      context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      context.lineTo(x + r, y + height);
+      context.quadraticCurveTo(x, y + height, x, y + height - r);
+      context.lineTo(x, y + r);
+      context.quadraticCurveTo(x, y, x + r, y);
+      context.closePath();
+    }
 
+    function update() {
       if (!gameWon) {
+        updateSeesaws();
+        updateSnakes();
         updatePlayer();
-        updateCoins();
-        updateSpikes();
-        updateFlag();
+        collectGems();
+        checkHazards();
+        checkExit();
+        updateHud();
       }
+
+      updateCamera();
+      updateAmbientMessage();
+    }
+
+    function draw() {
+      drawSky();
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, VIEW_W, VIEW_H);
+      ctx.clip();
 
       drawPlatforms();
+      drawSeesaws();
       drawSpikes();
-      drawCoins();
-      drawFlag();
+      drawSnakes();
+      drawGems();
+      drawExit();
       drawPlayer();
-      drawLevelNumber();
-      drawOverlay();
 
-      requestAnimationFrame(gameLoop);
+      ctx.restore();
+      drawOverlay();
     }
 
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowLeft") keys.left = true;
-      if (e.key === "ArrowRight") keys.right = true;
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
 
-      if ((e.key === "ArrowUp" || e.key === " " || e.code === "Space") && player.onGround) {
-        e.preventDefault();
-        player.vy = jumpPower;
-        player.onGround = false;
+    window.addEventListener("keydown", (event) => {
+      if (event.code === "ArrowLeft" || event.code === "KeyA") {
+        input.left = true;
+      }
+
+      if (event.code === "ArrowRight" || event.code === "KeyD") {
+        input.right = true;
+      }
+
+      if (
+        event.code === "ArrowUp" ||
+        event.code === "Space" ||
+        event.code === "KeyW"
+      ) {
+        jumpBuffer = 10;
+        event.preventDefault();
       }
     });
 
-    document.addEventListener("keyup", (e) => {
-      if (e.key === "ArrowLeft") keys.left = false;
-      if (e.key === "ArrowRight") keys.right = false;
+    window.addEventListener("keyup", (event) => {
+      if (event.code === "ArrowLeft" || event.code === "KeyA") {
+        input.left = false;
+      }
+
+      if (event.code === "ArrowRight" || event.code === "KeyD") {
+        input.right = false;
+      }
     });
 
-    prevLevelBtn.addEventListener("click", goPrevLevel);
-    nextLevelBtn.addEventListener("click", goNextLevel);
-    restartBtn.addEventListener("click", restartLevel);
-    resetProgressBtn.addEventListener("click", resetProgress);
+    restartBtn.addEventListener("click", () => {
+      restartLevel("Level restarted.");
+    });
 
-    if (currentLevelIndex > highestUnlockedLevel) {
-      currentLevelIndex = highestUnlockedLevel;
-    }
+    prevBtn.addEventListener("click", () => {
+      loadLevel(levelIndex - 1);
+    });
 
-    loadLevel(currentLevelIndex);
-    gameLoop();
+    nextBtn.addEventListener("click", () => {
+      loadLevel(levelIndex + 1);
+    });
+
+    loadLevel(0);
+    loop();
   </script>
 </body>
 </html>
