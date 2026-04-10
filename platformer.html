@@ -3,110 +3,95 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gemrise Adventure | Game Hub</title>
+  <title>Neon Platformer | Game Hub</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    .pixel-panel {
-      background: #4b3946;
-      border: 6px solid #5c4860;
-      box-shadow: inset 0 0 0 4px #3f313b;
-      border-radius: 16px;
-      padding: 20px;
+    .neon-panel {
+      background: linear-gradient(180deg, rgba(7, 12, 28, 0.96), rgba(9, 13, 24, 0.94));
+      border: 1px solid rgba(137, 247, 255, 0.18);
+      box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.45),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+      border-radius: 22px;
+      padding: 18px;
     }
 
-    .level-select-wrap {
+    .neon-levels {
       margin-top: 18px;
     }
 
-    .level-select-title {
+    .neon-levels h2 {
       margin: 0 0 12px;
-      color: var(--text-main);
-      font-size: 1.05rem;
-      letter-spacing: 0.06em;
+      font-size: 1rem;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
-    .pixel-level-grid {
+    .neon-level-grid {
       display: grid;
-      grid-template-columns: repeat(10, minmax(50px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(6, minmax(80px, 1fr));
+      gap: 12px;
     }
 
-    .pixel-level-btn {
-      border: 0;
-      border-radius: 18px;
-      padding: 0;
-      height: 92px;
+    .neon-level-btn {
+      border: 1px solid rgba(137, 247, 255, 0.22);
+      border-radius: 16px;
+      padding: 14px 10px;
+      background: linear-gradient(180deg, rgba(137, 247, 255, 0.14), rgba(255, 110, 209, 0.08));
+      color: #f5fbff;
+      font: 800 1rem/1 "Trebuchet MS", sans-serif;
       cursor: pointer;
-      background: #90a9d5;
-      color: #1c2b57;
-      font: 800 2rem/1 "Trebuchet MS", sans-serif;
-      box-shadow:
-        inset 0 0 0 6px #5d82bf,
-        inset 0 0 0 12px #a9bcdf,
-        0 8px 0 rgba(32, 21, 28, 0.35);
-      transition: transform 0.12s ease;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      transition: transform 0.15s ease, border-color 0.15s ease;
     }
 
-    .pixel-level-btn:hover {
+    .neon-level-btn:hover {
       transform: translateY(-2px);
+      border-color: rgba(137, 247, 255, 0.4);
     }
 
-    .pixel-level-btn.current {
-      background: #eef3ff;
-      color: #172754;
-      box-shadow:
-        inset 0 0 0 6px #5d82bf,
-        inset 0 0 0 12px #e4ecfd,
-        0 8px 0 rgba(32, 21, 28, 0.35);
+    .neon-level-btn.current {
+      background: linear-gradient(180deg, rgba(137, 247, 255, 0.26), rgba(137, 247, 255, 0.12));
+      color: #06111f;
+      border-color: rgba(137, 247, 255, 0.6);
+      box-shadow: 0 0 22px rgba(137, 247, 255, 0.28);
     }
 
-    .pixel-level-btn.locked {
+    .neon-level-btn.locked {
       opacity: 0.45;
       cursor: not-allowed;
       transform: none;
     }
 
-    .pixel-note {
+    .neon-note {
       margin: 18px auto 0;
-      max-width: 780px;
+      max-width: 760px;
       text-align: center;
       color: var(--text-soft);
-      line-height: 1.6;
+      line-height: 1.65;
     }
 
-    .pixel-note strong {
+    .neon-note strong {
       color: var(--text-main);
     }
 
-    @media (max-width: 900px) {
-      .pixel-level-grid {
-        grid-template-columns: repeat(5, minmax(50px, 1fr));
-      }
-
-      .pixel-level-btn {
-        height: 78px;
-        font-size: 1.7rem;
-      }
-    }
-
-    @media (max-width: 560px) {
-      .pixel-level-grid {
-        grid-template-columns: repeat(4, minmax(50px, 1fr));
+    @media (max-width: 720px) {
+      .neon-level-grid {
+        grid-template-columns: repeat(3, minmax(80px, 1fr));
       }
     }
   </style>
 </head>
-<body class="theme-adventure">
+<body class="theme-neon">
   <div class="page-shell">
     <main class="game-page-wrap">
       <section class="game-panel">
         <div class="game-topbar">
           <div class="game-header-left">
-            <p class="eyebrow">Original Puzzle Platformer</p>
-            <h1>Gemrise Adventure</h1>
+            <p class="eyebrow">Neon Platformer</p>
+            <h1>Neon Rift</h1>
             <p class="game-subtext">
-              Collect every gem to wake the exit flag, use seesaws to gain height, and clear 30 original single-screen rooms that start gentle and get steadily harder.
+              Collect every energy core to unlock the exit gate. Each level is handcrafted, longer than the last, and pushes the movement and platform timing a little harder.
             </p>
           </div>
           <a href="index.html" class="back-link">&larr; Home</a>
@@ -116,13 +101,13 @@
           <div class="status-box">Move: Arrows / A D</div>
           <div class="status-box">Jump: Space / Up / W</div>
           <div class="status-box" id="levelLabel">Level 1</div>
-          <div class="status-box is-accent" id="gemLabel">Gems: 0 / 0</div>
-          <div class="status-box" id="flagLabel">Flag: Red</div>
+          <div class="status-box is-accent" id="coreLabel">Cores: 0 / 0</div>
+          <div class="status-box" id="gateLabel">Gate: Locked</div>
         </div>
 
-        <div class="message-banner" id="messageBox">Collect all gems, then reach the flag.</div>
+        <div class="message-banner" id="messageBox">Collect every core, then enter the gate.</div>
 
-        <div class="canvas-stage pixel-panel">
+        <div class="canvas-stage neon-panel">
           <canvas id="gameCanvas" class="game-canvas" width="960" height="540"></canvas>
         </div>
 
@@ -132,13 +117,13 @@
           <button class="secondary-button" id="nextBtn">Next Level</button>
         </div>
 
-        <div class="level-select-wrap pixel-panel">
-          <h2 class="level-select-title">Level Select</h2>
-          <div class="pixel-level-grid" id="levelGrid"></div>
+        <div class="neon-levels neon-panel">
+          <h2>Level Select</h2>
+          <div class="neon-level-grid" id="levelGrid"></div>
         </div>
 
-        <p class="pixel-note">
-          <strong>Update:</strong> Level 1 is now intentionally easy and fully beatable. Levels 1-6 teach the mechanics, then the later rooms tighten the timing and hazard pressure.
+        <p class="neon-note">
+          <strong>Flow:</strong> Levels 1-2 are easier on purpose. Levels 3-4 add moving platforms and hazard pressure. Levels 5-6 are longer, more vertical, and demand cleaner execution.
         </p>
       </section>
     </main>
@@ -149,27 +134,37 @@
     const ctx = canvas.getContext("2d");
 
     const levelLabel = document.getElementById("levelLabel");
-    const gemLabel = document.getElementById("gemLabel");
-    const flagLabel = document.getElementById("flagLabel");
+    const coreLabel = document.getElementById("coreLabel");
+    const gateLabel = document.getElementById("gateLabel");
     const messageBox = document.getElementById("messageBox");
     const levelGrid = document.getElementById("levelGrid");
+
     const prevBtn = document.getElementById("prevBtn");
     const restartBtn = document.getElementById("restartBtn");
     const nextBtn = document.getElementById("nextBtn");
 
-    const W = canvas.width;
-    const H = canvas.height;
-    const TOTAL_LEVELS = 30;
-
-    const input = { left: false, right: false };
+    const VIEW_W = canvas.width;
+    const VIEW_H = canvas.height;
 
     const physics = {
       accel: 0.72,
       friction: 0.84,
-      maxSpeed: 5.7,
-      gravity: 0.5,
-      jump: -10.9,
-      maxFall: 14
+      gravity: 0.52,
+      jump: -11.2,
+      maxSpeed: 6,
+      maxFall: 15,
+      coyote: 6,
+      jumpBuffer: 8
+    };
+
+    const input = {
+      left: false,
+      right: false
+    };
+
+    const camera = {
+      x: 0,
+      y: 0
     };
 
     const player = {
@@ -182,56 +177,326 @@
       prevX: 0,
       prevY: 0,
       onGround: false,
-      support: null
+      support: null,
+      coyoteFrames: 0
     };
 
-    let jumpBuffer = 0;
+    let jumpBufferFrames = 0;
     let levelIndex = 0;
     let currentLevel = null;
     let messageTimer = 0;
-    let unlockedLevel = Number(localStorage.getItem("gemriseUnlocked") || 1);
+    let unlockedLevel = Number(localStorage.getItem("neonRiftUnlocked") || 1);
 
-    function clamp(value, min, max) {
-      return Math.max(min, Math.min(max, value));
+    function plat(x, y, w, h) {
+      return { x, y, w, h, kind: "static" };
     }
 
-    function platform(x, y, w, h) {
-      return { x, y, w, h };
+    function movingPlat(x, y, w, h, axis, range, speed, phase) {
+      return {
+        x,
+        y,
+        w,
+        h,
+        baseX: x,
+        baseY: y,
+        dx: 0,
+        dy: 0,
+        axis,
+        range,
+        speed,
+        phase,
+        kind: "moving"
+      };
     }
 
     function spike(x, y, w, h) {
       return { x, y, w, h };
     }
 
-    function snake(x, y, minX, maxX, speed) {
-      return { x, y, w: 36, h: 18, minX, maxX, speed, dir: 1 };
+    function boost(x, y, w, h, power) {
+      return { x, y, w, h, power };
     }
 
-    function gem(x, y) {
-      return { x, y, r: 12, collected: false };
+    function drone(x, y, axis, min, max, speed, phase) {
+      return { x, y, axis, min, max, speed, phase, r: 16 };
     }
 
-    function seesaw(pivotX, pivotY, length, maxAngle, spring, weight, startAngle) {
-      return {
-        pivotX,
-        pivotY,
-        length,
-        maxAngle,
-        spring,
-        weight,
-        angle: startAngle,
-        angularVelocity: 0,
-        damping: 0.9915,
-        thickness: 12
-      };
+    function core(x, y) {
+      return { x, y, collected: false, r: 10 };
     }
 
-    function saveProgress() {
-      localStorage.setItem("gemriseUnlocked", String(unlockedLevel));
-    }
+    const LEVELS = [
+      {
+        title: "Level 1: Glow Start",
+        hint: "Learn the movement. The first room is short and forgiving.",
+        worldWidth: 1700,
+        worldHeight: 760,
+        spawn: { x: 90, y: 570 },
+        goal: { x: 1510, y: 510, w: 34, h: 82 },
+        platforms: [
+          plat(0, 640, 300, 120),
+          plat(360, 590, 170, 22),
+          plat(610, 640, 300, 120),
+          plat(980, 540, 180, 22),
+          plat(1240, 640, 260, 120),
+          plat(1450, 590, 140, 22)
+        ],
+        movingPlatforms: [],
+        spikes: [],
+        boosts: [
+          boost(730, 616, 72, 18, -14)
+        ],
+        drones: [],
+        cores: [
+          core(448, 548),
+          core(1058, 498)
+        ]
+      },
+      {
+        title: "Level 2: Split Path",
+        hint: "A little longer. Use the boost to choose the high route.",
+        worldWidth: 2100,
+        worldHeight: 780,
+        spawn: { x: 96, y: 570 },
+        goal: { x: 1900, y: 488, w: 34, h: 82 },
+        platforms: [
+          plat(0, 640, 280, 120),
+          plat(350, 582, 140, 22),
+          plat(560, 640, 230, 120),
+          plat(860, 510, 160, 22),
+          plat(1100, 640, 240, 120),
+          plat(1420, 560, 170, 22),
+          plat(1680, 640, 250, 120),
+          plat(1840, 538, 130, 22)
+        ],
+        movingPlatforms: [],
+        spikes: [
+          spike(796, 618, 58, 22)
+        ],
+        boosts: [
+          boost(640, 616, 70, 18, -14),
+          boost(1480, 536, 68, 18, -13)
+        ],
+        drones: [],
+        cores: [
+          core(420, 540),
+          core(930, 468),
+          core(1888, 496)
+        ]
+      },
+      {
+        title: "Level 3: Pulse Transit",
+        hint: "Moving platforms start here. Wait for the safe cycle.",
+        worldWidth: 2500,
+        worldHeight: 860,
+        spawn: { x: 96, y: 650 },
+        goal: { x: 2280, y: 394, w: 34, h: 82 },
+        platforms: [
+          plat(0, 720, 260, 140),
+          plat(320, 650, 130, 22),
+          plat(540, 720, 220, 140),
+          plat(980, 610, 140, 22),
+          plat(1220, 720, 210, 140),
+          plat(1510, 556, 150, 22),
+          plat(1750, 720, 240, 140),
+          plat(2060, 486, 170, 22),
+          plat(2240, 720, 260, 140)
+        ],
+        movingPlatforms: [
+          movingPlat(812, 655, 116, 20, "y", 90, 0.028, 0),
+          movingPlat(1640, 610, 120, 20, "x", 80, 0.026, 1.7)
+        ],
+        spikes: [
+          spike(770, 698, 40, 22),
+          spike(1440, 698, 60, 22),
+          spike(2006, 698, 46, 22)
+        ],
+        boosts: [
+          boost(620, 696, 72, 18, -15),
+          boost(1815, 696, 70, 18, -15)
+        ],
+        drones: [
+          drone(1350, 450, "y", 420, 620, 0.028, 0.6)
+        ],
+        cores: [
+          core(360, 608),
+          core(1040, 568),
+          core(2122, 444)
+        ]
+      },
+      {
+        title: "Level 4: Prism Wells",
+        hint: "More vertical movement. Use the lifts and dodge the drones.",
+        worldWidth: 2900,
+        worldHeight: 980,
+        spawn: { x: 100, y: 760 },
+        goal: { x: 2650, y: 302, w: 34, h: 82 },
+        platforms: [
+          plat(0, 830, 260, 150),
+          plat(340, 742, 140, 22),
+          plat(550, 660, 120, 22),
+          plat(760, 830, 220, 150),
+          plat(1050, 560, 130, 22),
+          plat(1260, 480, 120, 22),
+          plat(1500, 830, 210, 150),
+          plat(1770, 618, 150, 22),
+          plat(1980, 510, 130, 22),
+          plat(2200, 830, 240, 150),
+          plat(2450, 410, 170, 22),
+          plat(2620, 830, 280, 150)
+        ],
+        movingPlatforms: [
+          movingPlat(890, 700, 116, 20, "y", 130, 0.028, 0.4),
+          movingPlat(1600, 700, 120, 20, "x", 110, 0.024, 1.4),
+          movingPlat(2300, 620, 120, 20, "y", 120, 0.026, 2.1)
+        ],
+        spikes: [
+          spike(706, 808, 52, 22),
+          spike(1450, 808, 48, 22),
+          spike(2144, 808, 52, 22)
+        ],
+        boosts: [
+          boost(136, 806, 74, 18, -15),
+          boost(1576, 806, 74, 18, -16),
+          boost(2730, 806, 74, 18, -16)
+        ],
+        drones: [
+          drone(1180, 390, "y", 350, 590, 0.03, 0.2),
+          drone(2050, 450, "x", 1940, 2140, 0.028, 1.5)
+        ],
+        cores: [
+          core(610, 618),
+          core(1320, 438),
+          core(2510, 368)
+        ]
+      },
+      {
+        title: "Level 5: Voltage Run",
+        hint: "This level is much longer. Expect tighter landings and more active hazards.",
+        worldWidth: 3500,
+        worldHeight: 1040,
+        spawn: { x: 96, y: 820 },
+        goal: { x: 3250, y: 270, w: 34, h: 82 },
+        platforms: [
+          plat(0, 890, 250, 150),
+          plat(320, 800, 120, 22),
+          plat(520, 720, 120, 22),
+          plat(740, 890, 200, 150),
+          plat(1010, 650, 130, 22),
+          plat(1230, 550, 130, 22),
+          plat(1450, 890, 200, 150),
+          plat(1700, 710, 150, 22),
+          plat(1950, 590, 140, 22),
+          plat(2200, 890, 220, 150),
+          plat(2480, 690, 150, 22),
+          plat(2740, 570, 140, 22),
+          plat(3000, 890, 220, 150),
+          plat(3200, 380, 150, 22),
+          plat(3330, 890, 170, 150)
+        ],
+        movingPlatforms: [
+          movingPlat(880, 760, 120, 20, "y", 140, 0.029, 0.2),
+          movingPlat(1590, 790, 120, 20, "x", 120, 0.024, 1.2),
+          movingPlat(2360, 760, 120, 20, "y", 130, 0.027, 2.3),
+          movingPlat(3090, 620, 120, 20, "x", 100, 0.025, 0.9)
+        ],
+        spikes: [
+          spike(660, 868, 74, 22),
+          spike(1380, 868, 60, 22),
+          spike(2140, 868, 56, 22),
+          spike(2940, 868, 58, 22)
+        ],
+        boosts: [
+          boost(120, 866, 76, 18, -15),
+          boost(1500, 866, 76, 18, -16),
+          boost(3040, 866, 76, 18, -16)
+        ],
+        drones: [
+          drone(1120, 470, "y", 430, 700, 0.032, 0.4),
+          drone(2000, 520, "x", 1860, 2140, 0.03, 1.1),
+          drone(2820, 490, "y", 450, 690, 0.03, 2.2)
+        ],
+        cores: [
+          core(390, 758),
+          core(1295, 508),
+          core(2545, 648),
+          core(3260, 338)
+        ]
+      },
+      {
+        title: "Level 6: Neon Crown",
+        hint: "Final stage. Long routes, stacked hazards, and no wasted jumps.",
+        worldWidth: 4300,
+        worldHeight: 1160,
+        spawn: { x: 110, y: 930 },
+        goal: { x: 4010, y: 248, w: 34, h: 82 },
+        platforms: [
+          plat(0, 1000, 260, 160),
+          plat(330, 910, 120, 22),
+          plat(520, 820, 120, 22),
+          plat(740, 730, 120, 22),
+          plat(920, 1000, 220, 160),
+          plat(1200, 780, 140, 22),
+          plat(1450, 670, 140, 22),
+          plat(1710, 1000, 240, 160),
+          plat(1980, 790, 150, 22),
+          plat(2230, 650, 150, 22),
+          plat(2510, 1000, 250, 160),
+          plat(2810, 720, 150, 22),
+          plat(3070, 600, 150, 22),
+          plat(3350, 1000, 240, 160),
+          plat(3610, 760, 150, 22),
+          plat(3860, 520, 170, 22),
+          plat(4100, 1000, 200, 160)
+        ],
+        movingPlatforms: [
+          movingPlat(1120, 890, 120, 20, "y", 170, 0.03, 0.1),
+          movingPlat(1840, 900, 126, 20, "x", 140, 0.024, 1.7),
+          movingPlat(2660, 860, 126, 20, "y", 160, 0.028, 2.5),
+          movingPlat(3480, 860, 126, 20, "x", 150, 0.025, 0.8),
+          movingPlat(3910, 680, 116, 20, "y", 140, 0.026, 1.1)
+        ],
+        spikes: [
+          spike(670, 978, 66, 22),
+          spike(1650, 978, 58, 22),
+          spike(2460, 978, 66, 22),
+          spike(3300, 978, 62, 22),
+          spike(4040, 978, 54, 22)
+        ],
+        boosts: [
+          boost(150, 976, 80, 18, -16),
+          boost(1820, 976, 80, 18, -16),
+          boost(3380, 976, 80, 18, -17)
+        ],
+        drones: [
+          drone(1340, 620, "y", 560, 860, 0.034, 0.2),
+          drone(2320, 560, "x", 2180, 2460, 0.03, 1.2),
+          drone(3180, 500, "y", 460, 820, 0.032, 2.1),
+          drone(3880, 420, "x", 3740, 4040, 0.03, 0.5)
+        ],
+        cores: [
+          core(570, 778),
+          core(1520, 628),
+          core(2295, 608),
+          core(3135, 558),
+          core(3970, 478)
+        ]
+      }
+    ];
 
-    function allGemsCollected() {
-      return currentLevel.gems.every((item) => item.collected);
+    function drawRoundedRect(context, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      context.beginPath();
+      context.moveTo(x + r, y);
+      context.lineTo(x + width - r, y);
+      context.quadraticCurveTo(x + width, y, x + width, y + r);
+      context.lineTo(x + width, y + height - r);
+      context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      context.lineTo(x + r, y + height);
+      context.quadraticCurveTo(x, y + height, x, y + height - r);
+      context.lineTo(x, y + r);
+      context.quadraticCurveTo(x, y, x + r, y);
+      context.closePath();
     }
 
     function setMessage(text, duration = 0) {
@@ -239,176 +504,63 @@
       messageTimer = duration;
     }
 
-    function makeFrame() {
-      return [
-        platform(0, 0, W, 28),
-        platform(0, 0, 28, H),
-        platform(W - 28, 0, 28, H),
-        platform(0, H - 28, W, 28)
-      ];
+    function updateHud() {
+      const collected = currentLevel.cores.filter((core) => core.collected).length;
+      levelLabel.textContent = currentLevel.title;
+      coreLabel.textContent = "Cores: " + collected + " / " + currentLevel.cores.length;
+      gateLabel.textContent = allCoresCollected() ? "Gate: Open" : "Gate: Locked";
+      gateLabel.style.color = allCoresCollected() ? "#7cf1ca" : "#ff9cbf";
+
+      prevBtn.disabled = levelIndex === 0;
+      nextBtn.disabled = levelIndex + 1 >= unlockedLevel || levelIndex === LEVELS.length - 1;
+
+      rebuildLevelGrid();
     }
 
-    function createLevel(levelNumber) {
-      const tier = Math.floor((levelNumber - 1) / 6);
-      const variant = (levelNumber - 1) % 6;
-
-      const platforms = makeFrame();
-      const seesaws = [];
-      const spikes = [];
-      const snakes = [];
-      const gems = [];
-
-      let spawn = { x: 76, y: 450 };
-      let exit = { x: 852, y: 112, w: 30, h: 74 };
-      let hint = "Collect all gems, then reach the flag.";
-
-      if (variant === 0) {
-        hint = tier === 0 ? "Easy start. Use the seesaw to reach the gem platform." : "Now the same idea needs better timing.";
-        platforms.push(
-          platform(28, 456, 220, 56),
-          platform(706, 456, 226, 56),
-          platform(724, 292, 154, 18)
-        );
-        seesaws.push(seesaw(474, 418, 228, 0.44 + tier * 0.04, 0.0104, 0.00155 + tier * 0.00018, -0.04));
-        gems.push(gem(792, 252));
-        if (tier >= 1) gems.push(gem(406, 360));
-        if (tier >= 2) spikes.push(spike(612, 484, 46 + tier * 8, 28));
-      }
-
-      if (variant === 1) {
-        hint = tier <= 1 ? "Practice short hops and one bigger launch." : "This room adds tighter landings.";
-        platforms.push(
-          platform(28, 456, 180, 56),
-          platform(276, 394, 112, 18),
-          platform(634, 456, 298, 56),
-          platform(744, 250, 122, 18)
-        );
-        seesaws.push(seesaw(504, 420, 214, 0.52 + tier * 0.04, 0.0101, 0.00175 + tier * 0.00018, 0.05));
-        gems.push(gem(330, 354), gem(804, 210));
-        if (tier >= 1) spikes.push(spike(580, 484, 58 + tier * 10, 28));
-        if (tier >= 3) snakes.push(snake(720, 438, 680, 844, 1.05 + tier * 0.12));
-      }
-
-      if (variant === 2) {
-        hint = tier === 0 ? "Chain two seesaws together." : "The same chain gets less forgiving later.";
-        platforms.push(
-          platform(28, 456, 180, 56),
-          platform(274, 330, 110, 18),
-          platform(770, 456, 162, 56),
-          platform(740, 194, 128, 18)
-        );
-        seesaws.push(
-          seesaw(332, 418, 170, 0.46 + tier * 0.04, 0.0103, 0.0017 + tier * 0.00016, -0.03),
-          seesaw(560, 360, 184, 0.56 + tier * 0.04, 0.0099, 0.00182 + tier * 0.00018, 0.03)
-        );
-        gems.push(gem(330, 290), gem(806, 154));
-        if (tier >= 2) spikes.push(spike(652, 484, 60 + tier * 10, 28));
-        if (tier >= 4) snakes.push(snake(802, 438, 782, 876, 1.4));
-      }
-
-      if (variant === 3) {
-        hint = tier <= 1 ? "Watch the spike pit and aim for the right ledge." : "More pressure now. Clear the room in one smooth flow.";
-        platforms.push(
-          platform(28, 402, 210, 110),
-          platform(714, 402, 218, 110),
-          platform(742, 244, 124, 18)
-        );
-        seesaws.push(
-          seesaw(398, 328, 188, 0.56 + tier * 0.04, 0.0101, 0.0019 + tier * 0.00016, -0.04),
-          seesaw(596, 292, 168, 0.52 + tier * 0.05, 0.01, 0.00182 + tier * 0.00016, 0.04)
-        );
-        gems.push(gem(430, 278), gem(800, 204));
-        spikes.push(spike(506, 430, 122 + tier * 8, 28));
-        if (tier >= 2) snakes.push(snake(752, 384, 734, 842, 1.1 + tier * 0.1));
-      }
-
-      if (variant === 4) {
-        hint = tier <= 1 ? "Long launcher room. Hit the seesaw from the end for more height." : "Late tiers punish weak launches.";
-        platforms.push(
-          platform(28, 456, 148, 56),
-          platform(238, 456, 110, 56),
-          platform(654, 456, 278, 56),
-          platform(250, 248, 122, 18),
-          platform(754, 150, 120, 18)
-        );
-        seesaws.push(seesaw(478, 418, 240, 0.68 + tier * 0.04, 0.0094, 0.002 + tier * 0.00018, -0.06));
-        gems.push(gem(310, 208), gem(810, 110));
-        spikes.push(spike(378, 484, 154 + tier * 10, 28));
-        if (tier >= 2) snakes.push(snake(710, 438, 690, 844, 1.16 + tier * 0.08));
-      }
-
-      if (variant === 5) {
-        hint = tier === 0 ? "Final tutorial room. Small launch, then big launch." : "This layout becomes a real challenge in later tiers.";
-        spawn = { x: 74, y: 404 };
-        exit = { x: 846, y: 108, w: 30, h: 74 };
-        platforms.push(
-          platform(28, 428, 170, 84),
-          platform(254, 340, 104, 18),
-          platform(420, 262, 102, 18),
-          platform(648, 330, 116, 18),
-          platform(760, 214, 120, 18)
-        );
-        seesaws.push(
-          seesaw(384, 398, 176, 0.5 + tier * 0.04, 0.0102, 0.00178 + tier * 0.00014, -0.04),
-          seesaw(612, 344, 176, 0.62 + tier * 0.04, 0.0097, 0.00192 + tier * 0.00016, 0.03)
-        );
-        gems.push(gem(306, 300), gem(472, 222), gem(818, 174));
-        if (tier >= 1) spikes.push(spike(556, 484, 72 + tier * 8, 28));
-        if (tier >= 3) spikes.push(spike(778, 484, 48 + tier * 8, 28));
-        if (tier >= 2) snakes.push(snake(86, 410, 70, 146, 1 + tier * 0.08));
-      }
-
-      return {
-        title: "Level " + levelNumber,
-        tier,
-        hint,
-        spawn,
-        exit,
-        platforms,
-        seesaws,
-        spikes,
-        snakes,
-        gems
-      };
+    function deepCloneLevel(level) {
+      return JSON.parse(JSON.stringify(level));
     }
 
     function rebuildLevelGrid() {
       levelGrid.innerHTML = "";
-      for (let i = 1; i <= TOTAL_LEVELS; i++) {
-        const button = document.createElement("button");
-        button.className = "pixel-level-btn";
-        button.textContent = i;
 
-        if (i === levelIndex + 1) {
+      for (let i = 0; i < LEVELS.length; i++) {
+        const button = document.createElement("button");
+        button.className = "neon-level-btn";
+        button.textContent = i + 1;
+
+        if (i === levelIndex) {
           button.classList.add("current");
         }
 
-        if (i > unlockedLevel) {
+        if (i + 1 > unlockedLevel) {
           button.classList.add("locked");
           button.disabled = true;
         } else {
-          button.addEventListener("click", () => loadLevel(i - 1));
+          button.addEventListener("click", () => loadLevel(i));
         }
 
         levelGrid.appendChild(button);
       }
     }
 
-    function updateHud() {
-      const collected = currentLevel.gems.filter((item) => item.collected).length;
-      levelLabel.textContent = currentLevel.title;
-      gemLabel.textContent = "Gems: " + collected + " / " + currentLevel.gems.length;
-      flagLabel.textContent = allGemsCollected() ? "Flag: Green" : "Flag: Red";
-      flagLabel.style.color = allGemsCollected() ? "#79f2c5" : "#ff9dad";
-
-      prevBtn.disabled = levelIndex === 0;
-      nextBtn.disabled = levelIndex + 1 >= unlockedLevel || levelIndex === TOTAL_LEVELS - 1;
-      rebuildLevelGrid();
-    }
-
     function loadLevel(index) {
-      levelIndex = clamp(index, 0, TOTAL_LEVELS - 1);
-      currentLevel = createLevel(levelIndex + 1);
+      levelIndex = clamp(index, 0, LEVELS.length - 1);
+      currentLevel = deepCloneLevel(LEVELS[levelIndex]);
+
+      currentLevel.movingPlatforms = currentLevel.movingPlatforms.map((platform) => ({
+        ...platform,
+        baseX: platform.x,
+        baseY: platform.y,
+        dx: 0,
+        dy: 0
+      }));
+
+      currentLevel.cores = currentLevel.cores.map((item) => ({
+        ...item,
+        collected: false
+      }));
+
       player.x = currentLevel.spawn.x;
       player.y = currentLevel.spawn.y;
       player.vx = 0;
@@ -417,60 +569,41 @@
       player.prevY = player.y;
       player.onGround = false;
       player.support = null;
-      jumpBuffer = 0;
+      player.coyoteFrames = 0;
+      jumpBufferFrames = 0;
+
+      camera.x = 0;
+      camera.y = 0;
+
       updateHud();
       setMessage(currentLevel.hint, 180);
     }
 
     function restartLevel(message) {
       loadLevel(levelIndex);
-      setMessage(message || currentLevel.hint, 160);
+      setMessage(message || currentLevel.hint, 180);
     }
 
     function completeLevel() {
-      unlockedLevel = Math.max(unlockedLevel, Math.min(TOTAL_LEVELS, levelIndex + 2));
-      saveProgress();
+      unlockedLevel = Math.max(unlockedLevel, Math.min(LEVELS.length, levelIndex + 2));
+      localStorage.setItem("neonRiftUnlocked", String(unlockedLevel));
 
-      if (levelIndex === TOTAL_LEVELS - 1) {
-        setMessage("You cleared all 30 levels.", 999999);
+      if (levelIndex === LEVELS.length - 1) {
+        setMessage("You cleared all handcrafted levels.", 999999);
         updateHud();
         return;
       }
 
       loadLevel(levelIndex + 1);
-      setMessage("Level cleared. Next level unlocked.", 200);
+      setMessage("Level cleared. Next level unlocked.", 220);
     }
 
-    function getSeesawGeometry(item) {
-      const half = item.length / 2;
-      const cos = Math.cos(item.angle);
-      const sin = Math.sin(item.angle);
-      return {
-        x1: item.pivotX - cos * half,
-        y1: item.pivotY - sin * half,
-        x2: item.pivotX + cos * half,
-        y2: item.pivotY + sin * half
-      };
+    function allCoresCollected() {
+      return currentLevel.cores.every((item) => item.collected);
     }
 
-    function getSeesawSurface(item, sampleX) {
-      const g = getSeesawGeometry(item);
-      const dx = g.x2 - g.x1;
-      const dy = g.y2 - g.y1;
-      if (Math.abs(dx) < 10) return null;
-
-      const minX = Math.min(g.x1, g.x2);
-      const maxX = Math.max(g.x1, g.x2);
-      if (sampleX < minX - 10 || sampleX > maxX + 10) return null;
-
-      const t = (sampleX - g.x1) / dx;
-      if (t < -0.08 || t > 1.08) return null;
-
-      return {
-        y: g.y1 + dy * t - item.thickness * 0.5,
-        minX,
-        maxX
-      };
+    function getPlatforms() {
+      return currentLevel.platforms.concat(currentLevel.movingPlatforms);
     }
 
     function rectsOverlap(a, b) {
@@ -482,117 +615,93 @@
       );
     }
 
+    function circleRectCollision(circle, rect) {
+      const closestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.w));
+      const closestY = Math.max(rect.y, Math.min(circle.y, rect.y + rect.h));
+      const dx = circle.x - closestX;
+      const dy = circle.y - closestY;
+      return dx * dx + dy * dy <= circle.r * circle.r;
+    }
+
     function updateAmbientMessage() {
       if (messageTimer > 0) {
         messageTimer--;
         return;
       }
-      messageBox.textContent = allGemsCollected() ? "All gems collected. Reach the flag." : currentLevel.hint;
-    }
 
-    function updateSeesaws() {
-      currentLevel.seesaws.forEach((item) => {
-        let riderForce = 0;
-
-        if (player.support && player.support.type === "seesaw" && player.support.ref === item && player.onGround) {
-          const offset = clamp((player.x + player.w * 0.5 - item.pivotX) / (item.length * 0.5), -1, 1);
-          riderForce = offset * item.weight;
-        }
-
-        item.angularVelocity += -item.angle * item.spring + riderForce;
-        item.angularVelocity *= item.damping;
-        item.angle += item.angularVelocity;
-
-        if (item.angle > item.maxAngle) {
-          item.angle = item.maxAngle;
-          item.angularVelocity *= -0.35;
-        }
-
-        if (item.angle < -item.maxAngle) {
-          item.angle = -item.maxAngle;
-          item.angularVelocity *= -0.35;
-        }
-      });
-    }
-
-    function updateSnakes() {
-      currentLevel.snakes.forEach((enemy) => {
-        enemy.x += enemy.speed * enemy.dir;
-        if (enemy.x <= enemy.minX) {
-          enemy.x = enemy.minX;
-          enemy.dir = 1;
-        }
-        if (enemy.x >= enemy.maxX) {
-          enemy.x = enemy.maxX;
-          enemy.dir = -1;
-        }
-      });
-    }
-
-    function resolvePlatformX() {
-      currentLevel.platforms.forEach((plat) => {
-        if (!rectsOverlap(player, plat)) return;
-        if (player.prevX + player.w <= plat.x) {
-          player.x = plat.x - player.w;
-          player.vx = 0;
-        } else if (player.prevX >= plat.x + plat.w) {
-          player.x = plat.x + plat.w;
-          player.vx = 0;
-        }
-      });
-    }
-
-    function resolvePlatformY() {
-      currentLevel.platforms.forEach((plat) => {
-        if (!rectsOverlap(player, plat)) return;
-        if (player.prevY + player.h <= plat.y && player.vy >= 0) {
-          player.y = plat.y - player.h;
-          player.vy = 0;
-          player.onGround = true;
-          player.support = { type: "platform", ref: plat };
-        } else if (player.prevY >= plat.y + plat.h && player.vy < 0) {
-          player.y = plat.y + plat.h;
-          player.vy = 0;
-        }
-      });
-    }
-
-    function resolveSeesawLanding() {
-      const centerX = player.x + player.w * 0.5;
-      for (const item of currentLevel.seesaws) {
-        const surface = getSeesawSurface(item, centerX);
-        if (!surface) continue;
-
-        const prevBottom = player.prevY + player.h;
-        const currentBottom = player.y + player.h;
-        if (
-          player.vy >= 0 &&
-          prevBottom <= surface.y + 8 &&
-          currentBottom >= surface.y &&
-          centerX > surface.minX + 8 &&
-          centerX < surface.maxX - 8
-        ) {
-          player.y = surface.y - player.h;
-          player.vy = 0;
-          player.onGround = true;
-          player.support = { type: "seesaw", ref: item };
-          break;
-        }
+      if (allCoresCollected()) {
+        messageBox.textContent = "All cores collected. Reach the gate.";
+      } else {
+        messageBox.textContent = currentLevel.hint;
       }
     }
 
-    function updatePlayer() {
-      const oldSupport = player.support;
+    function updateMovingPlatforms(frame) {
+      currentLevel.movingPlatforms.forEach((platform) => {
+        const prevX = platform.x;
+        const prevY = platform.y;
+        const offset = Math.sin(frame * platform.speed + platform.phase) * platform.range;
 
-      if (oldSupport && oldSupport.type === "seesaw" && player.onGround) {
-        const item = oldSupport.ref;
-        const offset = player.x + player.w * 0.5 - item.pivotX;
-        player.x += item.angularVelocity * offset * 0.12;
-
-        const surface = getSeesawSurface(item, player.x + player.w * 0.5);
-        if (surface && Math.abs(player.y + player.h - surface.y) < 24) {
-          player.y = surface.y - player.h;
+        if (platform.axis === "x") {
+          platform.x = platform.baseX + offset;
+          platform.y = platform.baseY;
+        } else {
+          platform.x = platform.baseX;
+          platform.y = platform.baseY + offset;
         }
+
+        platform.dx = platform.x - prevX;
+        platform.dy = platform.y - prevY;
+      });
+    }
+
+    function updateDrones(frame) {
+      currentLevel.drones.forEach((enemy) => {
+        const offset = Math.sin(frame * enemy.speed + enemy.phase) * (enemy.max - enemy.min) * 0.5;
+        const midpoint = (enemy.max + enemy.min) * 0.5;
+
+        if (enemy.axis === "x") {
+          enemy.x = midpoint + offset;
+        } else {
+          enemy.y = midpoint + offset;
+        }
+      });
+    }
+
+    function resolveHorizontal() {
+      getPlatforms().forEach((platform) => {
+        if (!rectsOverlap(player, platform)) return;
+
+        if (player.prevX + player.w <= platform.x) {
+          player.x = platform.x - player.w;
+          player.vx = 0;
+        } else if (player.prevX >= platform.x + platform.w) {
+          player.x = platform.x + platform.w;
+          player.vx = 0;
+        }
+      });
+    }
+
+    function resolveVertical() {
+      getPlatforms().forEach((platform) => {
+        if (!rectsOverlap(player, platform)) return;
+
+        if (player.prevY + player.h <= platform.y && player.vy >= 0) {
+          player.y = platform.y - player.h;
+          player.vy = 0;
+          player.onGround = true;
+          player.support = platform;
+        } else if (player.prevY >= platform.y + platform.h && player.vy < 0) {
+          player.y = platform.y + platform.h;
+          player.vy = 0;
+        }
+      });
+    }
+
+    function updatePlayer() {
+      if (player.support && player.support.kind === "moving") {
+        player.x += player.support.dx;
+        player.y += player.support.dy;
       }
 
       player.prevX = player.x;
@@ -604,51 +713,66 @@
 
       player.vx = clamp(player.vx, -physics.maxSpeed, physics.maxSpeed);
 
-      if (jumpBuffer > 0 && player.onGround) {
-        let bonusX = 0;
-        let bonusY = 0;
-
-        if (oldSupport && oldSupport.type === "seesaw") {
-          const item = oldSupport.ref;
-          const offset = clamp((player.x + player.w * 0.5 - item.pivotX) / (item.length * 0.5), -1, 1);
-          const kick = item.angularVelocity * item.length * offset;
-          bonusX = kick * 0.18;
-          bonusY = Math.min(4.2, Math.abs(kick) * 0.08);
-        }
-
-        player.vy = physics.jump - bonusY;
-        player.vx += bonusX;
+      if (jumpBufferFrames > 0 && player.coyoteFrames > 0) {
+        player.vy = physics.jump;
         player.onGround = false;
         player.support = null;
-        jumpBuffer = 0;
-      } else if (jumpBuffer > 0) {
-        jumpBuffer--;
+        player.coyoteFrames = 0;
+        jumpBufferFrames = 0;
+      } else if (jumpBufferFrames > 0) {
+        jumpBufferFrames--;
       }
 
       player.vy += physics.gravity;
       player.vy = Math.min(player.vy, physics.maxFall);
 
       player.x += player.vx;
-      resolvePlatformX();
+      resolveHorizontal();
 
       player.y += player.vy;
       player.onGround = false;
       player.support = null;
-      resolvePlatformY();
-      resolveSeesawLanding();
+      resolveVertical();
 
-      if (player.y > H + 60) {
-        restartLevel("You fell. Try a better launch angle.");
+      if (player.onGround) {
+        player.coyoteFrames = physics.coyote;
+      } else {
+        player.coyoteFrames = Math.max(0, player.coyoteFrames - 1);
+      }
+
+      for (const pad of currentLevel.boosts) {
+        const feet = {
+          x: player.x + 2,
+          y: player.y + player.h - 4,
+          w: player.w - 4,
+          h: 6
+        };
+
+        if (rectsOverlap(feet, pad) && player.vy >= 0) {
+          player.vy = pad.power;
+          player.onGround = false;
+          player.support = null;
+        }
+      }
+
+      if (player.y > currentLevel.worldHeight + 120) {
+        restartLevel("You fell into the rift.");
       }
     }
 
-    function collectGems() {
+    function collectCores() {
       let changed = false;
-      currentLevel.gems.forEach((item) => {
+
+      currentLevel.cores.forEach((item) => {
         if (item.collected) return;
-        const dx = player.x + player.w * 0.5 - item.x;
-        const dy = player.y + player.h * 0.5 - item.y;
-        if (dx * dx + dy * dy < 30 * 30) {
+
+        const circle = {
+          x: item.x,
+          y: item.y,
+          r: item.r
+        };
+
+        if (circleRectCollision(circle, player)) {
           item.collected = true;
           changed = true;
         }
@@ -656,235 +780,262 @@
 
       if (changed) {
         updateHud();
-        setMessage(allGemsCollected() ? "All gems collected. Reach the flag." : "Gem collected.", 90);
+        setMessage(allCoresCollected() ? "All cores collected. Gate unlocked." : "Core collected.", 100);
       }
     }
 
     function checkHazards() {
       for (const hazard of currentLevel.spikes) {
         if (rectsOverlap(player, hazard)) {
-          restartLevel("You hit the spikes.");
+          restartLevel("You hit the neon spikes.");
           return;
         }
       }
 
-      for (const enemy of currentLevel.snakes) {
-        if (rectsOverlap(player, enemy)) {
-          restartLevel("A snake got you.");
+      for (const enemy of currentLevel.drones) {
+        const circle = {
+          x: enemy.x,
+          y: enemy.y,
+          r: enemy.r
+        };
+
+        if (circleRectCollision(circle, player)) {
+          restartLevel("A drone knocked you out.");
           return;
         }
       }
     }
 
-    function checkExit() {
-      if (allGemsCollected() && rectsOverlap(player, currentLevel.exit)) {
-        completeLevel();
-      }
+    function checkGoal() {
+      if (!allCoresCollected()) return;
+      if (rectsOverlap(player, currentLevel.goal)) completeLevel();
     }
 
-    function drawBrickStrip(x, y, w, h, horizontal) {
-      ctx.fillStyle = "#4b3946";
-      ctx.fillRect(x, y, w, h);
-      ctx.fillStyle = "#dfdacd";
+    function updateCamera() {
+      const maxX = Math.max(0, currentLevel.worldWidth - VIEW_W);
+      const maxY = Math.max(0, currentLevel.worldHeight - VIEW_H);
 
-      if (horizontal) {
-        for (let yy = y + 6; yy < y + h - 3; yy += 10) {
-          const offset = ((yy - y) / 10) % 2 === 0 ? 0 : 9;
-          for (let xx = x + offset; xx < x + w; xx += 18) {
-            ctx.fillRect(xx, yy, 14, 8);
-          }
-        }
-      } else {
-        for (let xx = x + 6; xx < x + w - 3; xx += 10) {
-          const offset = ((xx - x) / 10) % 2 === 0 ? 0 : 9;
-          for (let yy = y + offset; yy < y + h; yy += 18) {
-            ctx.fillRect(xx, yy, 8, 14);
-          }
-        }
-      }
+      const targetX = clamp(player.x - VIEW_W * 0.35, 0, maxX);
+      const targetY = clamp(player.y - VIEW_H * 0.5, 0, maxY);
+
+      camera.x += (targetX - camera.x) * 0.12;
+      camera.y += (targetY - camera.y) * 0.12;
     }
 
     function drawBackground() {
-      ctx.fillStyle = "#4b3946";
-      ctx.fillRect(0, 0, W, H);
+      const bg = ctx.createLinearGradient(0, 0, 0, VIEW_H);
+      bg.addColorStop(0, "#081527");
+      bg.addColorStop(0.6, "#0c1731");
+      bg.addColorStop(1, "#07111f");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 
-      ctx.fillStyle = "#c5e8f4";
-      ctx.fillRect(28, 28, W - 56, H - 56);
+      ctx.strokeStyle = "rgba(137, 247, 255, 0.08)";
+      ctx.lineWidth = 1;
 
-      ctx.fillStyle = "#dbeef6";
-      for (let y = 66; y < H - 90; y += 36) {
-        for (let x = 50; x < W - 50; x += 44) {
-          ctx.fillRect(x, y, 20, 16);
-        }
+      for (let x = -camera.x % 40; x < VIEW_W; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, VIEW_H);
+        ctx.stroke();
       }
 
-      ctx.fillStyle = "#b9cad9";
-      ctx.fillRect(28, H * 0.48, W - 56, H * 0.52 - 28);
+      for (let y = -camera.y % 40; y < VIEW_H; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(VIEW_W, y);
+        ctx.stroke();
+      }
 
-      drawBrickStrip(0, 0, W, 28, true);
-      drawBrickStrip(0, H - 28, W, 28, true);
-      drawBrickStrip(0, 0, 28, H, false);
-      drawBrickStrip(W - 28, 0, 28, H, false);
+      ctx.fillStyle = "rgba(255, 110, 209, 0.18)";
+      ctx.beginPath();
+      ctx.arc(760, 100, 70, 0, Math.PI * 2);
+      ctx.fill();
 
-      ctx.fillStyle = "#89c279";
-      ctx.fillRect(760, 28, 56, 18);
-      ctx.fillRect(780, 42, 22, 18);
-      ctx.fillRect(770, 56, 42, 10);
+      ctx.fillStyle = "rgba(137, 247, 255, 0.16)";
+      ctx.beginPath();
+      ctx.arc(160, 90, 46, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawWorldRect(obj, fillStyle, strokeStyle = null) {
+      const x = obj.x - camera.x;
+      const y = obj.y - camera.y;
+
+      ctx.fillStyle = fillStyle;
+      drawRoundedRect(ctx, x, y, obj.w, obj.h, 10);
+      ctx.fill();
+
+      if (strokeStyle) {
+        ctx.strokeStyle = strokeStyle;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
     }
 
     function drawPlatforms() {
-      currentLevel.platforms.forEach((plat) => {
-        if ((plat.x === 0 && plat.y === 0) || (plat.x === 0 && plat.w === 28) || plat.x === W - 28 || plat.y === H - 28) {
-          return;
-        }
+      currentLevel.platforms.forEach((platform) => {
+        drawWorldRect(platform, "rgba(13, 25, 51, 0.96)", "rgba(137, 247, 255, 0.18)");
 
-        ctx.fillStyle = "#4b3946";
-        ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
-        drawBrickStrip(plat.x, plat.y, plat.w, Math.min(28, plat.h), true);
+        ctx.fillStyle = "rgba(137, 247, 255, 0.18)";
+        drawRoundedRect(ctx, platform.x - camera.x + 6, platform.y - camera.y + 6, platform.w - 12, 6, 4);
+        ctx.fill();
+      });
+
+      currentLevel.movingPlatforms.forEach((platform) => {
+        drawWorldRect(platform, "rgba(24, 34, 70, 0.98)", "rgba(255, 110, 209, 0.34)");
+
+        ctx.fillStyle = "rgba(255, 110, 209, 0.22)";
+        drawRoundedRect(ctx, platform.x - camera.x + 6, platform.y - camera.y + 6, platform.w - 12, 6, 4);
+        ctx.fill();
       });
     }
 
-    function drawSeesaws() {
-      currentLevel.seesaws.forEach((item) => {
-        const g = getSeesawGeometry(item);
+    function drawBoosts() {
+      currentLevel.boosts.forEach((pad) => {
+        const x = pad.x - camera.x;
+        const y = pad.y - camera.y;
 
-        ctx.fillStyle = "#d56c47";
+        ctx.fillStyle = "rgba(11, 24, 35, 0.96)";
+        drawRoundedRect(ctx, x, y, pad.w, pad.h, 8);
+        ctx.fill();
+
+        ctx.fillStyle = "#7cf1ca";
+        drawRoundedRect(ctx, x + 4, y + 4, pad.w - 8, pad.h - 8, 4);
+        ctx.fill();
+
+        ctx.fillStyle = "#0c1a22";
         ctx.beginPath();
-        ctx.moveTo(item.pivotX, item.pivotY - 6);
-        ctx.lineTo(item.pivotX - 18, item.pivotY + 30);
-        ctx.lineTo(item.pivotX + 18, item.pivotY + 30);
+        ctx.moveTo(x + pad.w * 0.5, y + 4);
+        ctx.lineTo(x + pad.w - 10, y + pad.h - 5);
+        ctx.lineTo(x + 10, y + pad.h - 5);
         ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = "#4b3946";
-        ctx.fillRect(item.pivotX - 10, item.pivotY + 24, 20, 8);
-
-        ctx.strokeStyle = "#4b3946";
-        ctx.lineWidth = item.thickness + 4;
-        ctx.lineCap = "round";
-        ctx.beginPath();
-        ctx.moveTo(g.x1, g.y1);
-        ctx.lineTo(g.x2, g.y2);
-        ctx.stroke();
-
-        ctx.strokeStyle = "#d56c47";
-        ctx.lineWidth = item.thickness - 2;
-        ctx.beginPath();
-        ctx.moveTo(g.x1, g.y1);
-        ctx.lineTo(g.x2, g.y2);
-        ctx.stroke();
-
-        ctx.fillStyle = "#4b3946";
-        ctx.beginPath();
-        ctx.arc(item.pivotX, item.pivotY, 11, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = "#d56c47";
-        ctx.beginPath();
-        ctx.arc(item.pivotX, item.pivotY, 6, 0, Math.PI * 2);
         ctx.fill();
       });
     }
 
     function drawSpikes() {
       currentLevel.spikes.forEach((hazard) => {
-        const count = Math.max(2, Math.floor(hazard.w / 24));
+        const count = Math.max(2, Math.floor(hazard.w / 18));
         const step = hazard.w / count;
+
         for (let i = 0; i < count; i++) {
-          const left = hazard.x + i * step;
+          const left = hazard.x + i * step - camera.x;
           const right = left + step;
-          const mid = (left + right) * 0.5;
+          const tip = (left + right) * 0.5;
 
-          ctx.fillStyle = "#4b3946";
+          ctx.fillStyle = "#ff6ed1";
           ctx.beginPath();
-          ctx.moveTo(left, hazard.y + hazard.h);
-          ctx.lineTo(mid, hazard.y);
-          ctx.lineTo(right, hazard.y + hazard.h);
-          ctx.closePath();
-          ctx.fill();
-
-          ctx.fillStyle = "#d56c47";
-          ctx.beginPath();
-          ctx.moveTo(left + 2, hazard.y + hazard.h - 2);
-          ctx.lineTo(mid, hazard.y + 4);
-          ctx.lineTo(right - 2, hazard.y + hazard.h - 2);
+          ctx.moveTo(left, hazard.y + hazard.h - camera.y);
+          ctx.lineTo(tip, hazard.y - camera.y);
+          ctx.lineTo(right, hazard.y + hazard.h - camera.y);
           ctx.closePath();
           ctx.fill();
         }
       });
     }
 
-    function drawSnakes() {
-      currentLevel.snakes.forEach((enemy) => {
-        ctx.fillStyle = "#4b3946";
-        ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
-        ctx.fillStyle = "#59a96a";
-        ctx.fillRect(enemy.x + 2, enemy.y + 2, enemy.w - 4, enemy.h - 4);
-        ctx.fillStyle = "#2d5b39";
-        ctx.fillRect(enemy.x + 4, enemy.y + 6, enemy.w - 8, 4);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(enemy.x + enemy.w - 12, enemy.y + 4, 3, 3);
-        ctx.fillRect(enemy.x + enemy.w - 20, enemy.y + 4, 3, 3);
+    function drawDrones() {
+      currentLevel.drones.forEach((enemy) => {
+        const x = enemy.x - camera.x;
+        const y = enemy.y - camera.y;
+
+        ctx.save();
+        ctx.shadowColor = "#ff6ed1";
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = "#ff6ed1";
+        ctx.beginPath();
+        ctx.arc(x, y, enemy.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.fillStyle = "#0b0f1c";
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fill();
       });
     }
 
-    function drawGems() {
-      currentLevel.gems.forEach((item) => {
+    function drawCores() {
+      currentLevel.cores.forEach((item) => {
         if (item.collected) return;
-        ctx.fillStyle = "#4b3946";
+
+        const x = item.x - camera.x;
+        const y = item.y - camera.y;
+
+        ctx.save();
+        ctx.shadowColor = "#89f7ff";
+        ctx.shadowBlur = 16;
+        ctx.fillStyle = "#89f7ff";
         ctx.beginPath();
-        ctx.moveTo(item.x, item.y - 14);
-        ctx.lineTo(item.x + 12, item.y);
-        ctx.lineTo(item.x, item.y + 14);
-        ctx.lineTo(item.x - 12, item.y);
+        ctx.moveTo(x, y - 14);
+        ctx.lineTo(x + 12, y);
+        ctx.lineTo(x, y + 14);
+        ctx.lineTo(x - 12, y);
         ctx.closePath();
         ctx.fill();
+        ctx.restore();
 
-        ctx.fillStyle = "#8dc8ff";
+        ctx.fillStyle = "#ffffff";
         ctx.beginPath();
-        ctx.moveTo(item.x, item.y - 11);
-        ctx.lineTo(item.x + 9, item.y);
-        ctx.lineTo(item.x, item.y + 11);
-        ctx.lineTo(item.x - 9, item.y);
+        ctx.moveTo(x, y - 8);
+        ctx.lineTo(x + 4, y - 1);
+        ctx.lineTo(x - 1, y + 4);
         ctx.closePath();
         ctx.fill();
       });
     }
 
-    function drawExit() {
-      const active = allGemsCollected();
-      const door = currentLevel.exit;
-      ctx.fillStyle = "#f2e7ea";
-      ctx.fillRect(door.x, door.y, door.w, door.h);
-      ctx.fillStyle = active ? "#72da92" : "#f2b4bf";
-      ctx.fillRect(door.x + 4, door.y + 6, door.w - 8, 22);
-      ctx.fillStyle = "#4b3946";
-      ctx.fillRect(door.x + 6, door.y + 30, door.w - 12, door.h - 36);
-      ctx.fillStyle = active ? "#72da92" : "#f2b4bf";
-      ctx.fillRect(door.x + 12, door.y + 10, 4, 10);
-      ctx.fillRect(door.x + 9, door.y + 13, 10, 4);
+    function drawGoal() {
+      const gate = currentLevel.goal;
+      const x = gate.x - camera.x;
+      const y = gate.y - camera.y;
+      const active = allCoresCollected();
+
+      ctx.fillStyle = "rgba(245, 247, 255, 0.96)";
+      drawRoundedRect(ctx, x, y, gate.w, gate.h, 10);
+      ctx.fill();
+
+      ctx.fillStyle = active ? "#7cf1ca" : "#f3afc8";
+      drawRoundedRect(ctx, x + 4, y + 6, gate.w - 8, 18, 4);
+      ctx.fill();
+
+      ctx.fillStyle = "#111529";
+      drawRoundedRect(ctx, x + 7, y + 28, gate.w - 14, gate.h - 35, 6);
+      ctx.fill();
     }
 
     function drawPlayer() {
-      ctx.fillStyle = "#4b3946";
-      ctx.fillRect(player.x, player.y, player.w, player.h);
-      ctx.fillStyle = "#ffda5f";
-      ctx.fillRect(player.x + 3, player.y + 4, player.w - 6, player.h - 7);
-      ctx.fillRect(player.x + 4, player.y - 4, 6, 10);
-      ctx.fillRect(player.x + player.w - 10, player.y - 4, 6, 10);
-      ctx.fillStyle = "#4b3946";
-      ctx.fillRect(player.x + 8, player.y + 12, 4, 4);
-      ctx.fillRect(player.x + 16, player.y + 12, 4, 4);
-      ctx.fillRect(player.x + 11, player.y + 22, 6, 3);
+      const x = player.x - camera.x;
+      const y = player.y - camera.y;
+
+      ctx.fillStyle = "#10162a";
+      drawRoundedRect(ctx, x, y, player.w, player.h, 8);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffe36b";
+      drawRoundedRect(ctx, x + 3, y + 4, player.w - 6, player.h - 7, 6);
+      ctx.fill();
+
+      ctx.fillStyle = "#10162a";
+      drawRoundedRect(ctx, x + 4, y - 4, 6, 10, 3);
+      ctx.fill();
+      drawRoundedRect(ctx, x + player.w - 10, y - 4, 6, 10, 3);
+      ctx.fill();
+
+      ctx.fillRect(x + 8, y + 12, 4, 4);
+      ctx.fillRect(x + 16, y + 12, 4, 4);
+      ctx.fillRect(x + 11, y + 22, 6, 3);
     }
 
-    function update() {
-      updateSeesaws();
-      updateSnakes();
+    function update(frame) {
+      updateMovingPlatforms(frame);
+      updateDrones(frame);
       updatePlayer();
-      collectGems();
+      collectCores();
       checkHazards();
-      checkExit();
+      checkGoal();
+      updateCamera();
       updateHud();
       updateAmbientMessage();
     }
@@ -892,32 +1043,43 @@
     function draw() {
       drawBackground();
       drawPlatforms();
-      drawSeesaws();
+      drawBoosts();
       drawSpikes();
-      drawSnakes();
-      drawGems();
-      drawExit();
+      drawDrones();
+      drawCores();
+      drawGoal();
       drawPlayer();
     }
 
-    function loop() {
-      update();
+    function loop(frame) {
+      update(frame);
       draw();
       requestAnimationFrame(loop);
     }
 
     window.addEventListener("keydown", (event) => {
-      if (event.code === "ArrowLeft" || event.code === "KeyA") input.left = true;
-      if (event.code === "ArrowRight" || event.code === "KeyD") input.right = true;
+      if (event.code === "ArrowLeft" || event.code === "KeyA") {
+        input.left = true;
+      }
+
+      if (event.code === "ArrowRight" || event.code === "KeyD") {
+        input.right = true;
+      }
+
       if (event.code === "ArrowUp" || event.code === "Space" || event.code === "KeyW") {
-        jumpBuffer = 10;
+        jumpBufferFrames = physics.jumpBuffer;
         event.preventDefault();
       }
     });
 
     window.addEventListener("keyup", (event) => {
-      if (event.code === "ArrowLeft" || event.code === "KeyA") input.left = false;
-      if (event.code === "ArrowRight" || event.code === "KeyD") input.right = false;
+      if (event.code === "ArrowLeft" || event.code === "KeyA") {
+        input.left = false;
+      }
+
+      if (event.code === "ArrowRight" || event.code === "KeyD") {
+        input.right = false;
+      }
     });
 
     prevBtn.addEventListener("click", () => {
@@ -929,14 +1091,14 @@
     });
 
     nextBtn.addEventListener("click", () => {
-      if (levelIndex + 1 < unlockedLevel && levelIndex < TOTAL_LEVELS - 1) {
+      if (levelIndex + 1 < unlockedLevel && levelIndex < LEVELS.length - 1) {
         loadLevel(levelIndex + 1);
       }
     });
 
-    unlockedLevel = clamp(unlockedLevel, 1, TOTAL_LEVELS);
+    unlockedLevel = clamp(unlockedLevel, 1, LEVELS.length);
     loadLevel(0);
-    loop();
+    requestAnimationFrame(loop);
   </script>
 </body>
 </html>
