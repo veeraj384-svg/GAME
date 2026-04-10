@@ -34,12 +34,13 @@ body {
   font-family: var(--body-font);
   color: var(--text-main);
   background:
-    radial-gradient(circle at top, rgba(144, 208, 255, 0.18), transparent 28%),
-    radial-gradient(circle at 80% 0%, rgba(141, 241, 255, 0.14), transparent 25%),
-    linear-gradient(90deg, rgba(138, 183, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(rgba(138, 183, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(145deg, #040814 0%, #07101d 40%, #0b1734 100%);
-  background-size: auto, auto, 44px 44px, 44px 44px, auto;
+    radial-gradient(circle at 15% 18%, rgba(137, 247, 255, 0.2), transparent 20%),
+    radial-gradient(circle at 84% 10%, rgba(255, 110, 209, 0.16), transparent 22%),
+    radial-gradient(circle at 50% 0%, rgba(159, 148, 255, 0.12), transparent 24%),
+    linear-gradient(90deg, rgba(120, 214, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(120, 214, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(145deg, #050714 0%, #091127 38%, #130a2a 68%, #0a1836 100%);
+  background-size: auto, auto, auto, 44px 44px, 44px 44px, auto;
 }
 
 body::before,
@@ -57,9 +58,9 @@ body::before {
   width: 360px;
   height: 360px;
   border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent-1) 36%, transparent) 0%, transparent 68%);
-  filter: blur(16px);
-  opacity: 0.85;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-1) 48%, transparent) 0%, transparent 70%);
+  filter: blur(22px);
+  opacity: 0.95;
 }
 
 body::after {
@@ -68,9 +69,9 @@ body::after {
   width: 420px;
   height: 420px;
   border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent-2) 22%, transparent) 0%, transparent 70%);
-  filter: blur(24px);
-  opacity: 0.8;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-2) 34%, transparent) 0%, transparent 72%);
+  filter: blur(30px);
+  opacity: 0.88;
 }
 
 body.theme-coin {
@@ -101,6 +102,9 @@ body.theme-neon {
   --accent-1: #89f7ff;
   --accent-2: #ff6ed1;
   --accent-3: #9f94ff;
+  --bg-main: #0a1028;
+  --bg-panel: rgba(12, 18, 46, 0.84);
+  --bg-panel-2: rgba(24, 17, 60, 0.74);
 }
 
 body.theme-adventure {
