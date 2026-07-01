@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neon Tap | Game Hub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="theme-arcade">
+  <div class="page-shell">
+    <main class="game-page-wrap">
+      <section class="game-panel">
+        <div class="game-topbar">
+          <div class="game-header-left">
+            <p class="eyebrow">Reflex</p>
+            <h1>Neon Tap</h1>
+            <p class="game-subtext">
+              Tap the glowing orbs before they vanish. Miss five and it's over.
+            </p>
+          </div>
+          <a href="index.html" class="back-link">&larr; Home</a>
+        </div>
+
+        <div class="info-row">
+          <div class="status-box">Input: Click / Tap</div>
+          <div class="status-box is-accent" id="tapScoreBox">Score: 0</div>
+          <div class="status-box" id="tapBestBox">Best: 0</div>
+          <div class="status-box is-alert" id="tapMissBox">Misses: 0 / 5</div>
+        </div>
+
+        <div class="message-banner" id="tapMessage">Click the orbs before they fade. Miss 5 and the run ends.</div>
+
+        <div class="canvas-stage">
+          <canvas id="tapCanvas" class="game-canvas" width="760" height="400"></canvas>
+        </div>
+
+        <div class="bottom-actions">
+          <button class="secondary-button" id="tapRestart">Restart Run</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const tapCanvas = document.getElementById("tapCanvas");
+    const tapCtx = tapCanvas.getContext("2d");
+    const tapScoreBox = document.getElementById("tapScoreBox");
+    const tapBestBox = document.getElementById("tapBestBox");
+    const tapMissBox = document.getElementById("tapMissBox");
+    const tapRestart = document.getElementById("tapRestart");
+    const tapMessage = document.getElementById("tapMessage");
+
+    const W = 760, H = 400;
+    const MAX_MISSES = 5;
+    const ORB_LIFETIME = 105;
+    const ORB_COLORS = ["#ffe27a", "#5ec1ff", "#8cffb2", "#ff8de1", "#89f7ff", "#ffb870"];
+
+    let orbs = [];
+    let tapScore = 0;
+    let tapBest = Number(localStorage.getItem("neonTapBest") || 0);
+    let tapMisses = 0;
+    let tapGameOver = false;
+    let tapStarted = false;
+    let tapFrame = 0;
+
+    tapBestBox.textContent = "Best: " + tapBest;
+
+    function setTapMessage(msg) { tapMessage.textContent = msg; }
+
+    function drawRoundedRect(ctx, x, y, w, h, r) {
+      const rr = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.lineTo(x + w - rr, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+      ctx.lineTo(x + w, y + h - rr);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+      ctx.lineTo(x + rr, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+      ctx.lineTo(x, y + rr);
+      ctx.quadraticCurveTo(x, y, x + rr, y);
+      ctx.closePath();
+    }
+
+    function spawnOrb() {
+      if (orbs.filter(o => o.state === "active").length >= 7) return;
+      const r = Math.random() * 14 + 22;
+      const margin = r + 14;
+      const color = ORB_COLORS[Math.floor(Math.random() * ORB_COLORS.length)];
+      orbs.push({
+        x: Math.random() * (W - margin * 2) + margin,
+        y: Math.random() * (H - margin * 2) + margin,
+        r, color,
+        age: 0,
+        state: "active",
+        deathAge: 0
+      });
+    }
+
+    function resetTapGame() {
+      orbs = [];
+      tapScore = 0;
+      tapMisses = 0;
+      tapGameOver = false;
+      tapStarted = false;
+      tapFrame = 0;
+      tapScoreBox.textContent = "Score: 0";
+      tapMissBox.textContent = "Misses: 0 / 5";
+      setTapMessage("Click the orbs before they fade. Miss 5 and the run ends.");
+    }
+
+    function drawBackground() {
+      const grad = tapCtx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, "#080b1c");
+      grad.addColorStop(0.5, "#0d1428");
+      grad.addColorStop(1, "#060a18");
+      tapCtx.fillStyle = grad;
+      tapCtx.fillRect(0, 0, W, H);
+
+      tapCtx.strokeStyle = "rgba(255, 226, 122, 0.04)";
+      tapCtx.lineWidth = 1;
+      for (let x = 0; x < W; x += 50) {
+        tapCtx.beginPath(); tapCtx.moveTo(x, 0); tapCtx.lineTo(x, H); tapCtx.stroke();
+      }
+      for (let y = 0; y < H; y += 50) {
+        tapCtx.beginPath(); tapCtx.moveTo(0, y); tapCtx.lineTo(W, y); tapCtx.stroke();
+      }
+    }
+
+    function drawOrbs() {
+      orbs.forEach(o => {
+        if (o.state === "dead") return;
+
+        let scale = 1, alpha = 1;
+
+        if (o.state === "active") {
+          const popIn = Math.min(o.age / 10, 1);
+          scale = 0.2 + popIn * 0.8;
+          alpha = popIn;
+        } else if (o.state === "clicked") {
+          const dp = o.deathAge / 18;
+          scale = 1 + dp * 0.9;
+          alpha = 1 - dp;
+        } else if (o.state === "expired") {
+          const dp = o.deathAge / 18;
+          scale = 1 - dp * 0.8;
+          alpha = 1 - dp;
+        }
+
+        tapCtx.save();
+        tapCtx.translate(o.x, o.y);
+        tapCtx.scale(scale, scale);
+        tapCtx.globalAlpha = Math.max(0, alpha);
+
+        if (o.state === "active") {
+          const lifeRatio = 1 - o.age / ORB_LIFETIME;
+          tapCtx.strokeStyle = o.color;
+          tapCtx.lineWidth = 2.5;
+          tapCtx.globalAlpha = Math.max(0, alpha * lifeRatio * 0.9);
+          tapCtx.beginPath();
+          tapCtx.arc(0, 0, o.r + 11, -Math.PI / 2, -Math.PI / 2 + lifeRatio * Math.PI * 2);
+          tapCtx.stroke();
+          tapCtx.globalAlpha = Math.max(0, alpha);
+        }
+
+        tapCtx.shadowColor = o.color;
+        tapCtx.shadowBlur = o.state === "clicked" ? 32 : 18;
+        tapCtx.fillStyle = o.color + "38";
+        tapCtx.beginPath();
+        tapCtx.arc(0, 0, o.r, 0, Math.PI * 2);
+        tapCtx.fill();
+
+        tapCtx.strokeStyle = o.color;
+        tapCtx.lineWidth = 2.4;
+        tapCtx.beginPath();
+        tapCtx.arc(0, 0, o.r, 0, Math.PI * 2);
+        tapCtx.stroke();
+
+        tapCtx.shadowBlur = 0;
+        tapCtx.fillStyle = "rgba(255,255,255,0.38)";
+        tapCtx.beginPath();
+        tapCtx.arc(-o.r * 0.28, -o.r * 0.3, o.r * 0.24, 0, Math.PI * 2);
+        tapCtx.fill();
+
+        tapCtx.restore();
+      });
+    }
+
+    function drawStartPrompt() {
+      if (tapStarted || tapGameOver) return;
+      tapCtx.fillStyle = "rgba(255,255,255,0.5)";
+      tapCtx.font = "bold 18px Arial";
+      tapCtx.textAlign = "center";
+      tapCtx.fillText("Click anywhere to start", W / 2, H / 2);
+      tapCtx.textAlign = "left";
+    }
+
+    function drawTapOverlay() {
+      if (!tapGameOver) return;
+      tapCtx.fillStyle = "rgba(6, 10, 24, 0.76)";
+      drawRoundedRect(tapCtx, (W - 280) / 2, (H - 124) / 2, 280, 124, 18);
+      tapCtx.fill();
+      tapCtx.fillStyle = "#ffffff";
+      tapCtx.font = "bold 28px Arial";
+      tapCtx.textAlign = "center";
+      tapCtx.fillText("Run Over", W / 2, H / 2 - 12);
+      tapCtx.font = "15px Arial";
+      tapCtx.fillStyle = "#bcc8e5";
+      tapCtx.fillText("Press Restart for another run", W / 2, H / 2 + 18);
+      tapCtx.fillStyle = "#ffffff";
+      tapCtx.fillText("Final score: " + tapScore, W / 2, H / 2 + 44);
+      tapCtx.textAlign = "left";
+    }
+
+    function updateOrbs() {
+      if (!tapStarted || tapGameOver) return;
+
+      const spawnRate = Math.max(22, 80 - Math.floor(tapScore / 4) * 6);
+      if (tapFrame % spawnRate === 0) spawnOrb();
+
+      orbs.forEach(o => {
+        if (o.state === "active") {
+          o.age++;
+          if (o.age >= ORB_LIFETIME) {
+            o.state = "expired";
+            tapMisses++;
+            tapMissBox.textContent = "Misses: " + tapMisses + " / " + MAX_MISSES;
+            if (tapMisses >= MAX_MISSES) {
+              tapGameOver = true;
+              setTapMessage("5 misses — run over. Final score: " + tapScore + ". Restart to go again.");
+            } else {
+              setTapMessage((MAX_MISSES - tapMisses) + " miss" + (MAX_MISSES - tapMisses !== 1 ? "es" : "") + " left. Stay focused.");
+            }
+          }
+        } else if (o.state === "clicked" || o.state === "expired") {
+          o.deathAge++;
+          if (o.deathAge >= 18) o.state = "dead";
+        }
+      });
+
+      orbs = orbs.filter(o => o.state !== "dead");
+      tapFrame++;
+    }
+
+    function handleTapClick(e) {
+      if (tapGameOver) return;
+
+      if (!tapStarted) {
+        tapStarted = true;
+        setTapMessage("Tap the orbs as they appear. Speed increases with your score.");
+        return;
+      }
+
+      const rect = tapCanvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      const mx = (e.clientX - rect.left) * scaleX;
+      const my = (e.clientY - rect.top) * scaleY;
+
+      for (let i = orbs.length - 1; i >= 0; i--) {
+        const o = orbs[i];
+        if (o.state !== "active") continue;
+        if (Math.hypot(mx - o.x, my - o.y) <= o.r) {
+          o.state = "clicked";
+          tapScore++;
+          tapScoreBox.textContent = "Score: " + tapScore;
+          if (tapScore > tapBest) {
+            tapBest = tapScore;
+            localStorage.setItem("neonTapBest", tapBest);
+            tapBestBox.textContent = "Best: " + tapBest;
+            setTapMessage("New best! " + tapBest + " orbs tapped.");
+          } else if (tapScore % 10 === 0) {
+            setTapMessage("On fire! " + tapScore + " taps and counting.");
+          }
+          break;
+        }
+      }
+    }
+
+    function tapLoop() {
+      drawBackground();
+      updateOrbs();
+      drawOrbs();
+      drawStartPrompt();
+      drawTapOverlay();
+      requestAnimationFrame(tapLoop);
+    }
+
+    tapCanvas.addEventListener("click", handleTapClick);
+    tapRestart.addEventListener("click", resetTapGame);
+    resetTapGame();
+    tapLoop();
+  </script>
+</body>
+</html>

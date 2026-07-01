@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brick Breaker | Game Hub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="theme-puzzle">
+  <div class="page-shell">
+    <main class="game-page-wrap">
+      <section class="game-panel">
+        <div class="game-topbar">
+          <div class="game-header-left">
+            <p class="eyebrow">Retro Breaker</p>
+            <h1>Brick Breaker</h1>
+            <p class="game-subtext">
+              Smash every glowing brick off the board. Control the paddle with arrow keys — don't let the ball drop.
+            </p>
+          </div>
+          <a href="index.html" class="back-link">&larr; Home</a>
+        </div>
+
+        <div class="info-row">
+          <div class="status-box">Move: Arrow Keys</div>
+          <div class="status-box">Launch: Space / Click</div>
+          <div class="status-box is-accent" id="bbScoreBox">Score: 0</div>
+          <div class="status-box" id="bbBestBox">Best: 0</div>
+        </div>
+
+        <div class="message-banner" id="bbMessage">Move the paddle with arrow keys. Press Space or click to launch the ball.</div>
+
+        <div class="canvas-stage">
+          <canvas id="bbCanvas" class="game-canvas" width="760" height="480"></canvas>
+        </div>
+
+        <div class="bottom-actions">
+          <button class="secondary-button" id="bbRestart">Restart Game</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const bbCanvas = document.getElementById("bbCanvas");
+    const bbCtx = bbCanvas.getContext("2d");
+    const bbScoreBox = document.getElementById("bbScoreBox");
+    const bbBestBox = document.getElementById("bbBestBox");
+    const bbRestart = document.getElementById("bbRestart");
+    const bbMessage = document.getElementById("bbMessage");
+
+    const W = 760, H = 480;
+
+    const BRICK_COLS = 10;
+    const BRICK_ROWS = 5;
+    const BRICK_W = 64;
+    const BRICK_H = 20;
+    const BRICK_PAD = 8;
+    const BRICK_OX = (W - (BRICK_COLS * (BRICK_W + BRICK_PAD) - BRICK_PAD)) / 2;
+    const BRICK_OY = 58;
+    const ROW_COLORS = ["#ff8de1", "#9f94ff", "#86f4ff", "#7cf3aa", "#ffe27a"];
+
+    const paddle = { x: W / 2 - 50, y: H - 34, w: 100, h: 14, speed: 8 };
+    const ball = { x: W / 2, y: H - 56, dx: 0, dy: 0, r: 9 };
+
+    let bricks = [];
+    let bbScore = 0;
+    let bbBest = Number(localStorage.getItem("brickBreakerBest") || 0);
+    let bbLives = 3;
+    let bbGameOver = false;
+    let bbWin = false;
+    let bbStarted = false;
+    let leftPressed = false;
+    let rightPressed = false;
+
+    bbBestBox.textContent = "Best: " + bbBest;
+
+    function setBBMessage(msg) { bbMessage.textContent = msg; }
+
+    function drawRoundedRect(ctx, x, y, w, h, r) {
+      const rr = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.lineTo(x + w - rr, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+      ctx.lineTo(x + w, y + h - rr);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+      ctx.lineTo(x + rr, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+      ctx.lineTo(x, y + rr);
+      ctx.quadraticCurveTo(x, y, x + rr, y);
+      ctx.closePath();
+    }
+
+    function initBricks() {
+      bricks = [];
+      for (let r = 0; r < BRICK_ROWS; r++) {
+        for (let c = 0; c < BRICK_COLS; c++) {
+          bricks.push({
+            x: BRICK_OX + c * (BRICK_W + BRICK_PAD),
+            y: BRICK_OY + r * (BRICK_H + BRICK_PAD),
+            row: r,
+            alive: true
+          });
+        }
+      }
+    }
+
+    function launchBall() {
+      const dir = Math.random() > 0.5 ? 1 : -1;
+      ball.dx = dir * (2.5 + Math.random() * 1.5);
+      ball.dy = -5.2;
+      bbStarted = true;
+    }
+
+    function resetBBGame() {
+      paddle.x = W / 2 - 50;
+      ball.dx = 0;
+      ball.dy = 0;
+      bbScore = 0;
+      bbLives = 3;
+      bbGameOver = false;
+      bbWin = false;
+      bbStarted = false;
+      leftPressed = false;
+      rightPressed = false;
+      initBricks();
+      bbScoreBox.textContent = "Score: 0";
+      setBBMessage("Move the paddle with arrow keys. Press Space or click to launch the ball.");
+    }
+
+    function drawBBBackground() {
+      const grad = bbCtx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, "#0e0b1e");
+      grad.addColorStop(0.5, "#0f1535");
+      grad.addColorStop(1, "#090d1e");
+      bbCtx.fillStyle = grad;
+      bbCtx.fillRect(0, 0, W, H);
+
+      bbCtx.strokeStyle = "rgba(134, 244, 255, 0.04)";
+      bbCtx.lineWidth = 1;
+      for (let x = 0; x < W; x += 40) {
+        bbCtx.beginPath(); bbCtx.moveTo(x, 0); bbCtx.lineTo(x, H); bbCtx.stroke();
+      }
+      for (let y = 0; y < H; y += 40) {
+        bbCtx.beginPath(); bbCtx.moveTo(0, y); bbCtx.lineTo(W, y); bbCtx.stroke();
+      }
+    }
+
+    function drawBricks() {
+      bricks.forEach(b => {
+        if (!b.alive) return;
+        const color = ROW_COLORS[b.row];
+        bbCtx.save();
+        bbCtx.shadowColor = color;
+        bbCtx.shadowBlur = 10;
+        bbCtx.fillStyle = color + "30";
+        bbCtx.strokeStyle = color;
+        bbCtx.lineWidth = 1.6;
+        drawRoundedRect(bbCtx, b.x, b.y, BRICK_W, BRICK_H, 6);
+        bbCtx.fill();
+        bbCtx.stroke();
+        bbCtx.shadowBlur = 0;
+        bbCtx.fillStyle = "rgba(255,255,255,0.2)";
+        drawRoundedRect(bbCtx, b.x + 4, b.y + 3, BRICK_W - 8, 4, 3);
+        bbCtx.fill();
+        bbCtx.restore();
+      });
+    }
+
+    function drawPaddle() {
+      bbCtx.save();
+      const grad = bbCtx.createLinearGradient(paddle.x, 0, paddle.x + paddle.w, 0);
+      grad.addColorStop(0, "#86f4ff");
+      grad.addColorStop(0.5, "#c4baff");
+      grad.addColorStop(1, "#86f4ff");
+      bbCtx.shadowColor = "#86f4ff";
+      bbCtx.shadowBlur = 22;
+      bbCtx.fillStyle = grad;
+      drawRoundedRect(bbCtx, paddle.x, paddle.y, paddle.w, paddle.h, 7);
+      bbCtx.fill();
+      bbCtx.shadowBlur = 0;
+      bbCtx.fillStyle = "rgba(255,255,255,0.5)";
+      drawRoundedRect(bbCtx, paddle.x + 6, paddle.y + 2, paddle.w - 12, 4, 3);
+      bbCtx.fill();
+      bbCtx.restore();
+    }
+
+    function drawBBBall() {
+      bbCtx.save();
+      bbCtx.shadowColor = "#c4baff";
+      bbCtx.shadowBlur = 24;
+      const grad = bbCtx.createRadialGradient(ball.x - 2, ball.y - 2, 1, ball.x, ball.y, ball.r);
+      grad.addColorStop(0, "#ffffff");
+      grad.addColorStop(0.45, "#c4baff");
+      grad.addColorStop(1, "#7f8cff");
+      bbCtx.fillStyle = grad;
+      bbCtx.beginPath();
+      bbCtx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+      bbCtx.fill();
+      bbCtx.restore();
+    }
+
+    function drawBBHud() {
+      for (let i = 0; i < bbLives; i++) {
+        bbCtx.save();
+        bbCtx.shadowColor = "#86f4ff";
+        bbCtx.shadowBlur = 14;
+        bbCtx.fillStyle = "#86f4ff";
+        bbCtx.beginPath();
+        bbCtx.arc(W - 26 - i * 24, 26, 7, 0, Math.PI * 2);
+        bbCtx.fill();
+        bbCtx.restore();
+      }
+    }
+
+    function drawBBLaunchHint() {
+      if (bbStarted || bbGameOver || bbWin) return;
+      bbCtx.fillStyle = "rgba(255,255,255,0.45)";
+      bbCtx.font = "14px Arial";
+      bbCtx.textAlign = "center";
+      bbCtx.fillText("Press Space or click to launch", W / 2, ball.y - 24);
+      bbCtx.textAlign = "left";
+    }
+
+    function drawBBOverlay() {
+      if (!bbGameOver && !bbWin) return;
+      bbCtx.fillStyle = "rgba(6, 10, 28, 0.76)";
+      drawRoundedRect(bbCtx, (W - 280) / 2, (H - 126) / 2, 280, 126, 18);
+      bbCtx.fill();
+      bbCtx.fillStyle = "#ffffff";
+      bbCtx.font = "bold 28px Arial";
+      bbCtx.textAlign = "center";
+      bbCtx.fillText(bbWin ? "Board Cleared!" : "Ball Lost", W / 2, H / 2 - 14);
+      bbCtx.font = "15px Arial";
+      bbCtx.fillStyle = "#bcc8e5";
+      bbCtx.fillText("Press Restart to play again", W / 2, H / 2 + 18);
+      bbCtx.fillStyle = "#ffffff";
+      bbCtx.fillText("Score: " + bbScore, W / 2, H / 2 + 46);
+      bbCtx.textAlign = "left";
+    }
+
+    function updatePaddle() {
+      if (leftPressed) paddle.x -= paddle.speed;
+      if (rightPressed) paddle.x += paddle.speed;
+      paddle.x = Math.max(0, Math.min(W - paddle.w, paddle.x));
+      if (!bbStarted) {
+        ball.x = paddle.x + paddle.w / 2;
+        ball.y = paddle.y - ball.r - 1;
+      }
+    }
+
+    function updateBBBall() {
+      if (!bbStarted) return;
+
+      ball.x += ball.dx;
+      ball.y += ball.dy;
+
+      if (ball.x - ball.r < 0) { ball.x = ball.r; ball.dx = Math.abs(ball.dx); }
+      if (ball.x + ball.r > W) { ball.x = W - ball.r; ball.dx = -Math.abs(ball.dx); }
+      if (ball.y - ball.r < 0) { ball.y = ball.r; ball.dy = Math.abs(ball.dy); }
+
+      const hitBottom = ball.y + ball.r >= paddle.y;
+      const hitTop = ball.y + ball.r <= paddle.y + paddle.h + Math.abs(ball.dy);
+      const hitSide = ball.x >= paddle.x - ball.r && ball.x <= paddle.x + paddle.w + ball.r;
+
+      if (hitBottom && hitTop && hitSide && ball.dy > 0) {
+        const hitPos = (ball.x - (paddle.x + paddle.w / 2)) / (paddle.w / 2);
+        const angle = hitPos * 65 * (Math.PI / 180);
+        const speed = Math.min(Math.hypot(ball.dx, ball.dy) + 0.08, 10);
+        ball.dx = Math.sin(angle) * speed;
+        ball.dy = -Math.abs(Math.cos(angle) * speed);
+        ball.y = paddle.y - ball.r - 0.5;
+      }
+
+      for (const b of bricks) {
+        if (!b.alive) continue;
+        const overlapX = ball.x + ball.r > b.x && ball.x - ball.r < b.x + BRICK_W;
+        const overlapY = ball.y + ball.r > b.y && ball.y - ball.r < b.y + BRICK_H;
+        if (!overlapX || !overlapY) continue;
+
+        b.alive = false;
+        bbScore++;
+        bbScoreBox.textContent = "Score: " + bbScore;
+
+        if (bbScore > bbBest) {
+          bbBest = bbScore;
+          localStorage.setItem("brickBreakerBest", bbBest);
+          bbBestBox.textContent = "Best: " + bbBest;
+          setBBMessage("New record! " + bbBest + " bricks smashed.");
+        }
+
+        const fromLeft = Math.abs((ball.x + ball.r) - b.x);
+        const fromRight = Math.abs((ball.x - ball.r) - (b.x + BRICK_W));
+        const fromTop = Math.abs((ball.y + ball.r) - b.y);
+        const fromBottom = Math.abs((ball.y - ball.r) - (b.y + BRICK_H));
+        const minD = Math.min(fromLeft, fromRight, fromTop, fromBottom);
+        if (minD === fromTop || minD === fromBottom) {
+          ball.dy = -ball.dy;
+        } else {
+          ball.dx = -ball.dx;
+        }
+
+        if (bricks.every(bk => !bk.alive)) {
+          bbWin = true;
+          setBBMessage("Board cleared! Outstanding run. Restart for another.");
+        }
+        break;
+      }
+
+      if (ball.y - ball.r > H) {
+        bbLives--;
+        if (bbLives <= 0) {
+          bbGameOver = true;
+          setBBMessage("Out of lives with score " + bbScore + ". Restart to try again.");
+        } else {
+          bbStarted = false;
+          ball.dx = 0;
+          ball.dy = 0;
+          ball.x = paddle.x + paddle.w / 2;
+          ball.y = paddle.y - ball.r - 1;
+          setBBMessage(bbLives + " " + (bbLives === 1 ? "life" : "lives") + " left. Press Space to relaunch.");
+        }
+      }
+    }
+
+    function bbLoop() {
+      drawBBBackground();
+      if (!bbGameOver && !bbWin) {
+        updatePaddle();
+        updateBBBall();
+      }
+      drawBricks();
+      drawPaddle();
+      drawBBBall();
+      drawBBLaunchHint();
+      drawBBHud();
+      drawBBOverlay();
+      requestAnimationFrame(bbLoop);
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft") leftPressed = true;
+      if (e.key === "ArrowRight") rightPressed = true;
+      if (e.key === " ") {
+        e.preventDefault();
+        if (!bbStarted && !bbGameOver && !bbWin) launchBall();
+      }
+    });
+    document.addEventListener("keyup", e => {
+      if (e.key === "ArrowLeft") leftPressed = false;
+      if (e.key === "ArrowRight") rightPressed = false;
+    });
+
+    bbCanvas.addEventListener("click", () => {
+      if (!bbStarted && !bbGameOver && !bbWin) launchBall();
+    });
+
+    bbRestart.addEventListener("click", resetBBGame);
+    resetBBGame();
+    bbLoop();
+  </script>
+</body>
+</html>

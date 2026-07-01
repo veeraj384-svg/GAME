@@ -251,19 +251,23 @@
       snakeCtx.fillText("Final score: " + snakeScore, 155, 252);
     }
 
-    function snakeLoop() {
-      if (!snakeGameOver) {
-        moveSnake();
-        checkSnakeCollision();
+    const SNAKE_INTERVAL = 110;
+    let lastSnakeTime = 0;
+
+    function snakeLoop(timestamp) {
+      if (timestamp - lastSnakeTime >= SNAKE_INTERVAL) {
+        lastSnakeTime = timestamp;
+        if (!snakeGameOver) {
+          moveSnake();
+          checkSnakeCollision();
+        }
+        drawSnakeBackground();
+        drawFood();
+        drawSnake();
+        drawSnakeHud();
+        drawSnakeOverlay();
       }
-
-      drawSnakeBackground();
-      drawFood();
-      drawSnake();
-      drawSnakeHud();
-      drawSnakeOverlay();
-
-      setTimeout(snakeLoop, 110);
+      requestAnimationFrame(snakeLoop);
     }
 
     document.addEventListener("keydown", (e) => {
@@ -285,7 +289,7 @@
     snakeRestart.addEventListener("click", resetSnakeGame);
 
     resetSnakeGame();
-    snakeLoop();
+    requestAnimationFrame(snakeLoop);
   </script>
 </body>
 </html>
