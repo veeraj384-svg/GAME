@@ -3,83 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Neon Trail | Game Hub</title>
+  <title>Nova Run | Game Hub</title>
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .neon-panel {
-      background: linear-gradient(180deg, rgba(8, 13, 32, 0.97), rgba(8, 10, 24, 0.96));
-      border: 1px solid rgba(137, 247, 255, 0.18);
-      border-radius: 22px;
-      padding: 18px;
-      box-shadow:
-        0 28px 80px rgba(0, 0, 0, 0.42),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-    }
-
-    .level-select-wrap {
-      margin-top: 18px;
-    }
-
-    .level-select-wrap h2 {
-      margin: 0 0 12px;
-      font-size: 1rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .level-grid-neon {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(88px, 1fr));
-      gap: 12px;
-    }
-
-    .level-chip {
-      border: 1px solid rgba(137, 247, 255, 0.2);
-      border-radius: 16px;
-      padding: 14px 10px;
-      background: linear-gradient(180deg, rgba(137, 247, 255, 0.12), rgba(255, 110, 209, 0.08));
-      color: #f3fbff;
-      font: 800 1rem/1 "Trebuchet MS", sans-serif;
-      cursor: pointer;
-      transition: transform 0.15s ease, border-color 0.15s ease;
-    }
-
-    .level-chip:hover {
-      transform: translateY(-2px);
-      border-color: rgba(137, 247, 255, 0.42);
-    }
-
-    .level-chip.current {
-      color: #08131f;
-      border-color: rgba(137, 247, 255, 0.64);
-      background: linear-gradient(180deg, rgba(137, 247, 255, 0.28), rgba(137, 247, 255, 0.12));
-      box-shadow: 0 0 20px rgba(137, 247, 255, 0.24);
-    }
-
-    .level-chip.locked {
-      opacity: 0.45;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .trail-note {
-      margin: 18px auto 0;
-      max-width: 760px;
-      text-align: center;
-      color: var(--text-soft);
-      line-height: 1.65;
-    }
-
-    .trail-note strong {
-      color: var(--text-main);
-    }
-
-    @media (max-width: 760px) {
-      .level-grid-neon {
-        grid-template-columns: repeat(2, minmax(88px, 1fr));
-      }
-    }
-  </style>
 </head>
 <body class="theme-neon">
   <div class="page-shell">
@@ -87,1497 +12,734 @@
       <section class="game-panel">
         <div class="game-topbar">
           <div class="game-header-left">
-            <p class="eyebrow">Neon Platformer</p>
-            <h1>Neon Trail</h1>
-            <p class="game-subtext">
-              A fresh platformer with eight handcrafted levels, forgiving movement, mid-level checkpoints, and enough scenery to make the run feel like a journey instead of a test.
-            </p>
+            <p class="eyebrow">Precision Platformer</p>
+            <h1>Nova Run</h1>
+            <p class="game-subtext">Dash, bounce, and thread the spikes to gather every shard across five neon stages.</p>
           </div>
           <a href="index.html" class="back-link">&larr; Home</a>
         </div>
-
         <div class="info-row">
-          <div class="status-box">Move: Arrows / A D</div>
-          <div class="status-box">Jump: Space / Up / W</div>
-          <div class="status-box" id="levelBox">Level 1</div>
-          <div class="status-box is-accent" id="shardBox">Shards: 0 / 0</div>
-          <div class="status-box" id="checkpointBox">Checkpoint: Start</div>
-          <div class="status-box" id="gateBox">Gate: Locked</div>
+          <div class="status-box">Move: &larr;&rarr;/AD &middot; Jump: Space/W &middot; Dash: Shift/X &middot; R: Restart</div>
+          <div class="status-box" id="novaLevelBox">Level 1 &middot; First Light</div>
+          <div class="status-box is-accent" id="novaShardBox">Shards: 0 / 0</div>
+          <div class="status-box" id="novaDeathBox">Deaths: 0</div>
+          <div class="status-box" id="novaBestBox">Best: Level 1</div>
         </div>
-
-        <div class="message-banner" id="messageBox">Collect every shard, touch checkpoints, and head for the gate.</div>
-
-        <div class="canvas-stage neon-panel">
-          <canvas id="gameCanvas" class="game-canvas" width="960" height="540"></canvas>
+        <div class="message-banner" id="novaMessage">Collect every shard to open the gate, then reach the glowing door.</div>
+        <div class="canvas-stage">
+          <canvas id="novaCanvas" class="game-canvas" width="960" height="540"></canvas>
         </div>
-
         <div class="bottom-actions">
-          <button class="secondary-button" id="prevLevelBtn">Previous Level</button>
-          <button class="secondary-button" id="restartBtn">Restart Level</button>
-          <button class="secondary-button" id="nextLevelBtn">Next Level</button>
+          <button class="secondary-button" id="novaRestart">Restart Level</button>
+          <span id="novaChips" style="display:inline-flex;gap:8px;flex-wrap:wrap;"></span>
         </div>
-
-        <div class="level-select-wrap neon-panel">
-          <h2>Level Select</h2>
-          <div class="level-grid-neon" id="levelGrid"></div>
-        </div>
-
-        <p class="trail-note">
-          <strong>Design:</strong> The early levels are short and readable, and the later ones get much longer and more distinct without turning into punishment. Dying sends you back to your latest checkpoint, not the beginning.
-        </p>
       </section>
     </main>
   </div>
-
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-
-    const levelBox = document.getElementById("levelBox");
-    const shardBox = document.getElementById("shardBox");
-    const checkpointBox = document.getElementById("checkpointBox");
-    const gateBox = document.getElementById("gateBox");
-    const messageBox = document.getElementById("messageBox");
-    const levelGrid = document.getElementById("levelGrid");
-
-    const prevLevelBtn = document.getElementById("prevLevelBtn");
-    const nextLevelBtn = document.getElementById("nextLevelBtn");
-    const restartBtn = document.getElementById("restartBtn");
-
-    const VIEW_W = canvas.width;
-    const VIEW_H = canvas.height;
-
-    const physics = {
-      accel: 0.7,
-      friction: 0.84,
-      gravity: 0.46,
-      jump: -13.2,
-      maxSpeed: 6,
-      maxFall: 15,
-      coyoteFrames: 8,
-      jumpBufferFrames: 10
-    };
-
-    const input = { left: false, right: false };
-    const camera = { x: 0, y: 0 };
-
-    const player = {
-      x: 0,
-      y: 0,
-      w: 28,
-      h: 34,
-      vx: 0,
-      vy: 0,
-      prevX: 0,
-      prevY: 0,
-      onGround: false,
-      coyote: 0,
-      support: null
-    };
-
-    let currentLevel = null;
-    let levelIndex = 0;
-    let unlockedLevel = Number(localStorage.getItem("neonTrailUnlocked") || 1);
-    let jumpBuffer = 0;
-    let frameCount = 0;
-    let messageTimer = 0;
-    let respawnPoint = { x: 0, y: 0, name: "Start" };
-
-    function rect(x, y, w, h) {
-      return { x, y, w, h };
-    }
-
-    function spike(x, y, w, h) {
-      return { x, y, w, h };
-    }
-
-    function movingPlatform(x, y, w, h, axis, range, speed, phase = 0) {
-      return {
-        x,
-        y,
-        w,
-        h,
-        axis,
-        range,
-        speed,
-        phase,
-        baseX: x,
-        baseY: y,
-        dx: 0,
-        dy: 0,
-        kind: "moving"
-      };
-    }
-
-    function pad(x, y, w, h, power) {
-      return { x, y, w, h, power };
-    }
-
-    function checkpoint(x, y, name) {
-      return { x, y, w: 26, h: 66, name, active: false };
-    }
-
-    function shard(x, y) {
-      return { x, y, r: 10, collected: false };
-    }
+    const TILE = 40, ROWS = 15, W = 960, H = 540, WORLD_H = ROWS * TILE;
+    const GRAVITY = 0.6, JUMP_V = -12.4, SPRING_V = -17.5;
+    const GROUND_ACC = 0.8, AIR_ACC = 0.55, GROUND_FRICTION = 0.8, AIR_DRAG = 0.92;
+    const MAX_SPEED = 5.6, MAX_FALL = 15, COYOTE = 6, BUFFER = 8;
+    const DASH_SPEED = 12, DASH_FRAMES = 9;
+    const PAL = { cyan: '#67e8f9', violet: '#a78bfa', pink: '#f472b6', amber: '#fde68a', green: '#86efac', white: '#f4f6ff', soft: '#9aa3c2' };
 
     const LEVELS = [
-      {
-        title: "Level 1: Lantern Walk",
-        hint: "A long introductory run with one checkpoint and easy jumps.",
-        worldWidth: 1900,
-        worldHeight: 760,
-        spawn: { x: 90, y: 570 },
-        goal: rect(1598, 478, 34, 82),
-        platforms: [
-          rect(0, 640, 280, 120),
-          rect(360, 590, 180, 22),
-          rect(620, 640, 240, 120),
-          rect(940, 560, 190, 22),
-          rect(1210, 640, 230, 120),
-          rect(1490, 560, 170, 22),
-          rect(1680, 640, 220, 120)
-        ],
-        spikes: [
-          spike(884, 618, 44, 22)
-        ],
-        movingPlatforms: [],
-        pads: [
-          pad(740, 616, 74, 18, -14)
-        ],
-        checkpoints: [
-          checkpoint(1288, 574, "Midway"),
-          checkpoint(1540, 494, "Final Step")
-        ],
-        shards: [
-          shard(446, 548),
-          shard(1018, 518),
-          shard(1550, 518)
-        ],
-        decor: "skyline"
-      },
-      {
-        title: "Level 2: Glass Tunnels",
-        hint: "This one is longer, with a tunnel feel and two friendly checkpoints.",
-        worldWidth: 2500,
-        worldHeight: 860,
-        spawn: { x: 90, y: 650 },
-        goal: rect(2290, 520, 34, 82),
-        platforms: [
-          rect(0, 720, 270, 140),
-          rect(350, 660, 170, 22),
-          rect(600, 580, 150, 22),
-          rect(830, 720, 220, 140),
-          rect(1130, 640, 170, 22),
-          rect(1380, 560, 150, 22),
-          rect(1610, 720, 240, 140),
-          rect(1910, 620, 170, 22),
-          rect(2140, 560, 150, 22),
-          rect(2260, 720, 240, 140)
-        ],
-        spikes: [
-          spike(1070, 698, 40, 22),
-          spike(1858, 698, 48, 22)
-        ],
-        movingPlatforms: [],
-        pads: [
-          pad(690, 556, 70, 18, -14),
-          pad(1720, 696, 74, 18, -14)
-        ],
-        checkpoints: [
-          checkpoint(1185, 654, "Tunnel"),
-          checkpoint(2010, 574, "Bridge")
-        ],
-        shards: [
-          shard(430, 618),
-          shard(920, 678),
-          shard(1458, 518),
-          shard(2210, 518)
-        ],
-        decor: "tunnels"
-      },
-      {
-        title: "Level 3: Aurora Steps",
-        hint: "A taller level with soft vertical climbs and lots of safe staging spots.",
-        worldWidth: 3200,
-        worldHeight: 980,
-        spawn: { x: 90, y: 780 },
-        goal: rect(2960, 430, 34, 82),
-        platforms: [
-          rect(0, 840, 260, 140),
-          rect(330, 760, 160, 22),
-          rect(560, 680, 150, 22),
-          rect(790, 600, 150, 22),
-          rect(1030, 840, 220, 140),
-          rect(1260, 730, 150, 22),
-          rect(1490, 640, 150, 22),
-          rect(1730, 560, 160, 22),
-          rect(1960, 840, 240, 140),
-          rect(2230, 700, 150, 22),
-          rect(2480, 610, 170, 22),
-          rect(2740, 520, 170, 22),
-          rect(2910, 840, 290, 140)
-        ],
-        spikes: [
-          spike(967, 818, 44, 22),
-          spike(2204, 818, 44, 22)
-        ],
-        movingPlatforms: [],
-        pads: [
-          pad(1120, 816, 76, 18, -15),
-          pad(2070, 816, 76, 18, -15)
-        ],
-        checkpoints: [
-          checkpoint(1360, 744, "Rise"),
-          checkpoint(2540, 624, "Glow Arch")
-        ],
-        shards: [
-          shard(410, 718),
-          shard(840, 558),
-          shard(1560, 598),
-          shard(2310, 658),
-          shard(2800, 478)
-        ],
-        decor: "garden"
-      },
-      {
-        title: "Level 4: Starlight Causeway",
-        hint: "A broad scenic run with a lot of breathing room and several safe checkpoints.",
-        worldWidth: 3900,
-        worldHeight: 1040,
-        spawn: { x: 90, y: 860 },
-        goal: rect(3528, 688, 34, 82),
-        platforms: [
-          rect(0, 900, 260, 140),
-          rect(340, 820, 170, 22),
-          rect(590, 740, 160, 22),
-          rect(820, 900, 220, 140),
-          rect(1090, 780, 160, 22),
-          rect(1320, 690, 170, 22),
-          rect(1590, 900, 230, 140),
-          rect(1860, 780, 160, 22),
-          rect(2090, 700, 170, 22),
-          rect(2360, 900, 250, 140),
-          rect(2640, 780, 160, 22),
-          rect(2880, 690, 180, 22),
-          rect(3160, 900, 250, 140),
-          rect(3420, 770, 170, 22),
-          rect(3710, 900, 190, 140)
-        ],
-        spikes: [
-          spike(768, 878, 42, 22),
-          spike(1540, 878, 42, 22),
-          spike(2310, 878, 42, 22),
-          spike(3110, 878, 42, 22)
-        ],
-        movingPlatforms: [],
-        pads: [
-          pad(160, 876, 76, 18, -14),
-          pad(1688, 876, 76, 18, -14),
-          pad(3270, 876, 76, 18, -14)
-        ],
-        checkpoints: [
-          checkpoint(1150, 794, "Vista"),
-          checkpoint(2480, 794, "Causeway"),
-          checkpoint(3490, 784, "Crown")
-        ],
-        shards: [
-          shard(426, 778),
-          shard(1162, 738),
-          shard(1910, 738),
-          shard(2710, 738),
-          shard(3470, 728),
-          shard(3556, 728)
-        ],
-        decor: "causeway"
-      },
-      {
-        title: "Level 5: Neon Harbor",
-        hint: "A long dockside route with low bridges, broad ledges, and relaxed pacing.",
-        worldWidth: 4700,
-        worldHeight: 980,
-        spawn: { x: 90, y: 820 },
-        goal: rect(4510, 778, 34, 82),
-        platforms: [
-          rect(0, 860, 280, 120),
-          rect(350, 800, 170, 22),
-          rect(600, 860, 240, 120),
-          rect(900, 780, 180, 22),
-          rect(1160, 860, 250, 120),
-          rect(1450, 750, 180, 22),
-          rect(1710, 860, 260, 120),
-          rect(2000, 790, 180, 22),
-          rect(2270, 860, 250, 120),
-          rect(2550, 730, 180, 22),
-          rect(2820, 860, 250, 120),
-          rect(3110, 790, 180, 22),
-          rect(3380, 860, 260, 120),
-          rect(3680, 740, 180, 22),
-          rect(3940, 860, 260, 120),
-          rect(4240, 780, 190, 22),
-          rect(4410, 860, 290, 120)
-        ],
-        spikes: [
-          spike(1090, 838, 40, 22),
-          spike(1980, 838, 40, 22),
-          spike(3070, 838, 40, 22),
-          spike(4210, 838, 40, 22)
-        ],
-        movingPlatforms: [],
-        pads: [
-          pad(720, 836, 76, 18, -14),
-          pad(1820, 836, 76, 18, -14),
-          pad(3500, 836, 76, 18, -14)
-        ],
-        checkpoints: [
-          checkpoint(1240, 800, "Pier"),
-          checkpoint(2920, 800, "Harbor"),
-          checkpoint(4300, 720, "Lighthouse")
-        ],
-        shards: [
-          shard(430, 758),
-          shard(970, 738),
-          shard(1530, 708),
-          shard(2360, 818),
-          shard(3180, 748),
-          shard(4020, 818),
-          shard(4470, 818)
-        ],
-        decor: "harbor"
-      },
-      {
-        title: "Level 6: Prism Terraces",
-        hint: "A long climb across gentle terraces with launch pads that keep the route flowing.",
-        worldWidth: 5600,
-        worldHeight: 1180,
-        spawn: { x: 90, y: 920 },
-        goal: rect(5230, 498, 34, 82),
-        platforms: [
-          rect(0, 980, 280, 140),
-          rect(340, 900, 170, 22),
-          rect(580, 820, 170, 22),
-          rect(820, 740, 170, 22),
-          rect(1090, 980, 230, 140),
-          rect(1350, 860, 170, 22),
-          rect(1600, 770, 170, 22),
-          rect(1850, 680, 170, 22),
-          rect(2130, 980, 240, 140),
-          rect(2400, 850, 170, 22),
-          rect(2650, 740, 170, 22),
-          rect(2920, 630, 180, 22),
-          rect(3220, 980, 240, 140),
-          rect(3470, 840, 180, 22),
-          rect(3730, 720, 180, 22),
-          rect(4010, 600, 190, 22),
-          rect(4320, 980, 250, 140),
-          rect(4610, 820, 180, 22),
-          rect(4890, 700, 190, 22),
-          rect(5170, 580, 190, 22),
-          rect(5380, 980, 220, 140)
-        ],
-        spikes: [
-          spike(1040, 958, 40, 22),
-          spike(2080, 958, 40, 22),
-          spike(4270, 958, 40, 22)
-        ],
-        movingPlatforms: [],
-        pads: [
-          pad(1160, 956, 76, 18, -15),
-          pad(2250, 956, 76, 18, -15),
-          pad(4440, 956, 76, 18, -15)
-        ],
-        checkpoints: [
-          checkpoint(1420, 860, "Terrace One"),
-          checkpoint(3030, 630, "Terrace Two"),
-          checkpoint(4700, 820, "Terrace Three")
-        ],
-        shards: [
-          shard(420, 858),
-          shard(650, 778),
-          shard(930, 698),
-          shard(1660, 728),
-          shard(2460, 808),
-          shard(2990, 588),
-          shard(3770, 678),
-          shard(5250, 538)
-        ],
-        decor: "terraces"
-      },
-      {
-        title: "Level 7: Twin Route Loop",
-        hint: "A very long level with upper and lower route choices that keep the run feeling new.",
-        worldWidth: 6500,
-        worldHeight: 1120,
-        spawn: { x: 90, y: 880 },
-        goal: rect(6270, 858, 34, 82),
-        platforms: [
-          rect(0, 940, 260, 140),
-          rect(330, 860, 170, 22),
-          rect(580, 780, 170, 22),
-          rect(730, 700, 110, 22),
-          rect(850, 940, 240, 140),
-          rect(1120, 820, 170, 22),
-          rect(1360, 700, 190, 22),
-          rect(1650, 940, 250, 140),
-          rect(1940, 820, 170, 22),
-          rect(2200, 940, 260, 140),
-          rect(2480, 760, 180, 22),
-          rect(2740, 650, 190, 22),
-          rect(3040, 940, 250, 140),
-          rect(3320, 820, 180, 22),
-          rect(3470, 760, 110, 22),
-          rect(3580, 700, 180, 22),
-          rect(3720, 620, 110, 22),
-          rect(3850, 940, 260, 140),
-          rect(4090, 860, 120, 22),
-          rect(4140, 800, 180, 22),
-          rect(4300, 730, 110, 22),
-          rect(4400, 680, 180, 22),
-          rect(4680, 940, 270, 140),
-          rect(4990, 780, 180, 22),
-          rect(5260, 660, 190, 22),
-          rect(5450, 590, 110, 22),
-          rect(5560, 940, 270, 140),
-          rect(5920, 780, 200, 22),
-          rect(6200, 940, 300, 140)
-        ],
-        spikes: [
-          spike(810, 918, 42, 22),
-          spike(2170, 918, 42, 22),
-          spike(5520, 918, 42, 22)
-        ],
-        movingPlatforms: [],
-        pads: [
-          pad(1010, 916, 76, 18, -14),
-          pad(3120, 916, 76, 18, -14),
-          pad(3920, 916, 76, 18, -15),
-          pad(4740, 916, 76, 18, -14)
-        ],
-        checkpoints: [
-          checkpoint(1710, 860, "Fork"),
-          checkpoint(3380, 820, "Loop"),
-          checkpoint(5030, 780, "Overlook"),
-          checkpoint(6100, 780, "Finish Lane")
-        ],
-        shards: [
-          shard(420, 818),
-          shard(1450, 658),
-          shard(2570, 718),
-          shard(3670, 658),
-          shard(4470, 638),
-          shard(5330, 618),
-          shard(6140, 738)
-        ],
-        decor: "loop"
-      },
-      {
-        title: "Level 8: Moonline Parade",
-        hint: "The longest route in the game. It is huge, scenic, and checkpoint-heavy rather than brutal.",
-        worldWidth: 7600,
-        worldHeight: 1180,
-        spawn: { x: 90, y: 920 },
-        goal: rect(7340, 918, 34, 82),
-        platforms: [
-          rect(0, 1000, 280, 160),
-          rect(340, 920, 180, 22),
-          rect(600, 840, 180, 22),
-          rect(860, 760, 180, 22),
-          rect(1180, 1000, 250, 160),
-          rect(1480, 860, 180, 22),
-          rect(1740, 740, 180, 22),
-          rect(2050, 620, 200, 22),
-          rect(2380, 1000, 260, 160),
-          rect(2680, 870, 180, 22),
-          rect(2950, 760, 180, 22),
-          rect(3240, 650, 190, 22),
-          rect(3570, 1000, 260, 160),
-          rect(3860, 850, 190, 22),
-          rect(4140, 720, 190, 22),
-          rect(4430, 600, 200, 22),
-          rect(4760, 1000, 280, 160),
-          rect(5080, 860, 190, 22),
-          rect(5360, 740, 190, 22),
-          rect(5650, 620, 200, 22),
-          rect(5980, 1000, 280, 160),
-          rect(6300, 840, 190, 22),
-          rect(6580, 700, 200, 22),
-          rect(6880, 560, 220, 22),
-          rect(7200, 1000, 400, 160)
-        ],
-        spikes: [
-          spike(1130, 978, 42, 22),
-          spike(2350, 978, 42, 22),
-          spike(4720, 978, 42, 22),
-          spike(5940, 978, 42, 22)
-        ],
-        movingPlatforms: [],
-        pads: [
-          pad(1300, 976, 76, 18, -15),
-          pad(2500, 976, 76, 18, -15),
-          pad(4850, 976, 76, 18, -15),
-          pad(6120, 976, 76, 18, -15)
-        ],
-        checkpoints: [
-          checkpoint(1600, 860, "Parade One"),
-          checkpoint(3300, 650, "Parade Two"),
-          checkpoint(5000, 860, "Parade Three"),
-          checkpoint(6900, 560, "Parade Four")
-        ],
-        shards: [
-          shard(430, 878),
-          shard(920, 718),
-          shard(1550, 818),
-          shard(2120, 578),
-          shard(2990, 718),
-          shard(3890, 808),
-          shard(4530, 558),
-          shard(5430, 698),
-          shard(6660, 658),
-          shard(7270, 958)
-        ],
-        decor: "parade"
-      },
-      {
-        title: "Level 9: Drift Garden",
-        hint: "Wide, slow lifts drift across open gaps. The moving parts are here to carry you, not trick you.",
-        worldWidth: 8600,
-        worldHeight: 1180,
-        spawn: { x: 90, y: 920 },
-        goal: rect(8300, 898, 34, 82),
-        platforms: [
-          rect(0, 1000, 280, 160),
-          rect(380, 920, 180, 22),
-          rect(670, 1000, 250, 160),
-          rect(1050, 890, 190, 22),
-          rect(1350, 1000, 260, 160),
-          rect(1690, 900, 180, 22),
-          rect(2000, 1000, 260, 160),
-          rect(2390, 870, 190, 22),
-          rect(2710, 1000, 260, 160),
-          rect(3090, 910, 200, 22),
-          rect(3420, 1000, 260, 160),
-          rect(3800, 870, 200, 22),
-          rect(4150, 1000, 260, 160),
-          rect(4530, 900, 200, 22),
-          rect(4860, 1000, 280, 160),
-          rect(5250, 870, 210, 22),
-          rect(5600, 1000, 280, 160),
-          rect(6010, 910, 220, 22),
-          rect(6380, 1000, 290, 160),
-          rect(6790, 870, 220, 22),
-          rect(7150, 1000, 300, 160),
-          rect(7590, 900, 220, 22),
-          rect(7970, 1000, 630, 160)
-        ],
-        spikes: [
-          spike(972, 978, 40, 22),
-          spike(2340, 978, 40, 22),
-          spike(4470, 978, 40, 22),
-          spike(6740, 978, 40, 22)
-        ],
-        movingPlatforms: [
-          movingPlatform(840, 930, 180, 20, "x", 70, 0.012),
-          movingPlatform(2190, 930, 190, 20, "x", 70, 0.013, 1),
-          movingPlatform(4300, 930, 180, 20, "x", 80, 0.012, 2),
-          movingPlatform(6550, 930, 190, 20, "x", 80, 0.013, 0.8)
-        ],
-        pads: [
-          pad(1450, 976, 76, 18, -14),
-          pad(4960, 976, 76, 18, -14)
-        ],
-        checkpoints: [
-          checkpoint(1760, 914, "Garden One"),
-          checkpoint(3900, 884, "Garden Two"),
-          checkpoint(6070, 924, "Garden Three")
-        ],
-        shards: [
-          shard(480, 878),
-          shard(1130, 848),
-          shard(2470, 828),
-          shard(3880, 828),
-          shard(5400, 828),
-          shard(6940, 828),
-          shard(8210, 958)
-        ],
-        decor: "garden"
-      },
-      {
-        title: "Level 10: Skyline Ferries",
-        hint: "Large vertical ferries float up and down beside easy ledges. Ride them like elevators.",
-        worldWidth: 9400,
-        worldHeight: 1320,
-        spawn: { x: 90, y: 1060 },
-        goal: rect(9040, 598, 34, 82),
-        platforms: [
-          rect(0, 1140, 300, 180),
-          rect(420, 1040, 190, 22),
-          rect(720, 1140, 250, 180),
-          rect(1100, 980, 200, 22),
-          rect(1420, 1140, 260, 180),
-          rect(1620, 1020, 140, 22),
-          rect(1800, 900, 210, 22),
-          rect(2140, 1140, 260, 180),
-          rect(2520, 980, 210, 22),
-          rect(2860, 1140, 270, 180),
-          rect(3240, 870, 220, 22),
-          rect(3600, 1140, 270, 180),
-          rect(4000, 980, 210, 22),
-          rect(4360, 1140, 280, 180),
-          rect(4760, 840, 220, 22),
-          rect(5140, 1140, 280, 180),
-          rect(5530, 980, 210, 22),
-          rect(5920, 1140, 290, 180),
-          rect(6320, 820, 230, 22),
-          rect(6720, 1140, 300, 180),
-          rect(7130, 980, 220, 22),
-          rect(7540, 1140, 300, 180),
-          rect(7970, 760, 230, 22),
-          rect(8390, 1140, 300, 180),
-          rect(8800, 980, 230, 22),
-          rect(9000, 1140, 400, 180)
-        ],
-        spikes: [
-          spike(1030, 1118, 40, 22),
-          spike(2480, 1118, 40, 22),
-          spike(4720, 1118, 40, 22),
-          spike(7080, 1118, 40, 22)
-        ],
-        movingPlatforms: [
-          movingPlatform(930, 1080, 170, 20, "y", 120, 0.012),
-          movingPlatform(2270, 1090, 180, 20, "y", 170, 0.011, 0.35),
-          movingPlatform(2980, 1080, 180, 20, "y", 130, 0.012, 1.2),
-          movingPlatform(4540, 1080, 190, 20, "y", 210, 0.011, 1.6),
-          movingPlatform(5650, 1080, 180, 20, "y", 140, 0.012, 2.1),
-          movingPlatform(6100, 1090, 190, 20, "y", 190, 0.011, 0.9),
-          movingPlatform(7800, 1040, 200, 20, "y", 220, 0.011, 2.6),
-          movingPlatform(8200, 1080, 190, 20, "y", 150, 0.012, 0.7),
-          movingPlatform(8920, 960, 220, 20, "y", 320, 0.01, 1.3)
-        ],
-        pads: [
-          pad(2240, 1116, 76, 18, -14),
-          pad(6780, 1116, 76, 18, -14)
-        ],
-        checkpoints: [
-          checkpoint(1180, 994, "Ferry One"),
-          checkpoint(1880, 914, "Upper Deck"),
-          checkpoint(4880, 854, "Ferry Two"),
-          checkpoint(8000, 774, "Ferry Three")
-        ],
-        shards: [
-          shard(500, 998),
-          shard(1180, 938),
-          shard(3330, 828),
-          shard(4860, 798),
-          shard(6430, 778),
-          shard(8100, 718),
-          shard(9060, 1098)
-        ],
-        decor: "skyline"
-      },
-      {
-        title: "Level 11: Ribbon Crossing",
-        hint: "Slow ribbon platforms slide across wide plazas. They are broad enough that you can wait comfortably.",
-        worldWidth: 10400,
-        worldHeight: 1260,
-        spawn: { x: 90, y: 1000 },
-        goal: rect(9980, 918, 34, 82),
-        platforms: [
-          rect(0, 1080, 280, 180),
-          rect(380, 1000, 180, 22),
-          rect(660, 1080, 250, 180),
-          rect(1030, 930, 190, 22),
-          rect(1330, 1080, 260, 180),
-          rect(1690, 900, 190, 22),
-          rect(2010, 1080, 260, 180),
-          rect(2390, 940, 200, 22),
-          rect(2720, 1080, 270, 180),
-          rect(3110, 900, 210, 22),
-          rect(3460, 1080, 280, 180),
-          rect(3860, 960, 200, 22),
-          rect(4210, 1080, 280, 180),
-          rect(4610, 900, 220, 22),
-          rect(5000, 1080, 290, 180),
-          rect(5410, 940, 210, 22),
-          rect(5800, 1080, 300, 180),
-          rect(6230, 900, 220, 22),
-          rect(6640, 1080, 300, 180),
-          rect(7080, 940, 220, 22),
-          rect(7510, 1080, 300, 180),
-          rect(7940, 900, 220, 22),
-          rect(8370, 1080, 300, 180),
-          rect(8810, 940, 220, 22),
-          rect(9240, 1080, 1160, 180)
-        ],
-        spikes: [
-          spike(980, 1058, 40, 22),
-          spike(2350, 1058, 40, 22),
-          spike(4550, 1058, 40, 22),
-          spike(7040, 1058, 40, 22)
-        ],
-        movingPlatforms: [
-          movingPlatform(890, 970, 200, 20, "x", 90, 0.012),
-          movingPlatform(4340, 970, 210, 20, "x", 100, 0.012, 1.6),
-          movingPlatform(6900, 970, 220, 20, "x", 100, 0.012, 0.7),
-          movingPlatform(9660, 980, 220, 20, "y", 130, 0.011, 0.5)
-        ],
-        pads: [
-          pad(1410, 1056, 76, 18, -14),
-          pad(5150, 1056, 76, 18, -14),
-          pad(8480, 1056, 76, 18, -14)
-        ],
-        checkpoints: [
-          checkpoint(1810, 914, "Ribbon One"),
-          checkpoint(4740, 914, "Ribbon Two"),
-          checkpoint(8010, 914, "Ribbon Three")
-        ],
-        shards: [
-          shard(460, 958),
-          shard(1110, 888),
-          shard(2490, 898),
-          shard(3910, 918),
-          shard(5280, 898),
-          shard(7130, 898),
-          shard(8990, 898),
-          shard(10020, 1038)
-        ],
-        decor: "loop"
-      },
-      {
-        title: "Level 12: Crown Promenade",
-        hint: "The final route is huge, but the moving bridges are extra slow and every section gives you a safe reset point.",
-        worldWidth: 11600,
-        worldHeight: 1360,
-        spawn: { x: 90, y: 1100 },
-        goal: rect(11140, 998, 34, 82),
-        platforms: [
-          rect(0, 1180, 300, 180),
-          rect(420, 1090, 190, 22),
-          rect(700, 1180, 260, 180),
-          rect(1080, 1020, 200, 22),
-          rect(1380, 1180, 280, 180),
-          rect(1760, 930, 210, 22),
-          rect(2100, 1180, 280, 180),
-          rect(2500, 1030, 210, 22),
-          rect(2860, 1180, 290, 180),
-          rect(3270, 920, 220, 22),
-          rect(3660, 1180, 300, 180),
-          rect(4080, 1040, 220, 22),
-          rect(4460, 1180, 300, 180),
-          rect(4890, 900, 230, 22),
-          rect(5310, 1180, 300, 180),
-          rect(5740, 1020, 230, 22),
-          rect(6160, 1180, 320, 180),
-          rect(6610, 900, 230, 22),
-          rect(7050, 1180, 320, 180),
-          rect(7490, 1030, 230, 22),
-          rect(7920, 1180, 320, 180),
-          rect(8380, 900, 230, 22),
-          rect(8840, 1180, 330, 180),
-          rect(9240, 1040, 240, 22),
-          rect(9500, 1000, 220, 22),
-          rect(9750, 1180, 330, 180),
-          rect(9800, 940, 340, 22),
-          rect(10720, 1180, 880, 180)
-        ],
-        spikes: [
-          spike(1030, 1158, 40, 22),
-          spike(2460, 1158, 40, 22),
-          spike(4860, 1158, 40, 22),
-          spike(7440, 1158, 40, 22),
-          spike(9720, 1158, 40, 22)
-        ],
-        movingPlatforms: [
-          movingPlatform(980, 1070, 210, 20, "x", 100, 0.011),
-          movingPlatform(1690, 1060, 220, 20, "y", 180, 0.011, 0.4),
-          movingPlatform(3030, 1070, 220, 20, "y", 110, 0.011, 1.1),
-          movingPlatform(4820, 1060, 220, 20, "y", 200, 0.011, 1.9),
-          movingPlatform(5510, 1070, 220, 20, "x", 110, 0.011, 2.2),
-          movingPlatform(8310, 1060, 230, 20, "y", 210, 0.011, 0.1),
-          movingPlatform(8180, 1070, 230, 20, "y", 120, 0.011, 0.6),
-          movingPlatform(9560, 1090, 240, 20, "y", 210, 0.0105, 0.55),
-          movingPlatform(10380, 1060, 230, 20, "y", 180, 0.011, 1.8),
-          movingPlatform(11020, 1080, 240, 20, "y", 170, 0.01, 0.9)
-        ],
-        pads: [
-          pad(1470, 1156, 76, 18, -14),
-          pad(3790, 1156, 76, 18, -14),
-          pad(6210, 1156, 76, 18, -14),
-          pad(8950, 1156, 76, 18, -14)
-        ],
-        checkpoints: [
-          checkpoint(1880, 944, "Promenade One"),
-          checkpoint(4970, 914, "Promenade Two"),
-          checkpoint(8460, 914, "Promenade Three"),
-          checkpoint(10820, 944, "Promenade Four")
-        ],
-        shards: [
-          shard(500, 1048),
-          shard(1180, 968),
-          shard(2600, 988),
-          shard(3390, 878),
-          shard(5000, 858),
-          shard(6760, 878),
-          shard(8550, 858),
-          shard(9990, 898),
-          shard(11220, 1118)
-        ],
-        decor: "causeway"
-      }
+      { name: 'First Light', w: 62, tint: '#67e8f9', tokens: [
+        '# 13 0-11 15-24 28-38 42-49 52-61', '# 14 0-11 15-24 28-38 42-49 52-61',
+        '# 8 46-50', '# 11 33-35',
+        'o 7 47 49', 'o 10 34', 'o 11 18',
+        '^ 12 22 54', 'P 12 3', 'C 12 30', 'S 12 44', 'G 12 58' ] },
+      { name: 'Twin Circuit', w: 88, tint: '#a78bfa', tokens: [
+        '# 13 0-13 17-27 31-43 50-63 67-87', '# 14 0-13 17-27 31-43 50-63 67-87',
+        '# 11 18-20', '# 10 36-38', '# 8 69-74',
+        'o 10 19', 'o 9 37', 'o 7 70 72', 'o 12 10 55', 'o 11 46 47',
+        '^ 12 24 41 61', 'P 12 3', 'C 12 33 60', 'S 12 68', 'G 12 84' ] },
+      { name: 'Skyline Steps', w: 92, tint: '#f472b6', tokens: [
+        '# 13 0-9 13-22 27-36 46-58 62-73 80-91', '# 14 0-9 13-22 27-36 46-58 62-73 80-91',
+        '# 8 17-20', '# 11 33-35', '# 9 38-41', '# 8 44-46',
+        'o 7 18', 'o 10 34', 'o 8 39 40', 'o 7 45', 'o 11 76 77', 'o 12 5 70',
+        '^ 12 20 49 65', 'P 12 3', 'C 12 30 52 82', 'S 12 15', 'G 12 88' ] },
+      { name: 'Spring Vault', w: 96, tint: '#86efac', tokens: [
+        '# 13 0-11 15-30 34-47 56-69 73-83 87-95', '# 14 0-11 15-30 34-47 56-69 73-83 87-95',
+        '# 7 42-45', '# 9 50-53', '# 11 26-28',
+        'o 6 43 44', 'o 8 51 52', 'o 10 27', 'o 12 8 78', 'o 8 91 92',
+        '^ 12 21 22 37 60 61 66 80', 'P 12 3', 'C 12 17 58 75', 'S 12 40 91', 'G 12 94' ] },
+      { name: 'Crown Gauntlet', w: 110, tint: '#fde68a', tokens: [
+        '# 13 0-9 13-24 31-42 46-60 70-82 86-97 101-109', '# 14 0-9 13-24 31-42 46-60 70-82 86-97 101-109',
+        '# 8 51-54', '# 11 58-60', '# 10 62-64', '# 9 66-68',
+        'o 7 52 53', 'o 9 63', 'o 8 67', 'o 11 27 28', 'o 8 104 105', 'o 12 5 20 39 78 93',
+        '^ 12 17 34 35 56 74 90 91 95', 'P 12 3', 'C 12 14 32 71 87', 'S 12 49 103', 'G 12 107' ] }
     ];
 
-    function deepClone(value) {
-      return JSON.parse(JSON.stringify(value));
+    const canvas = document.getElementById('novaCanvas');
+    const ctx = canvas.getContext('2d');
+    const levelBox = document.getElementById('novaLevelBox');
+    const shardBox = document.getElementById('novaShardBox');
+    const deathBox = document.getElementById('novaDeathBox');
+    const bestBox = document.getElementById('novaBestBox');
+    const banner = document.getElementById('novaMessage');
+    const restartBtn = document.getElementById('novaRestart');
+    const chipWrap = document.getElementById('novaChips');
+
+    let unlocked = Math.min(5, Math.max(1, parseInt(localStorage.getItem('novaUnlocked') || '1', 10) || 1));
+    let levelIndex = 0, grid = [], worldW = 0, tint = PAL.cyan;
+    let shards = [], spikes = [], springs = [], checkpoints = [], gate = null, spawn = { x: 100, y: 460 };
+    let shardTotal = 0, shardGot = 0, gateOpen = false, deaths = 0;
+    let state = 'play', deadTimer = 0, clearTimer = 0, fadeAlpha = 0, t = 0;
+    let camX = 0, camY = 0, shake = 0, shakeX = 0, shakeY = 0;
+    let particles = [], popups = [], ghosts = [];
+    let levelCanvas = null, shardSprite = null;
+    let respawnPt = { x: 100, y: 460 };
+
+    const p = { x: 0, y: 0, w: 26, h: 34, vx: 0, vy: 0, facing: 1, onGround: false, coyote: 0, jumpBuffer: 0, dashTimer: 0, dashDir: 1, dashAvail: true, scaleY: 1 };
+    const keys = {};
+    let dashQueued = false;
+
+    function setText(el, txt) { if (el.dataset.v !== txt) { el.dataset.v = txt; el.textContent = txt; } }
+    function setBanner(txt) { setText(banner, txt); }
+    function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+    function aabb(ax, ay, aw, ah, bx, by, bw, bh) { return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by; }
+
+    function rr(c, x, y, w, h, r) {
+      const rad = Math.min(r, w / 2, h / 2);
+      c.beginPath();
+      c.moveTo(x + rad, y);
+      c.arcTo(x + w, y, x + w, y + h, rad);
+      c.arcTo(x + w, y + h, x, y + h, rad);
+      c.arcTo(x, y + h, x, y, rad);
+      c.arcTo(x, y, x + w, y, rad);
+      c.closePath();
     }
 
-    function clamp(value, min, max) {
-      return Math.max(min, Math.min(max, value));
+    function parseLevel(def) {
+      const g = [];
+      for (let r = 0; r < ROWS; r++) g.push(new Array(def.w).fill('.'));
+      for (const token of def.tokens) {
+        const parts = token.split(/\s+/);
+        const ch = parts[0], row = parseInt(parts[1], 10);
+        for (let i = 2; i < parts.length; i++) {
+          const spec = parts[i];
+          if (spec.includes('-')) {
+            const [a, b] = spec.split('-').map(Number);
+            for (let c = a; c <= b; c++) g[row][c] = ch;
+          } else {
+            g[row][parseInt(spec, 10)] = ch;
+          }
+        }
+      }
+      return g;
     }
 
-    function setMessage(text, duration = 0) {
-      messageBox.textContent = text;
-      messageTimer = duration;
+    function isSolid(cx, cy) {
+      if (cy < 0 || cy >= ROWS) return false;
+      if (cx < 0 || cx >= grid[0].length) return true;
+      return grid[cy][cx] === '#';
     }
 
-    function allShardsCollected() {
-      return currentLevel.shards.every((item) => item.collected);
+    function prerenderLevel() {
+      levelCanvas = document.createElement('canvas');
+      levelCanvas.width = worldW;
+      levelCanvas.height = WORLD_H;
+      const lc = levelCanvas.getContext('2d');
+      lc.fillStyle = 'rgba(13,17,34,0.97)';
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < grid[0].length; c++) {
+        if (grid[r][c] === '#') lc.fillRect(c * TILE, r * TILE, TILE, TILE);
+      }
+      lc.save();
+      lc.strokeStyle = tint;
+      lc.lineWidth = 1.5;
+      lc.shadowColor = tint;
+      lc.shadowBlur = 12;
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < grid[0].length; c++) {
+        if (grid[r][c] !== '#' || isSolid(c, r - 1)) continue;
+        lc.beginPath();
+        lc.moveTo(c * TILE, r * TILE + 0.75);
+        lc.lineTo(c * TILE + TILE, r * TILE + 0.75);
+        lc.stroke();
+      }
+      lc.restore();
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < grid[0].length; c++) {
+        if (grid[r][c] !== '#' || isSolid(c, r - 1)) continue;
+        const hl = lc.createLinearGradient(0, r * TILE, 0, r * TILE + 4);
+        hl.addColorStop(0, tint + '55');
+        hl.addColorStop(1, tint + '00');
+        lc.fillStyle = hl;
+        lc.fillRect(c * TILE, r * TILE + 1, TILE, 4);
+      }
+      lc.save();
+      lc.fillStyle = PAL.pink;
+      lc.shadowColor = PAL.pink;
+      lc.shadowBlur = 10;
+      for (const s of spikes) {
+        const x = s.x * TILE, y = s.y * TILE;
+        lc.beginPath();
+        lc.moveTo(x + 3, y + TILE); lc.lineTo(x + 11, y + 8); lc.lineTo(x + 19, y + TILE);
+        lc.moveTo(x + 21, y + TILE); lc.lineTo(x + 29, y + 8); lc.lineTo(x + 37, y + TILE);
+        lc.fill();
+      }
+      lc.restore();
     }
 
-    function getAllPlatforms() {
-      return currentLevel.platforms.concat(currentLevel.movingPlatforms || []);
+    function prerenderShard() {
+      shardSprite = document.createElement('canvas');
+      shardSprite.width = 40;
+      shardSprite.height = 40;
+      const sc = shardSprite.getContext('2d');
+      sc.save();
+      sc.shadowColor = tint;
+      sc.shadowBlur = 12;
+      sc.fillStyle = tint;
+      sc.beginPath();
+      sc.moveTo(20, 8); sc.lineTo(29, 20); sc.lineTo(20, 32); sc.lineTo(11, 20);
+      sc.closePath();
+      sc.fill();
+      sc.restore();
+      sc.fillStyle = 'rgba(244,246,255,0.9)';
+      sc.beginPath();
+      sc.moveTo(20, 13); sc.lineTo(25, 20); sc.lineTo(20, 27); sc.lineTo(15, 20);
+      sc.closePath();
+      sc.fill();
     }
 
-    function saveProgress() {
-      localStorage.setItem("neonTrailUnlocked", String(unlockedLevel));
+    const bgGradient = (() => {
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#070a16');
+      g.addColorStop(0.5, '#0b1024');
+      g.addColorStop(1, '#070a16');
+      return g;
+    })();
+
+    function makeStarLayer(count, alpha, maxR) {
+      const c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      const sc = c.getContext('2d');
+      sc.fillStyle = 'rgba(255,255,255,' + alpha + ')';
+      for (let i = 0; i < count; i++) {
+        sc.beginPath();
+        sc.arc(Math.random() * W, Math.random() * H, 0.5 + Math.random() * maxR, 0, 7);
+        sc.fill();
+      }
+      return c;
+    }
+    const starLayers = [
+      { img: makeStarLayer(70, 0.3, 0.9), depth: 0.22 },
+      { img: makeStarLayer(50, 0.55, 1.3), depth: 0.45 }
+    ];
+
+    const chips = [];
+    for (let i = 0; i < 5; i++) {
+      const b = document.createElement('button');
+      b.className = 'secondary-button';
+      b.textContent = 'Lv ' + (i + 1);
+      b.addEventListener('click', () => { if (i < unlocked) { loadLevel(i); } });
+      chipWrap.appendChild(b);
+      chips.push(b);
     }
 
-    function rebuildLevelButtons() {
-      levelGrid.innerHTML = "";
-
-      for (let i = 0; i < LEVELS.length; i++) {
-        const button = document.createElement("button");
-        button.className = "level-chip";
-        button.textContent = i + 1;
-
+    function refreshChips() {
+      for (let i = 0; i < 5; i++) {
+        chips[i].disabled = i >= unlocked;
+        chips[i].style.opacity = i >= unlocked ? '0.45' : '1';
         if (i === levelIndex) {
-          button.classList.add("current");
-        }
-
-        if (i + 1 > unlockedLevel) {
-          button.classList.add("locked");
-          button.disabled = true;
+          chips[i].style.background = 'linear-gradient(135deg,#67e8f9,#a78bfa)';
+          chips[i].style.color = '#070a16';
         } else {
-          button.addEventListener("click", () => loadLevel(i));
+          chips[i].style.background = '';
+          chips[i].style.color = '';
         }
-
-        levelGrid.appendChild(button);
       }
     }
 
-    function updateHud() {
-      const collected = currentLevel.shards.filter((item) => item.collected).length;
-      levelBox.textContent = currentLevel.title;
-      shardBox.textContent = "Shards: " + collected + " / " + currentLevel.shards.length;
-      checkpointBox.textContent = "Checkpoint: " + respawnPoint.name;
-      gateBox.textContent = allShardsCollected() ? "Gate: Open" : "Gate: Locked";
-      gateBox.style.color = allShardsCollected() ? "#7cf1ca" : "#ff9dbf";
-
-      prevLevelBtn.disabled = levelIndex === 0;
-      nextLevelBtn.disabled = levelIndex + 1 >= unlockedLevel || levelIndex === LEVELS.length - 1;
-
-      rebuildLevelButtons();
+    function loadLevel(i) {
+      levelIndex = i;
+      const def = LEVELS[i];
+      tint = def.tint;
+      grid = parseLevel(def);
+      worldW = def.w * TILE;
+      shards = []; spikes = []; springs = []; checkpoints = []; gate = null;
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < def.w; c++) {
+        const ch = grid[r][c];
+        if (ch === 'o') shards.push({ x: c, y: r, got: false });
+        else if (ch === '^') spikes.push({ x: c, y: r });
+        else if (ch === 'S') springs.push({ x: c, y: r, timer: 0 });
+        else if (ch === 'C') checkpoints.push({ x: c, y: r, active: false });
+        else if (ch === 'P') spawn = { x: c * TILE + 7, y: r * TILE + 6 };
+        else if (ch === 'G') gate = { x: c, y: r };
+      }
+      shardTotal = shards.length;
+      shardGot = 0;
+      gateOpen = shardTotal === 0;
+      respawnPt = { x: spawn.x, y: spawn.y };
+      prerenderLevel();
+      prerenderShard();
+      p.x = spawn.x; p.y = spawn.y; p.vx = 0; p.vy = 0; p.facing = 1;
+      p.onGround = false; p.coyote = 0; p.jumpBuffer = 0; p.dashTimer = 0; p.dashAvail = true; p.scaleY = 1;
+      particles = []; popups = []; ghosts = [];
+      shake = 0; fadeAlpha = 0;
+      state = 'play';
+      camX = clamp(p.x - W * 0.42 + 80, 0, Math.max(0, worldW - W));
+      camY = clamp(p.y - H * 0.6, 0, WORLD_H - H);
+      setText(levelBox, 'Level ' + (i + 1) + ' · ' + def.name);
+      setText(shardBox, 'Shards: 0 / ' + shardTotal);
+      setText(deathBox, 'Deaths: ' + deaths);
+      setText(bestBox, 'Best: Level ' + unlocked);
+      setBanner(def.name + ' — collect ' + shardTotal + ' shards to open the gate.');
+      refreshChips();
     }
 
-    function spawnAt(point) {
-      player.x = point.x;
-      player.y = point.y;
-      player.vx = 0;
-      player.vy = 0;
-      player.prevX = player.x;
-      player.prevY = player.y;
-      player.onGround = false;
-      player.coyote = 0;
-      player.support = null;
+    function addParticles(x, y, count, color, speed) {
+      for (let i = 0; i < count; i++) {
+        if (particles.length >= 220) particles.shift();
+        const a = Math.random() * Math.PI * 2, sp = speed * (0.4 + Math.random() * 0.8);
+        particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1, life: 30 + Math.random() * 20 | 0, max: 50, color, size: 2 + Math.random() * 3 });
+      }
     }
 
-    function loadLevel(index) {
-      levelIndex = clamp(index, 0, LEVELS.length - 1);
-      currentLevel = deepClone(LEVELS[levelIndex]);
-      currentLevel.movingPlatforms = (currentLevel.movingPlatforms || []).map((platform) => ({
-        ...platform,
-        baseX: platform.x,
-        baseY: platform.y,
-        dx: 0,
-        dy: 0,
-        kind: "moving"
-      }));
-      respawnPoint = { ...currentLevel.spawn, name: "Start" };
-      spawnAt(respawnPoint);
-      camera.x = 0;
-      camera.y = Math.max(0, currentLevel.worldHeight - VIEW_H);
-      updateHud();
-      setMessage(currentLevel.hint, 180);
+    function addPopup(x, y, text, color) {
+      popups.push({ x, y, text, color, life: 45 });
     }
 
-    function restartLevel() {
-      loadLevel(levelIndex);
-      setMessage("Level restarted from the beginning.", 150);
+    function updateFx() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const q = particles[i];
+        q.x += q.vx; q.y += q.vy; q.vy += 0.15; q.life--;
+        if (q.life <= 0) particles.splice(i, 1);
+      }
+      for (let i = popups.length - 1; i >= 0; i--) {
+        const q = popups[i];
+        q.y -= 0.7; q.life--;
+        if (q.life <= 0) popups.splice(i, 1);
+      }
+      for (let i = ghosts.length - 1; i >= 0; i--) {
+        ghosts[i].alpha -= 0.05;
+        if (ghosts[i].alpha <= 0) ghosts.splice(i, 1);
+      }
+      for (const s of springs) if (s.timer > 0) s.timer--;
     }
 
-    function respawnPlayer(reason) {
-      spawnAt(respawnPoint);
-      setMessage(reason + " Respawned at " + respawnPoint.name + ".", 120);
+    function camFollow() {
+      const tx = clamp(p.x - W * 0.42 + p.facing * 80, 0, Math.max(0, worldW - W));
+      const ty = clamp(p.y - H * 0.6, 0, WORLD_H - H);
+      camX += (tx - camX) * 0.14;
+      camY += (ty - camY) * 0.14;
     }
 
-    function completeLevel() {
-      unlockedLevel = Math.max(unlockedLevel, Math.min(LEVELS.length, levelIndex + 2));
-      saveProgress();
+    function moveX() {
+      p.x += p.vx;
+      const y0 = Math.floor(p.y / TILE), y1 = Math.floor((p.y + p.h - 0.01) / TILE);
+      if (p.vx > 0) {
+        const cx = Math.floor((p.x + p.w) / TILE);
+        for (let cy = y0; cy <= y1; cy++) if (isSolid(cx, cy)) { p.x = cx * TILE - p.w; p.vx = 0; if (p.dashTimer > 0) p.dashTimer = 0; break; }
+      } else if (p.vx < 0) {
+        const cx = Math.floor(p.x / TILE);
+        for (let cy = y0; cy <= y1; cy++) if (isSolid(cx, cy)) { p.x = (cx + 1) * TILE; p.vx = 0; if (p.dashTimer > 0) p.dashTimer = 0; break; }
+      }
+    }
 
-      if (levelIndex === LEVELS.length - 1) {
-        updateHud();
-        setMessage("You finished Neon Trail.", 999999);
+    function moveY() {
+      p.y += p.vy;
+      p.onGround = false;
+      const x0 = Math.floor(p.x / TILE), x1 = Math.floor((p.x + p.w - 0.01) / TILE);
+      if (p.vy > 0) {
+        const cy = Math.floor((p.y + p.h) / TILE);
+        for (let cx = x0; cx <= x1; cx++) if (isSolid(cx, cy)) {
+          p.y = cy * TILE - p.h;
+          if (p.vy > 8) { p.scaleY = 0.7; addParticles(p.x + p.w / 2, p.y + p.h, 4, PAL.soft, 1.5); }
+          else if (p.vy > 3) p.scaleY = 0.78;
+          p.vy = 0; p.onGround = true; p.dashAvail = true;
+          break;
+        }
+      } else if (p.vy < 0) {
+        const cy = Math.floor(p.y / TILE);
+        for (let cx = x0; cx <= x1; cx++) if (isSolid(cx, cy)) { p.y = (cy + 1) * TILE; p.vy = 0; break; }
+      }
+    }
+
+    function playerStep() {
+      const dir = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0);
+      if (dir !== 0) p.facing = dir;
+
+      if (dashQueued && p.dashAvail && p.dashTimer <= 0) {
+        p.dashTimer = DASH_FRAMES;
+        p.dashDir = p.facing;
+        p.dashAvail = false;
+        p.vy = 0;
+        shake += 2;
+        addParticles(p.x + p.w / 2, p.y + p.h / 2, 6, PAL.cyan, 2.5);
+      }
+      dashQueued = false;
+
+      if (p.dashTimer > 0) {
+        p.dashTimer--;
+        p.vx = DASH_SPEED * p.dashDir;
+        p.vy = 0;
+        if (p.dashTimer % 2 === 0) ghosts.push({ x: p.x, y: p.y, scaleY: p.scaleY, alpha: 0.45 });
+      } else {
+        const acc = p.onGround ? GROUND_ACC : AIR_ACC;
+        if (dir !== 0) p.vx += dir * acc;
+        else p.vx *= p.onGround ? GROUND_FRICTION : AIR_DRAG;
+        p.vx = clamp(p.vx, -MAX_SPEED, MAX_SPEED);
+        if (Math.abs(p.vx) < 0.05 && dir === 0) p.vx = 0;
+        p.vy = Math.min(p.vy + GRAVITY, MAX_FALL);
+      }
+
+      if (p.onGround) p.coyote = COYOTE; else if (p.coyote > 0) p.coyote--;
+      if (p.jumpBuffer > 0) p.jumpBuffer--;
+      if (p.jumpBuffer > 0 && p.coyote > 0 && p.dashTimer <= 0) {
+        p.vy = JUMP_V;
+        p.jumpBuffer = 0;
+        p.coyote = 0;
+        p.onGround = false;
+        p.scaleY = 1.15;
+      }
+
+      moveX();
+      moveY();
+      p.scaleY += (1 - p.scaleY) * 0.18;
+    }
+
+    function interactions() {
+      const pcx = p.x + p.w / 2, pcy = p.y + p.h / 2;
+
+      for (const s of springs) {
+        if (p.vy >= 0 && aabb(p.x, p.y, p.w, p.h, s.x * TILE + 2, s.y * TILE + 20, 36, 20)) {
+          p.vy = SPRING_V;
+          p.scaleY = 1.2;
+          p.dashAvail = true;
+          s.timer = 10;
+          shake += 2;
+          addParticles(s.x * TILE + 20, s.y * TILE + 30, 6, tint, 2.5);
+        }
+      }
+
+      for (const s of shards) {
+        if (s.got) continue;
+        const cx = s.x * TILE + 20, cy = s.y * TILE + 20;
+        const nx = clamp(cx, p.x, p.x + p.w), ny = clamp(cy, p.y, p.y + p.h);
+        if ((nx - cx) * (nx - cx) + (ny - cy) * (ny - cy) < 81) {
+          s.got = true;
+          shardGot++;
+          addParticles(cx, cy, 8, tint, 3);
+          addPopup(cx, cy - 10, '+1', tint);
+          setText(shardBox, 'Shards: ' + shardGot + ' / ' + shardTotal);
+          if (shardGot === shardTotal) {
+            gateOpen = true;
+            shake += 4;
+            addPopup(pcx, p.y - 16, 'GATE OPEN', PAL.green);
+            setBanner('Gate open! Reach the glowing door.');
+          }
+        }
+      }
+
+      for (const c of checkpoints) {
+        if (!c.active && aabb(p.x, p.y, p.w, p.h, c.x * TILE, (c.y - 1) * TILE, TILE, 80)) {
+          for (const o of checkpoints) o.active = false;
+          c.active = true;
+          respawnPt = { x: c.x * TILE + 7, y: c.y * TILE + 6 };
+          addParticles(c.x * TILE + 20, c.y * TILE, 8, tint, 2.5);
+          addPopup(c.x * TILE + 20, (c.y - 1) * TILE, 'CHECKPOINT', tint);
+          setBanner('Checkpoint locked in.');
+        }
+      }
+
+      for (const s of spikes) {
+        if (aabb(p.x, p.y, p.w, p.h, s.x * TILE + 6, s.y * TILE + 16, 28, 24)) { die(); return; }
+      }
+      if (p.y > WORLD_H + 40) { die(); return; }
+
+      if (gate && gateOpen && aabb(p.x, p.y, p.w, p.h, gate.x * TILE + 4, (gate.y - 1) * TILE, 32, 80)) {
+        state = 'clear';
+        clearTimer = 40;
+        shake += 6;
+        addPopup(pcx, p.y - 16, 'LEVEL CLEAR', PAL.amber);
+        addParticles(gate.x * TILE + 20, gate.y * TILE, 24, PAL.green, 4);
+        const next = Math.min(5, levelIndex + 2);
+        if (next > unlocked) {
+          unlocked = next;
+          localStorage.setItem('novaUnlocked', String(unlocked));
+          setText(bestBox, 'Best: Level ' + unlocked);
+          refreshChips();
+        }
+        setBanner(levelIndex < 4 ? 'Level clear! Warping to the next stage...' : 'Final stage clear!');
+      }
+    }
+
+    function die() {
+      state = 'dead';
+      deadTimer = 24;
+      deaths++;
+      shake = 14;
+      addParticles(p.x + p.w / 2, p.y + p.h / 2, 16, PAL.pink, 4.5);
+      setText(deathBox, 'Deaths: ' + deaths);
+      setBanner('Ouch. Back to the checkpoint.');
+    }
+
+    function respawn() {
+      p.x = respawnPt.x; p.y = respawnPt.y;
+      p.vx = 0; p.vy = 0; p.dashTimer = 0; p.dashAvail = true; p.scaleY = 1;
+      state = 'play';
+      camX = clamp(p.x - W * 0.42 + p.facing * 80, 0, Math.max(0, worldW - W));
+      camY = clamp(p.y - H * 0.6, 0, WORLD_H - H);
+    }
+
+    function advance() {
+      if (levelIndex < 4) loadLevel(levelIndex + 1);
+      else {
+        state = 'victory';
+        setBanner('Every stage cleared — you are the Nova runner!');
+      }
+    }
+
+    function restartRun() {
+      deaths = 0;
+      loadLevel(0);
+    }
+
+    function step() {
+      t++;
+      if (shake > 0.05) shake *= 0.85; else shake = 0;
+      shakeX = (Math.random() * 2 - 1) * shake;
+      shakeY = (Math.random() * 2 - 1) * shake;
+      updateFx();
+      if (state === 'dead') {
+        fadeAlpha = Math.min(0.85, fadeAlpha + 0.06);
+        deadTimer--;
+        if (deadTimer <= 0) respawn();
         return;
       }
-
-      loadLevel(levelIndex + 1);
-      setMessage("Level cleared. Next route unlocked.", 180);
-    }
-
-    function rectsOverlap(a, b) {
-      return (
-        a.x < b.x + b.w &&
-        a.x + a.w > b.x &&
-        a.y < b.y + b.h &&
-        a.y + a.h > b.y
-      );
-    }
-
-    function circleRectOverlap(circle, target) {
-      const closestX = Math.max(target.x, Math.min(circle.x, target.x + target.w));
-      const closestY = Math.max(target.y, Math.min(circle.y, target.y + target.h));
-      const dx = circle.x - closestX;
-      const dy = circle.y - closestY;
-      return dx * dx + dy * dy <= circle.r * circle.r;
-    }
-
-    function getCheckpointLayout(node) {
-      const checkpointCenter = node.x + node.w * 0.5;
-      let support = null;
-
-      getAllPlatforms().forEach((platform) => {
-        const coversCheckpoint =
-          checkpointCenter >= platform.x - 6 &&
-          checkpointCenter <= platform.x + platform.w + 6;
-
-        if (!coversCheckpoint) return;
-
-        if (!support || Math.abs(platform.y - node.y) < Math.abs(support.y - node.y)) {
-          support = platform;
-        }
-      });
-
-      const surfaceY = support ? support.y : node.y + node.h;
-      return {
-        x: node.x,
-        y: surfaceY - node.h,
-        w: node.w,
-        h: node.h,
-        surfaceY
-      };
-    }
-
-    function updateMovingPlatforms(frame) {
-      (currentLevel.movingPlatforms || []).forEach((platform) => {
-        const prevX = platform.x;
-        const prevY = platform.y;
-        const offset = Math.sin(frame * platform.speed + platform.phase) * platform.range;
-
-        if (platform.axis === "x") {
-          platform.x = platform.baseX + offset;
-          platform.y = platform.baseY;
-        } else {
-          platform.x = platform.baseX;
-          platform.y = platform.baseY + offset;
-        }
-
-        platform.dx = platform.x - prevX;
-        platform.dy = platform.y - prevY;
-      });
-    }
-
-    function updateAmbientMessage() {
-      if (messageTimer > 0) {
-        messageTimer--;
+      fadeAlpha = Math.max(0, fadeAlpha - 0.08);
+      if (state === 'clear') {
+        clearTimer--;
+        camFollow();
+        if (clearTimer <= 0) advance();
         return;
       }
-
-      if (allShardsCollected()) {
-        messageBox.textContent = "All shards collected. Head to the gate.";
-      } else {
-        messageBox.textContent = currentLevel.hint;
-      }
+      if (state === 'victory') return;
+      playerStep();
+      if (state === 'play') interactions();
+      camFollow();
     }
 
-    function resolveHorizontal() {
-      getAllPlatforms().forEach((platform) => {
-        if (!rectsOverlap(player, platform)) return;
-
-        if (player.prevX + player.w <= platform.x) {
-          player.x = platform.x - player.w;
-          player.vx = 0;
-        } else if (player.prevX >= platform.x + platform.w) {
-          player.x = platform.x + platform.w;
-          player.vx = 0;
-        }
-      });
-    }
-
-    function resolveVertical() {
-      getAllPlatforms().forEach((platform) => {
-        if (!rectsOverlap(player, platform)) return;
-
-        if (player.prevY + player.h <= platform.y && player.vy >= 0) {
-          player.y = platform.y - player.h;
-          player.vy = 0;
-          player.onGround = true;
-          player.support = platform;
-        } else if (player.prevY >= platform.y + platform.h && player.vy < 0) {
-          player.y = platform.y + platform.h;
-          player.vy = 0;
-        }
-      });
-    }
-
-    function updatePlayer() {
-      if (player.support && player.support.kind === "moving") {
-        player.x += player.support.dx;
-        player.y += player.support.dy;
-      }
-
-      player.prevX = player.x;
-      player.prevY = player.y;
-
-      if (input.left) player.vx -= physics.accel;
-      if (input.right) player.vx += physics.accel;
-      if (!input.left && !input.right) player.vx *= physics.friction;
-
-      player.vx = clamp(player.vx, -physics.maxSpeed, physics.maxSpeed);
-
-      if (jumpBuffer > 0 && player.coyote > 0) {
-        player.vy = physics.jump;
-        player.onGround = false;
-        player.coyote = 0;
-        jumpBuffer = 0;
-      } else if (jumpBuffer > 0) {
-        jumpBuffer--;
-      }
-
-      player.vy += physics.gravity;
-      player.vy = Math.min(player.vy, physics.maxFall);
-
-      player.x += player.vx;
-      resolveHorizontal();
-
-      player.y += player.vy;
-      player.onGround = false;
-      player.support = null;
-      resolveVertical();
-
-      if (player.onGround) {
-        player.coyote = physics.coyoteFrames;
-      } else {
-        player.coyote = Math.max(0, player.coyote - 1);
-      }
-
-      for (const booster of currentLevel.pads) {
-        const feet = {
-          x: player.x + 2,
-          y: player.y + player.h - 4,
-          w: player.w - 4,
-          h: 6
-        };
-
-        if (rectsOverlap(feet, booster) && player.vy >= 0) {
-          player.vy = booster.power;
-          player.onGround = false;
-        }
-      }
-
-      if (player.y > currentLevel.worldHeight + 120) {
-        respawnPlayer("You fell off the route.");
-      }
-    }
-
-    function updateShards() {
-      let changed = false;
-
-      currentLevel.shards.forEach((item) => {
-        if (item.collected) return;
-        if (circleRectOverlap(item, player)) {
-          item.collected = true;
-          changed = true;
-        }
-      });
-
-      if (changed) {
-        updateHud();
-        setMessage(allShardsCollected() ? "All shards collected. Gate unlocked." : "Shard collected.", 90);
-      }
-    }
-
-    function updateCheckpoints() {
-      currentLevel.checkpoints.forEach((node) => {
-        const layout = getCheckpointLayout(node);
-        if (!rectsOverlap(player, layout)) return;
-        if (respawnPoint.name === node.name) return;
-
-        currentLevel.checkpoints.forEach((other) => {
-          other.active = false;
-        });
-
-        node.active = true;
-        respawnPoint = {
-          x: node.x - 2,
-          y: layout.surfaceY - player.h,
-          name: node.name
-        };
-
-        updateHud();
-        setMessage("Checkpoint reached: " + node.name + ".", 120);
-      });
-    }
-
-    function checkHazards() {
-      for (const hazard of currentLevel.spikes) {
-        if (rectsOverlap(player, hazard)) {
-          respawnPlayer("You hit the spikes.");
-          return;
-        }
-      }
-    }
-
-    function checkGoal() {
-      if (!allShardsCollected()) return;
-      if (rectsOverlap(player, currentLevel.goal)) {
-        completeLevel();
-      }
-    }
-
-    function updateCamera() {
-      const maxX = Math.max(0, currentLevel.worldWidth - VIEW_W);
-      const maxY = Math.max(0, currentLevel.worldHeight - VIEW_H);
-      const targetX = clamp(player.x - VIEW_W * 0.34, 0, maxX);
-      const targetY = clamp(player.y - VIEW_H * 0.55, 0, maxY);
-
-      camera.x += (targetX - camera.x) * 0.12;
-      camera.y += (targetY - camera.y) * 0.12;
-    }
-
-    function drawRoundedRect(context, x, y, width, height, radius) {
-      const r = Math.min(radius, width / 2, height / 2);
-      context.beginPath();
-      context.moveTo(x + r, y);
-      context.lineTo(x + width - r, y);
-      context.quadraticCurveTo(x + width, y, x + width, y + r);
-      context.lineTo(x + width, y + height - r);
-      context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
-      context.lineTo(x + r, y + height);
-      context.quadraticCurveTo(x, y + height, x, y + height - r);
-      context.lineTo(x, y + r);
-      context.quadraticCurveTo(x, y, x + r, y);
-      context.closePath();
-    }
-
-    function drawBackground() {
-      const sky = ctx.createLinearGradient(0, 0, 0, VIEW_H);
-      sky.addColorStop(0, "#0a1430");
-      sky.addColorStop(0.38, "#131d46");
-      sky.addColorStop(0.72, "#24134a");
-      sky.addColorStop(1, "#091220");
-      ctx.fillStyle = sky;
-      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-
-      const haze = ctx.createLinearGradient(0, 0, VIEW_W, VIEW_H);
-      haze.addColorStop(0, "rgba(137, 247, 255, 0.08)");
-      haze.addColorStop(0.5, "rgba(159, 148, 255, 0.06)");
-      haze.addColorStop(1, "rgba(255, 110, 209, 0.08)");
-      ctx.fillStyle = haze;
-      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-
-      ctx.strokeStyle = "rgba(137, 247, 255, 0.1)";
-      ctx.lineWidth = 1;
-
-      for (let x = -camera.x % 48; x < VIEW_W; x += 48) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, VIEW_H);
-        ctx.stroke();
-      }
-
-      for (let y = -camera.y % 48; y < VIEW_H; y += 48) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(VIEW_W, y);
-        ctx.stroke();
-      }
-
-      const colors = {
-        skyline: ["rgba(137, 247, 255, 0.22)", "rgba(255, 110, 209, 0.2)"],
-        tunnels: ["rgba(124, 241, 202, 0.2)", "rgba(137, 247, 255, 0.18)"],
-        garden: ["rgba(124, 241, 202, 0.2)", "rgba(255, 227, 107, 0.16)"],
-        causeway: ["rgba(255, 110, 209, 0.2)", "rgba(137, 247, 255, 0.22)"],
-        harbor: ["rgba(124, 241, 202, 0.16)", "rgba(137, 247, 255, 0.22)"],
-        terraces: ["rgba(255, 227, 107, 0.18)", "rgba(124, 241, 202, 0.2)"],
-        loop: ["rgba(255, 110, 209, 0.18)", "rgba(124, 241, 202, 0.2)"],
-        parade: ["rgba(255, 227, 107, 0.2)", "rgba(255, 110, 209, 0.2)"]
-      };
-
-      const pair = colors[currentLevel.decor] || colors.skyline;
-
-      ctx.fillStyle = pair[0];
-      ctx.beginPath();
-      ctx.arc(190, 100, 72, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = pair[1];
-      ctx.beginPath();
-      ctx.arc(820, 90, 104, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = "rgba(137, 247, 255, 0.06)";
-      ctx.beginPath();
-      ctx.arc(520, 40, 140, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function drawPlatforms() {
-      currentLevel.platforms.forEach((platform) => {
-        const x = platform.x - camera.x;
-        const y = platform.y - camera.y;
-
-        ctx.fillStyle = "rgba(11, 23, 46, 0.98)";
-        drawRoundedRect(ctx, x, y, platform.w, platform.h, 10);
+    function drawSprings() {
+      for (const s of springs) {
+        const x = s.x * TILE, y = s.y * TILE;
+        const squish = s.timer > 0 ? s.timer / 10 * 8 : 0;
+        ctx.fillStyle = '#fb7185';
+        ctx.fillRect(x + 12, y + 28 + squish * 0.4, 16, 12 - squish * 0.4);
+        ctx.fillStyle = tint;
+        rr(ctx, x + 4, y + 20 + squish, 32, 7, 3);
         ctx.fill();
-
-        ctx.strokeStyle = "rgba(137, 247, 255, 0.2)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        ctx.fillStyle = "rgba(137, 247, 255, 0.14)";
-        drawRoundedRect(ctx, x + 6, y + 6, platform.w - 12, Math.min(6, platform.h - 10), 4);
-        ctx.fill();
-      });
-
-      (currentLevel.movingPlatforms || []).forEach((platform) => {
-        const x = platform.x - camera.x;
-        const y = platform.y - camera.y;
-
-        ctx.fillStyle = "rgba(27, 30, 72, 0.98)";
-        drawRoundedRect(ctx, x, y, platform.w, platform.h, 10);
-        ctx.fill();
-
-        ctx.strokeStyle = "rgba(255, 110, 209, 0.34)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        ctx.fillStyle = "rgba(255, 110, 209, 0.18)";
-        drawRoundedRect(ctx, x + 6, y + 6, platform.w - 12, 6, 4);
-        ctx.fill();
-      });
-    }
-
-    function drawPads() {
-      currentLevel.pads.forEach((booster) => {
-        const x = booster.x - camera.x;
-        const y = booster.y - camera.y;
-
-        ctx.fillStyle = "#0d1c28";
-        drawRoundedRect(ctx, x, y, booster.w, booster.h, 8);
-        ctx.fill();
-
-        ctx.fillStyle = "#7cf1ca";
-        drawRoundedRect(ctx, x + 4, y + 4, booster.w - 8, booster.h - 8, 4);
-        ctx.fill();
-      });
-    }
-
-    function drawSpikes() {
-      currentLevel.spikes.forEach((hazard) => {
-        const count = Math.max(2, Math.floor(hazard.w / 18));
-        const step = hazard.w / count;
-
-        for (let i = 0; i < count; i++) {
-          const left = hazard.x + i * step - camera.x;
-          const right = left + step;
-          const mid = (left + right) * 0.5;
-          const baseY = hazard.y + hazard.h - camera.y;
-          const tipY = hazard.y - camera.y;
-
-          ctx.fillStyle = "#ff6ed1";
-          ctx.beginPath();
-          ctx.moveTo(left, baseY);
-          ctx.lineTo(mid, tipY);
-          ctx.lineTo(right, baseY);
-          ctx.closePath();
-          ctx.fill();
-        }
-      });
+      }
     }
 
     function drawCheckpoints() {
-      currentLevel.checkpoints.forEach((node) => {
-        const layout = getCheckpointLayout(node);
-        const x = layout.x - camera.x;
-        const y = layout.y - camera.y;
-        const active = node.active;
-
-        ctx.fillStyle = active ? "#7cf1ca" : "rgba(245, 247, 255, 0.95)";
-        drawRoundedRect(ctx, x, y, 6, layout.h, 3);
-        ctx.fill();
-
-        ctx.fillStyle = active ? "#7cf1ca" : "#f5b7d5";
-        drawRoundedRect(ctx, x + 6, y + 8, 20, 14, 4);
-        ctx.fill();
-      });
+      for (const c of checkpoints) {
+        const x = c.x * TILE, base = (c.y + 1) * TILE;
+        ctx.fillStyle = c.active ? tint : 'rgba(154,163,194,0.55)';
+        ctx.fillRect(x + 18, base - 80, 4, 80);
+        if (c.active) {
+          ctx.save();
+          ctx.shadowColor = tint;
+          ctx.shadowBlur = 10 + Math.sin(t * 0.12) * 4;
+          ctx.beginPath();
+          ctx.moveTo(x + 22, base - 80);
+          ctx.lineTo(x + 38, base - 71);
+          ctx.lineTo(x + 22, base - 62);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(x + 22, base - 80);
+          ctx.lineTo(x + 38, base - 71);
+          ctx.lineTo(x + 22, base - 62);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
     }
 
-    function drawShards() {
-      currentLevel.shards.forEach((item) => {
-        if (item.collected) return;
-
-        const x = item.x - camera.x;
-        const y = item.y - camera.y;
-
+    function drawGate() {
+      if (!gate) return;
+      const x = gate.x * TILE, base = (gate.y + 1) * TILE;
+      if (gateOpen) {
         ctx.save();
-        ctx.shadowColor = "#89f7ff";
-        ctx.shadowBlur = 16;
-        ctx.fillStyle = "#89f7ff";
-        ctx.beginPath();
-        ctx.moveTo(x, y - 14);
-        ctx.lineTo(x + 12, y);
-        ctx.lineTo(x, y + 14);
-        ctx.lineTo(x - 12, y);
-        ctx.closePath();
+        ctx.shadowColor = PAL.green;
+        ctx.shadowBlur = 14 + Math.sin(t * 0.1) * 6;
+        ctx.fillStyle = 'rgba(134,239,172,0.28)';
+        rr(ctx, x + 4, base - 80, 32, 80, 8);
         ctx.fill();
+        ctx.strokeStyle = PAL.green;
+        ctx.lineWidth = 2;
+        ctx.stroke();
         ctx.restore();
-      });
-    }
-
-    function drawGoal() {
-      const gate = currentLevel.goal;
-      const x = gate.x - camera.x;
-      const y = gate.y - camera.y;
-      const isOpen = allShardsCollected();
-
-      ctx.fillStyle = "rgba(240, 244, 255, 0.96)";
-      drawRoundedRect(ctx, x, y, gate.w, gate.h, 10);
-      ctx.fill();
-
-      ctx.fillStyle = isOpen ? "#7cf1ca" : "#f4afc7";
-      drawRoundedRect(ctx, x + 4, y + 6, gate.w - 8, 18, 4);
-      ctx.fill();
-
-      ctx.fillStyle = "#101528";
-      drawRoundedRect(ctx, x + 7, y + 28, gate.w - 14, gate.h - 35, 6);
-      ctx.fill();
+        ctx.fillStyle = 'rgba(134,239,172,' + (0.35 + Math.sin(t * 0.1) * 0.15) + ')';
+        rr(ctx, x + 12, base - 68, 16, 56, 6);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = 'rgba(244,114,182,0.18)';
+        rr(ctx, x + 4, base - 80, 32, 80, 8);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(244,114,182,0.55)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(244,114,182,0.7)';
+        ctx.fillRect(x + 8, base - 44, 24, 6);
+      }
     }
 
     function drawPlayer() {
-      const x = player.x - camera.x;
-      const y = player.y - camera.y;
-
-      ctx.fillStyle = "#0f1528";
-      drawRoundedRect(ctx, x, y, player.w, player.h, 8);
+      if (state === 'dead') return;
+      const cx = p.x + p.w / 2, feet = p.y + p.h;
+      const sy = p.scaleY, sx = 1 + (1 - sy) * 0.7;
+      ctx.save();
+      ctx.translate(cx, feet);
+      ctx.scale(sx, sy);
+      const g = ctx.createLinearGradient(0, -p.h, 0, 0);
+      g.addColorStop(0, PAL.cyan);
+      g.addColorStop(1, PAL.violet);
+      ctx.fillStyle = g;
+      rr(ctx, -p.w / 2, -p.h, p.w, p.h, 12);
       ctx.fill();
-
-      ctx.fillStyle = "#ffe36b";
-      drawRoundedRect(ctx, x + 3, y + 4, player.w - 6, player.h - 7, 6);
+      ctx.fillStyle = '#0b1024';
+      const ex = p.facing * 4;
+      ctx.beginPath();
+      ctx.arc(-5 + ex, -p.h + 12, 2.6, 0, 7);
+      ctx.arc(5 + ex, -p.h + 12, 2.6, 0, 7);
       ctx.fill();
-
-      ctx.fillStyle = "#0f1528";
-      drawRoundedRect(ctx, x + 4, y - 4, 6, 10, 3);
-      ctx.fill();
-      drawRoundedRect(ctx, x + player.w - 10, y - 4, 6, 10, 3);
-      ctx.fill();
-
-      ctx.fillRect(x + 8, y + 12, 4, 4);
-      ctx.fillRect(x + 16, y + 12, 4, 4);
-      ctx.fillRect(x + 11, y + 22, 6, 3);
+      ctx.restore();
     }
 
-    function update() {
-      frameCount++;
-      updateMovingPlatforms(frameCount);
-      updatePlayer();
-      updateShards();
-      updateCheckpoints();
-      checkHazards();
-      checkGoal();
-      updateCamera();
-      updateHud();
-      updateAmbientMessage();
+    function drawVictory() {
+      ctx.fillStyle = 'rgba(5,8,20,0.55)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = 'rgba(5,8,20,0.78)';
+      rr(ctx, W / 2 - 240, H / 2 - 130, 480, 260, 18);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(134,239,172,0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.textAlign = 'center';
+      ctx.fillStyle = PAL.amber;
+      ctx.font = 'bold 34px system-ui, sans-serif';
+      ctx.fillText('NOVA RUN COMPLETE', W / 2, H / 2 - 66);
+      ctx.fillStyle = PAL.white;
+      ctx.font = '20px system-ui, sans-serif';
+      ctx.fillText('All 5 stages cleared · Total deaths: ' + deaths, W / 2, H / 2 - 16);
+      ctx.fillStyle = PAL.soft;
+      ctx.font = '16px system-ui, sans-serif';
+      ctx.fillText('Best: Level ' + unlocked + ' unlocked', W / 2, H / 2 + 20);
+      ctx.fillText('Press Space or click to run it back from Level 1', W / 2, H / 2 + 84);
+      ctx.textAlign = 'left';
     }
 
-    function draw() {
-      drawBackground();
-      drawPlatforms();
-      drawPads();
-      drawSpikes();
+    function render() {
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, W, H);
+      for (const layer of starLayers) {
+        const off = -((camX * layer.depth) % W);
+        ctx.drawImage(layer.img, off, 0);
+        ctx.drawImage(layer.img, off + W, 0);
+      }
+      ctx.save();
+      ctx.translate(Math.round(-camX + shakeX), Math.round(-camY + shakeY));
+      ctx.drawImage(levelCanvas, 0, 0);
+      drawSprings();
       drawCheckpoints();
-      drawShards();
-      drawGoal();
+      drawGate();
+      for (const s of shards) {
+        if (s.got) continue;
+        const bob = Math.sin(t * 0.05 + s.x) * 4;
+        ctx.drawImage(shardSprite, s.x * TILE, s.y * TILE + bob);
+      }
+      for (const g of ghosts) {
+        ctx.globalAlpha = g.alpha;
+        ctx.fillStyle = PAL.cyan;
+        rr(ctx, g.x, g.y, p.w, p.h, 12);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
       drawPlayer();
+      for (const q of particles) {
+        ctx.globalAlpha = Math.max(0, q.life / q.max);
+        ctx.fillStyle = q.color;
+        ctx.fillRect(q.x - q.size / 2, q.y - q.size / 2, q.size, q.size);
+      }
+      ctx.globalAlpha = 1;
+      ctx.font = 'bold 16px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      for (const q of popups) {
+        ctx.globalAlpha = Math.min(1, q.life / 30);
+        ctx.fillStyle = q.color;
+        ctx.fillText(q.text, q.x, q.y);
+      }
+      ctx.globalAlpha = 1;
+      ctx.textAlign = 'left';
+      ctx.restore();
+      if (fadeAlpha > 0.01) {
+        ctx.fillStyle = 'rgba(5,8,20,' + fadeAlpha.toFixed(3) + ')';
+        ctx.fillRect(0, 0, W, H);
+      }
+      if (state === 'victory') drawVictory();
     }
 
-    function loop() {
-      update();
-      draw();
-      requestAnimationFrame(loop);
+    document.addEventListener('keydown', (e) => {
+      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
+      keys[e.code] = true;
+      if (e.repeat) return;
+      if (e.code === 'Space' || e.code === 'KeyW' || e.code === 'ArrowUp') {
+        if (state === 'victory') { restartRun(); return; }
+        p.jumpBuffer = BUFFER;
+      }
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyX') dashQueued = true;
+      if (e.code === 'KeyR') {
+        if (state === 'victory') restartRun();
+        else loadLevel(levelIndex);
+      }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      keys[e.code] = false;
+      if ((e.code === 'Space' || e.code === 'KeyW' || e.code === 'ArrowUp') && p.vy < -4) p.vy = -4;
+    });
+
+    function canvasPoint(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) };
     }
 
-    document.addEventListener("keydown", (event) => {
-      if (event.code === "ArrowLeft" || event.code === "KeyA") {
-        input.left = true;
-      }
-
-      if (event.code === "ArrowRight" || event.code === "KeyD") {
-        input.right = true;
-      }
-
-      if (event.code === "ArrowUp" || event.code === "Space" || event.code === "KeyW") {
-        jumpBuffer = physics.jumpBufferFrames;
-        event.preventDefault();
-      }
+    canvas.addEventListener('mousedown', (e) => {
+      const pt = canvasPoint(e.clientX, e.clientY);
+      if (state === 'victory' && pt.x >= 0 && pt.y >= 0) restartRun();
     });
 
-    document.addEventListener("keyup", (event) => {
-      if (event.code === "ArrowLeft" || event.code === "KeyA") {
-        input.left = false;
-      }
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const touch = e.changedTouches[0];
+      const pt = canvasPoint(touch.clientX, touch.clientY);
+      if (state === 'victory' && pt.x >= 0 && pt.y >= 0) restartRun();
+    }, { passive: false });
 
-      if (event.code === "ArrowRight" || event.code === "KeyD") {
-        input.right = false;
-      }
+    restartBtn.addEventListener('click', () => {
+      if (state === 'victory') restartRun();
+      else loadLevel(levelIndex);
     });
 
-    prevLevelBtn.addEventListener("click", () => {
-      if (levelIndex > 0) {
-        loadLevel(levelIndex - 1);
-      }
-    });
-
-    nextLevelBtn.addEventListener("click", () => {
-      if (levelIndex + 1 < unlockedLevel && levelIndex < LEVELS.length - 1) {
-        loadLevel(levelIndex + 1);
-      }
-    });
-
-    restartBtn.addEventListener("click", () => {
-      restartLevel();
-    });
-
-    unlockedLevel = clamp(unlockedLevel, 1, LEVELS.length);
     loadLevel(0);
-    loop();
+
+    const STEP = 1 / 60;
+    let last = performance.now(), acc = 0;
+    function frame(now) {
+      let dt = (now - last) / 1000;
+      last = now;
+      if (dt > 0.1) dt = 0.1;
+      acc += dt;
+      while (acc >= STEP) { step(); acc -= STEP; }
+      render();
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
   </script>
 </body>
 </html>

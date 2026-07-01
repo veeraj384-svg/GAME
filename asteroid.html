@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asteroid Blaster | Game Hub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="theme-neon">
+  <div class="page-shell">
+    <main class="game-page-wrap">
+      <section class="game-panel">
+        <div class="game-topbar">
+          <div class="game-header-left">
+            <p class="eyebrow">Space Shooter</p>
+            <h1>Asteroid Blaster</h1>
+            <p class="game-subtext">
+              Pilot your neon ship through the debris field. Destroy asteroids before they reach you.
+            </p>
+          </div>
+          <a href="index.html" class="back-link">&larr; Home</a>
+        </div>
+
+        <div class="info-row">
+          <div class="status-box">Move: Arrow Keys</div>
+          <div class="status-box">Shoot: Space</div>
+          <div class="status-box is-accent" id="astScoreBox">Score: 0</div>
+          <div class="status-box" id="astBestBox">Best: 0</div>
+        </div>
+
+        <div class="message-banner" id="astMessage">Navigate the debris field and blast incoming asteroids to survive.</div>
+
+        <div class="canvas-stage">
+          <canvas id="astCanvas" class="game-canvas" width="760" height="420"></canvas>
+        </div>
+
+        <div class="bottom-actions">
+          <button class="secondary-button" id="astRestart">Restart Run</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const astCanvas = document.getElementById("astCanvas");
+    const astCtx = astCanvas.getContext("2d");
+    const astScoreBox = document.getElementById("astScoreBox");
+    const astBestBox = document.getElementById("astBestBox");
+    const astRestart = document.getElementById("astRestart");
+    const astMessage = document.getElementById("astMessage");
+
+    const W = 760, H = 420;
+    const ship = { x: W / 2, y: H - 50, speed: 6 };
+
+    let bullets = [];
+    let asteroids = [];
+    let particles = [];
+    let astScore = 0;
+    let astBest = Number(localStorage.getItem("asteroidBest") || 0);
+    let astGameOver = false;
+    let astFrame = 0;
+    let leftPressed = false;
+    let rightPressed = false;
+    let spacePressed = false;
+    let lastShot = 0;
+
+    const stars = Array.from({ length: 90 }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      size: Math.random() * 1.8 + 0.3,
+      speed: Math.random() * 0.4 + 0.12,
+      opacity: Math.random() * 0.7 + 0.2
+    }));
+
+    astBestBox.textContent = "Best: " + astBest;
+
+    function setAstMessage(msg) { astMessage.textContent = msg; }
+
+    function drawRoundedRect(ctx, x, y, w, h, r) {
+      const rr = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.lineTo(x + w - rr, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+      ctx.lineTo(x + w, y + h - rr);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+      ctx.lineTo(x + rr, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+      ctx.lineTo(x, y + rr);
+      ctx.quadraticCurveTo(x, y, x + rr, y);
+      ctx.closePath();
+    }
+
+    function resetAstGame() {
+      ship.x = W / 2;
+      bullets = [];
+      asteroids = [];
+      particles = [];
+      astScore = 0;
+      astGameOver = false;
+      astFrame = 0;
+      leftPressed = false;
+      rightPressed = false;
+      spacePressed = false;
+      lastShot = 0;
+      astScoreBox.textContent = "Score: 0";
+      setAstMessage("Navigate the debris field and blast incoming asteroids to survive.");
+    }
+
+    function spawnAsteroid() {
+      const size = Math.random() * 20 + 16;
+      const x = Math.random() * (W - size * 2) + size;
+      const baseSpeed = 1.4 + Math.min(astScore * 0.04, 2.6);
+      asteroids.push({
+        x, y: -size,
+        size,
+        speed: Math.random() * 1.2 + baseSpeed,
+        dx: (Math.random() - 0.5) * 1.4,
+        angle: 0,
+        rotSpeed: (Math.random() - 0.5) * 0.06
+      });
+    }
+
+    function shootBullet() {
+      if (astFrame - lastShot < 12) return;
+      lastShot = astFrame;
+      bullets.push({ x: ship.x, y: ship.y - 18, speed: 12 });
+    }
+
+    function spawnParticles(x, y) {
+      for (let i = 0; i < 9; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 3.5 + 1;
+        particles.push({
+          x, y,
+          dx: Math.cos(angle) * speed,
+          dy: Math.sin(angle) * speed,
+          life: 1,
+          decay: Math.random() * 0.04 + 0.03,
+          size: Math.random() * 4 + 2
+        });
+      }
+    }
+
+    function drawBackground() {
+      const grad = astCtx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, "#060a1c");
+      grad.addColorStop(0.55, "#0c1230");
+      grad.addColorStop(1, "#070c1f");
+      astCtx.fillStyle = grad;
+      astCtx.fillRect(0, 0, W, H);
+
+      stars.forEach(s => {
+        s.y += s.speed;
+        if (s.y > H) { s.y = 0; s.x = Math.random() * W; }
+        astCtx.globalAlpha = s.opacity;
+        astCtx.fillStyle = "#ffffff";
+        astCtx.beginPath();
+        astCtx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        astCtx.fill();
+      });
+      astCtx.globalAlpha = 1;
+    }
+
+    function drawShip() {
+      const { x, y } = ship;
+      astCtx.save();
+
+      astCtx.shadowColor = "#ff6ed1";
+      astCtx.shadowBlur = 16;
+      astCtx.fillStyle = "rgba(255, 110, 209, 0.75)";
+      astCtx.beginPath();
+      astCtx.moveTo(x - 7, y + 11);
+      astCtx.lineTo(x + 7, y + 11);
+      astCtx.lineTo(x, y + 22 + Math.sin(astFrame * 0.4) * 4);
+      astCtx.closePath();
+      astCtx.fill();
+
+      astCtx.shadowColor = "#89f7ff";
+      astCtx.shadowBlur = 24;
+      astCtx.fillStyle = "#89f7ff";
+      astCtx.beginPath();
+      astCtx.moveTo(x, y - 20);
+      astCtx.lineTo(x - 14, y + 13);
+      astCtx.lineTo(x - 4, y + 8);
+      astCtx.lineTo(x, y + 12);
+      astCtx.lineTo(x + 4, y + 8);
+      astCtx.lineTo(x + 14, y + 13);
+      astCtx.closePath();
+      astCtx.fill();
+
+      astCtx.shadowBlur = 0;
+      astCtx.fillStyle = "rgba(255,255,255,0.62)";
+      astCtx.beginPath();
+      astCtx.moveTo(x, y - 16);
+      astCtx.lineTo(x - 4, y - 3);
+      astCtx.lineTo(x + 4, y - 3);
+      astCtx.closePath();
+      astCtx.fill();
+
+      astCtx.restore();
+    }
+
+    function drawBullets() {
+      bullets.forEach(b => {
+        astCtx.save();
+        astCtx.shadowColor = "#9f94ff";
+        astCtx.shadowBlur = 14;
+        astCtx.fillStyle = "#c4baff";
+        astCtx.beginPath();
+        astCtx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+        astCtx.fill();
+        astCtx.restore();
+      });
+    }
+
+    function drawAsteroids() {
+      asteroids.forEach(a => {
+        astCtx.save();
+        astCtx.translate(a.x, a.y);
+        astCtx.rotate(a.angle);
+        astCtx.shadowColor = "#ff8c42";
+        astCtx.shadowBlur = 16;
+        astCtx.strokeStyle = "#ff8c42";
+        astCtx.fillStyle = "rgba(255, 100, 40, 0.22)";
+        astCtx.lineWidth = 2.2;
+        astCtx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const ang = (i / 8) * Math.PI * 2;
+          const r = a.size * (0.72 + Math.sin(i * 1.7 + 0.6) * 0.28);
+          const px = Math.cos(ang) * r;
+          const py = Math.sin(ang) * r;
+          i === 0 ? astCtx.moveTo(px, py) : astCtx.lineTo(px, py);
+        }
+        astCtx.closePath();
+        astCtx.fill();
+        astCtx.stroke();
+        astCtx.restore();
+      });
+    }
+
+    function drawParticles() {
+      particles.forEach(p => {
+        astCtx.save();
+        astCtx.globalAlpha = p.life;
+        astCtx.shadowColor = "#ff8c42";
+        astCtx.shadowBlur = 8;
+        astCtx.fillStyle = "#ffb870";
+        astCtx.beginPath();
+        astCtx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+        astCtx.fill();
+        astCtx.restore();
+      });
+    }
+
+    function drawAstHud() {
+      astCtx.fillStyle = "rgba(7, 11, 28, 0.58)";
+      drawRoundedRect(astCtx, 14, 14, 124, 36, 14);
+      astCtx.fill();
+      astCtx.fillStyle = "#ffffff";
+      astCtx.font = "bold 17px Arial";
+      astCtx.fillText("Score  " + astScore, 28, 38);
+    }
+
+    function drawAstOverlay() {
+      if (!astGameOver) return;
+      astCtx.fillStyle = "rgba(6, 10, 24, 0.74)";
+      drawRoundedRect(astCtx, (W - 284) / 2, 144, 284, 128, 18);
+      astCtx.fill();
+      astCtx.fillStyle = "#ffffff";
+      astCtx.font = "bold 28px Arial";
+      astCtx.textAlign = "center";
+      astCtx.fillText("Ship Destroyed", W / 2, 188);
+      astCtx.font = "15px Arial";
+      astCtx.fillStyle = "#bcc8e5";
+      astCtx.fillText("Press Restart to re-launch", W / 2, 218);
+      astCtx.fillStyle = "#ffffff";
+      astCtx.fillText("Final score: " + astScore, W / 2, 246);
+      astCtx.textAlign = "left";
+    }
+
+    function updateShip() {
+      if (leftPressed) ship.x -= ship.speed;
+      if (rightPressed) ship.x += ship.speed;
+      ship.x = Math.max(18, Math.min(W - 18, ship.x));
+      if (spacePressed) shootBullet();
+    }
+
+    function updateBullets() {
+      bullets.forEach(b => { b.y -= b.speed; });
+      bullets = bullets.filter(b => b.y > -10);
+    }
+
+    function updateAsteroids() {
+      const rate = Math.max(28, 70 - Math.floor(astScore / 4) * 5);
+      if (astFrame % rate === 0) spawnAsteroid();
+      asteroids.forEach(a => { a.y += a.speed; a.x += a.dx; a.angle += a.rotSpeed; });
+      asteroids = asteroids.filter(a => a.y < H + a.size);
+    }
+
+    function updateParticles() {
+      particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.life -= p.decay; });
+      particles = particles.filter(p => p.life > 0);
+    }
+
+    function checkAstCollisions() {
+      outer: for (let bi = bullets.length - 1; bi >= 0; bi--) {
+        for (let ai = asteroids.length - 1; ai >= 0; ai--) {
+          const b = bullets[bi];
+          const a = asteroids[ai];
+          if (Math.hypot(b.x - a.x, b.y - a.y) < a.size) {
+            spawnParticles(a.x, a.y);
+            bullets.splice(bi, 1);
+            asteroids.splice(ai, 1);
+            astScore++;
+            astScoreBox.textContent = "Score: " + astScore;
+            if (astScore > astBest) {
+              astBest = astScore;
+              localStorage.setItem("asteroidBest", astBest);
+              astBestBox.textContent = "Best: " + astBest;
+              setAstMessage("New record! " + astBest + " asteroids blasted.");
+            } else if (astScore % 5 === 0) {
+              setAstMessage("Clean shot. " + astScore + " asteroids down.");
+            }
+            continue outer;
+          }
+        }
+      }
+
+      if (!astGameOver) {
+        for (const a of asteroids) {
+          if (Math.hypot(ship.x - a.x, ship.y - a.y) < a.size + 10) {
+            astGameOver = true;
+            setAstMessage("Ship destroyed at score " + astScore + ". Restart to re-enter the field.");
+            break;
+          }
+        }
+      }
+    }
+
+    function astLoop() {
+      drawBackground();
+      if (!astGameOver) {
+        updateShip();
+        updateBullets();
+        updateAsteroids();
+        updateParticles();
+        checkAstCollisions();
+        astFrame++;
+      }
+      drawParticles();
+      drawAsteroids();
+      drawBullets();
+      drawShip();
+      drawAstHud();
+      drawAstOverlay();
+      requestAnimationFrame(astLoop);
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft") leftPressed = true;
+      if (e.key === "ArrowRight") rightPressed = true;
+      if (e.key === " ") { e.preventDefault(); spacePressed = true; }
+    });
+    document.addEventListener("keyup", e => {
+      if (e.key === "ArrowLeft") leftPressed = false;
+      if (e.key === "ArrowRight") rightPressed = false;
+      if (e.key === " ") spacePressed = false;
+    });
+
+    astRestart.addEventListener("click", resetAstGame);
+    resetAstGame();
+    astLoop();
+  </script>
+</body>
+</html>
