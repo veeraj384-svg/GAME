@@ -225,9 +225,9 @@
 
     const bgGradient = (() => {
       const g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, '#070a16');
-      g.addColorStop(0.5, '#0b1024');
-      g.addColorStop(1, '#070a16');
+      g.addColorStop(0, '#0a0f30');
+      g.addColorStop(0.5, '#161d52');
+      g.addColorStop(1, '#0a0f30');
       return g;
     })();
 
@@ -264,7 +264,7 @@
         chips[i].style.opacity = i >= unlocked ? '0.45' : '1';
         if (i === levelIndex) {
           chips[i].style.background = 'linear-gradient(135deg,#67e8f9,#a78bfa)';
-          chips[i].style.color = '#070a16';
+          chips[i].style.color = '#0a0f30';
         } else {
           chips[i].style.background = '';
           chips[i].style.color = '';
@@ -623,7 +623,7 @@
       ctx.fillStyle = g;
       rr(ctx, -p.w / 2, -p.h, p.w, p.h, 12);
       ctx.fill();
-      ctx.fillStyle = '#0b1024';
+      ctx.fillStyle = '#161d52';
       const ex = p.facing * 4;
       ctx.beginPath();
       ctx.arc(-5 + ex, -p.h + 12, 2.6, 0, 7);
