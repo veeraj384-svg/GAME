@@ -14,7 +14,7 @@
           <div class="game-header-left">
             <p class="eyebrow">Precision Platformer</p>
             <h1>Nova Run</h1>
-            <p class="game-subtext">Dash, bounce, and thread the spikes to gather every shard across five neon stages.</p>
+            <p class="game-subtext">Dash, bounce, and thread the spikes to gather every shard across eight neon stages.</p>
           </div>
           <a href="index.html" class="back-link">&larr; Home</a>
         </div>
@@ -69,7 +69,24 @@
         '# 13 0-9 13-24 31-42 46-60 70-82 86-97 101-109', '# 14 0-9 13-24 31-42 46-60 70-82 86-97 101-109',
         '# 8 51-54', '# 11 58-60', '# 10 62-64', '# 9 66-68',
         'o 7 52 53', 'o 9 63', 'o 8 67', 'o 11 27 28', 'o 8 104 105', 'o 12 5 20 39 78 93',
-        '^ 12 17 34 35 56 74 90 91 95', 'P 12 3', 'C 12 14 32 71 87', 'S 12 49 103', 'G 12 107' ] }
+        '^ 12 17 34 35 56 74 90 91 95', 'P 12 3', 'C 12 14 32 71 87', 'S 12 49 103', 'G 12 107' ] },
+      { name: 'Comet Alley', w: 104, tint: '#5eead4', tokens: [
+        '# 13 0-9 16-27 32-45 52-65 70-81 88-103', '# 14 0-9 16-27 32-45 52-65 70-81 88-103',
+        '# 8 37-40', '# 10 42-44',
+        'o 7 38 39', 'o 9 43', 'o 11 12 13 48 49 84 85', 'o 12 6 63 78 99',
+        '^ 12 22 38 58 74 94', 'P 12 3', 'C 12 18 54 90', 'S 12 35', 'G 12 100' ] },
+      { name: 'Spring Skyway', w: 108, tint: '#fda4af', tokens: [
+        '# 13 0-11 15-34 38-57 61-80 84-107', '# 14 0-11 15-34 38-57 61-80 84-107',
+        '# 8 19-23 27-31 41-45 55-59 66-70 80-84', '# 7 34-38 48-52 73-77',
+        'o 7 21 29 43 57 68 82', 'o 6 35 36 50 75', 'o 12 5 88 99',
+        '^ 12 20 21 27 28 44 45 51 52 67 68 74 75 92 93',
+        'P 12 3', 'C 12 39 62 86', 'S 12 17 64', 'G 12 104' ] },
+      { name: 'Nova Finale', w: 120, tint: '#93c5fd', tokens: [
+        '# 13 0-9 14-25 32-43 47-58 68-79 86-99 103-119', '# 14 0-9 14-25 32-43 47-58 68-79 86-99 103-119',
+        '# 8 52-55', '# 11 56-58', '# 10 60-62', '# 9 64-66',
+        'o 7 53 54', 'o 9 61', 'o 8 65', 'o 11 28 29 82 83', 'o 8 111 112', 'o 12 6 21 40 76 93 107',
+        '^ 12 17 36 37 71 72 89 96 106',
+        'P 12 3', 'C 12 15 33 69 87', 'S 12 50 110', 'G 12 116' ] }
     ];
 
     const canvas = document.getElementById('novaCanvas');
@@ -82,7 +99,7 @@
     const restartBtn = document.getElementById('novaRestart');
     const chipWrap = document.getElementById('novaChips');
 
-    let unlocked = Math.min(5, Math.max(1, parseInt(localStorage.getItem('novaUnlocked') || '1', 10) || 1));
+    let unlocked = Math.min(LEVELS.length, Math.max(1, parseInt(localStorage.getItem('novaUnlocked') || '1', 10) || 1));
     let levelIndex = 0, grid = [], worldW = 0, tint = PAL.cyan;
     let shards = [], spikes = [], springs = [], checkpoints = [], gate = null, spawn = { x: 100, y: 460 };
     let shardTotal = 0, shardGot = 0, gateOpen = false, deaths = 0;
@@ -142,7 +159,11 @@
       levelCanvas.width = worldW;
       levelCanvas.height = WORLD_H;
       const lc = levelCanvas.getContext('2d');
-      lc.fillStyle = 'rgba(13,17,34,0.97)';
+      lc.fillStyle = 'rgba(38,47,88,0.97)';
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < grid[0].length; c++) {
+        if (grid[r][c] === '#') lc.fillRect(c * TILE, r * TILE, TILE, TILE);
+      }
+      lc.fillStyle = tint + '14';
       for (let r = 0; r < ROWS; r++) for (let c = 0; c < grid[0].length; c++) {
         if (grid[r][c] === '#') lc.fillRect(c * TILE, r * TILE, TILE, TILE);
       }
@@ -161,11 +182,11 @@
       lc.restore();
       for (let r = 0; r < ROWS; r++) for (let c = 0; c < grid[0].length; c++) {
         if (grid[r][c] !== '#' || isSolid(c, r - 1)) continue;
-        const hl = lc.createLinearGradient(0, r * TILE, 0, r * TILE + 4);
-        hl.addColorStop(0, tint + '55');
+        const hl = lc.createLinearGradient(0, r * TILE, 0, r * TILE + 6);
+        hl.addColorStop(0, tint + '7a');
         hl.addColorStop(1, tint + '00');
         lc.fillStyle = hl;
-        lc.fillRect(c * TILE, r * TILE + 1, TILE, 4);
+        lc.fillRect(c * TILE, r * TILE + 1, TILE, 6);
       }
       lc.save();
       lc.fillStyle = PAL.pink;
@@ -228,7 +249,7 @@
     ];
 
     const chips = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < LEVELS.length; i++) {
       const b = document.createElement('button');
       b.className = 'secondary-button';
       b.textContent = 'Lv ' + (i + 1);
@@ -238,7 +259,7 @@
     }
 
     function refreshChips() {
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < LEVELS.length; i++) {
         chips[i].disabled = i >= unlocked;
         chips[i].style.opacity = i >= unlocked ? '0.45' : '1';
         if (i === levelIndex) {
@@ -454,14 +475,14 @@
         shake += 6;
         addPopup(pcx, p.y - 16, 'LEVEL CLEAR', PAL.amber);
         addParticles(gate.x * TILE + 20, gate.y * TILE, 24, PAL.green, 4);
-        const next = Math.min(5, levelIndex + 2);
+        const next = Math.min(LEVELS.length, levelIndex + 2);
         if (next > unlocked) {
           unlocked = next;
           localStorage.setItem('novaUnlocked', String(unlocked));
           setText(bestBox, 'Best: Level ' + unlocked);
           refreshChips();
         }
-        setBanner(levelIndex < 4 ? 'Level clear! Warping to the next stage...' : 'Final stage clear!');
+        setBanner(levelIndex < LEVELS.length - 1 ? 'Level clear! Warping to the next stage...' : 'Final stage clear!');
       }
     }
 
@@ -484,7 +505,7 @@
     }
 
     function advance() {
-      if (levelIndex < 4) loadLevel(levelIndex + 1);
+      if (levelIndex < LEVELS.length - 1) loadLevel(levelIndex + 1);
       else {
         state = 'victory';
         setBanner('Every stage cleared — you are the Nova runner!');
@@ -626,7 +647,7 @@
       ctx.fillText('NOVA RUN COMPLETE', W / 2, H / 2 - 66);
       ctx.fillStyle = PAL.white;
       ctx.font = '20px system-ui, sans-serif';
-      ctx.fillText('All 5 stages cleared · Total deaths: ' + deaths, W / 2, H / 2 - 16);
+      ctx.fillText('All ' + LEVELS.length + ' stages cleared · Total deaths: ' + deaths, W / 2, H / 2 - 16);
       ctx.fillStyle = PAL.soft;
       ctx.font = '16px system-ui, sans-serif';
       ctx.fillText('Best: Level ' + unlocked + ' unlocked', W / 2, H / 2 + 20);
