@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbit Shift | Game Hub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="theme-neon">
+  <div class="page-shell">
+    <main class="game-page-wrap">
+      <section class="game-panel">
+        <div class="game-topbar">
+          <div class="game-header-left">
+            <p class="eyebrow">One-Button Orbits</p>
+            <h1>Orbit Shift</h1>
+            <p class="game-subtext">Swap your comet between two neon orbits to thread hazard arcs and chase gems as the pace climbs.</p>
+          </div>
+          <a href="index.html" class="back-link">&larr; Home</a>
+        </div>
+        <div class="info-row">
+          <div class="status-box">Swap Ring: Space / Click</div>
+          <div class="status-box is-accent" id="orbitScoreBox">Score: 0</div>
+          <div class="status-box" id="orbitBestBox">Best: 0</div>
+          <div class="status-box" id="orbitSpeedBox">Speed: 1.0x</div>
+        </div>
+        <div class="message-banner" id="orbitMessage">Dodge the solid pink arcs and scoop the amber gems &mdash; one button is all you get.</div>
+        <div class="canvas-stage">
+          <canvas id="orbitCanvas" class="game-canvas" width="760" height="460"></canvas>
+        </div>
+        <div class="bottom-actions">
+          <button class="secondary-button" id="orbitRestart">Restart Run</button>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>
+  (() => {
+    'use strict';
+    const canvas = document.getElementById('orbitCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreBox = document.getElementById('orbitScoreBox');
+    const bestBox = document.getElementById('orbitBestBox');
+    const speedBox = document.getElementById('orbitSpeedBox');
+    const messageBox = document.getElementById('orbitMessage');
+    const restartBtn = document.getElementById('orbitRestart');
+
+    const W = 760, H = 460, CX = 380, CY = 230;
+    const TAU = Math.PI * 2;
+    const STEP = 1 / 60;
+    const RINGS = [95, 165];
+    const BASE_OMEGA = 0.030;
+    const BEST_KEY = 'orbitShiftBest';
+    const FONT = '"Segoe UI", system-ui, sans-serif';
+
+    const CYAN = '#67e8f9', PINK = '#f472b6', AMBER = '#fde68a',
+          GREEN = '#86efac', WHITE = '#f4f6ff', SOFT = '#9aa3c2';
+
+    canvas.style.touchAction = 'none';
+
+    // cached background gradient + static twinkle stars
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+    bgGrad.addColorStop(0, '#070a16');
+    bgGrad.addColorStop(0.5, '#0b1024');
+    bgGrad.addColorStop(1, '#070a16');
+
+    const stars = [];
+    for (let i = 0; i < 70; i++) {
+      stars.push({
+        x: Math.random() * W, y: Math.random() * H,
+        r: 0.4 + Math.random() * 1.2,
+        base: 0.2 + Math.random() * 0.4,
+        spd: 0.6 + Math.random() * 1.4,
+        ph: Math.random() * TAU
+      });
+    }
+
+    // ---- state ----
+    let state = 'ready'; // ready | playing | over
+    let score = 0, best = 0, speedMult = 1, elapsedSteps = 0, overSteps = 0, newBest = false;
+    let shake = 0, arcTimer = 0, gemTimer = 0;
+    const comet = { ring: 0, a: 0, r: RINGS[0], x: 0, y: 0, tweenFrom: 0, tweenTo: 0, tweenT: 1, tweening: false };
+    let arcs = [], gems = [], particles = [], popups = [], ripples = [], trail = [];
+
+    // ---- guarded DOM writes ----
+    let scoreText = '', bestText = '', msgText = '', speedRounded = -1;
+    const setScoreBox = () => { const t = 'Score: ' + score; if (t !== scoreText) { scoreText = t; scoreBox.textContent = t; } };
+    const setBestBox = () => { const t = 'Best: ' + best; if (t !== bestText) { bestText = t; bestBox.textContent = t; } };
+    const setMessage = (t) => { if (t !== msgText) { msgText = t; messageBox.textContent = t; } };
+    const setSpeedBox = () => {
+      const r = Math.round(speedMult * 10) / 10;
+      if (r !== speedRounded) { speedRounded = r; speedBox.textContent = 'Speed: ' + r.toFixed(1) + 'x'; }
+    };
+
+    // ---- helpers ----
+    const norm = (a) => { a %= TAU; return a < 0 ? a + TAU : a; };
+    const inSpan = (angle, start, len, pad) => norm(angle - start + pad) <= len + pad * 2;
+    const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+
+    function cometPos() {
+      comet.x = CX + Math.cos(comet.a) * comet.r;
+      comet.y = CY + Math.sin(comet.a) * comet.r;
+    }
+
+    function loadBest() {
+      try { best = parseInt(localStorage.getItem(BEST_KEY), 10) || 0; } catch (err) { best = 0; }
+    }
+
+    function saveBest() {
+      try { localStorage.setItem(BEST_KEY, String(best)); } catch (err) { /* storage unavailable */ }
+    }
+
+    function spawnBurst(x, y, n, color, power) {
+      for (let i = 0; i < n; i++) {
+        if (particles.length >= 220) particles.shift();
+        const ang = Math.random() * TAU;
+        const sp = power * (0.35 + Math.random() * 0.9);
+        const life = 26 + Math.floor(Math.random() * 26);
+        particles.push({ x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, life, maxLife: life, size: 1.4 + Math.random() * 2.2, color });
+      }
+    }
+
+    function addPopup(x, y, text, color, big) {
+      popups.push({ x, y, text, color, big: !!big, life: 62, maxLife: 62 });
+    }
+
+    function spawnArc() {
+      for (let tries = 0; tries < 24; tries++) {
+        const ring = Math.random() < 0.5 ? 0 : 1;
+        const start = Math.random() * TAU;
+        const len = (40 + Math.random() * 40) * Math.PI / 180;
+        if (ring === comet.ring && inSpan(comet.a, start, len, 0.5)) continue;
+        arcs.push({ ring, start, len, state: 'warn', age: 0, life: 360 + Math.floor(Math.random() * 240) });
+        return;
+      }
+    }
+
+    function spawnGem() {
+      for (let tries = 0; tries < 24; tries++) {
+        const ring = Math.random() < 0.5 ? 0 : 1;
+        const a = Math.random() * TAU;
+        let blocked = false;
+        for (const arc of arcs) {
+          if (arc.ring === ring && arc.state !== 'fade' && inSpan(a, arc.start, arc.len, 0.15)) { blocked = true; break; }
+        }
+        if (blocked) continue;
+        const r = RINGS[ring];
+        gems.push({ ring, a, x: CX + Math.cos(a) * r, y: CY + Math.sin(a) * r, ph: Math.random() * TAU });
+        return;
+      }
+    }
+
+    function swapRing() {
+      spawnBurst(comet.x, comet.y, 5, CYAN, 2.4);
+      comet.ring = 1 - comet.ring;
+      comet.tweenFrom = comet.r;
+      comet.tweenTo = RINGS[comet.ring];
+      comet.tweenT = 0;
+      comet.tweening = true;
+    }
+
+    function die() {
+      state = 'over';
+      overSteps = 0;
+      spawnBurst(comet.x, comet.y, 18, PINK, 3.4);
+      shake = 14;
+      newBest = score > best;
+      if (newBest) { best = score; saveBest(); setBestBox(); }
+      setMessage('Splashed on a hazard arc — press Space or click to relaunch.');
+    }
+
+    function reset() {
+      score = 0; speedMult = 1; elapsedSteps = 0; shake = 0; newBest = false;
+      arcs = []; gems = []; particles = []; popups = []; ripples = []; trail = [];
+      arcTimer = 40; gemTimer = 30;
+      comet.ring = 0;
+      comet.a = norm(-Math.PI / 2);
+      comet.r = RINGS[0];
+      comet.tweening = false;
+      comet.tweenT = 1;
+      cometPos();
+      spawnGem();
+      spawnGem();
+      setScoreBox();
+      setSpeedBox();
+    }
+
+    function startRun() {
+      state = 'playing';
+      setMessage('Stay off the solid pink arcs — every amber gem is a point.');
+    }
+
+    // ---- input ----
+    function getCanvasPoint(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (canvas.width / rect.width),
+        y: (e.clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    function action(pt) {
+      if (state === 'ready') { startRun(); return; }
+      if (state === 'playing') {
+        swapRing();
+        if (pt) ripples.push({ x: pt.x, y: pt.y, t: 0 });
+        return;
+      }
+      if (state === 'over' && overSteps > 20) { reset(); startRun(); }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.code.indexOf('Arrow') === 0) e.preventDefault();
+      if (e.code === 'Space' && !e.repeat) action(null);
+    });
+    canvas.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      action(getCanvasPoint(e));
+    });
+    restartBtn.addEventListener('click', () => { reset(); startRun(); });
+
+    // ---- fixed-timestep update ----
+    function step() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.vx *= 0.94; p.vy *= 0.94;
+        if (--p.life <= 0) particles.splice(i, 1);
+      }
+      for (let i = popups.length - 1; i >= 0; i--) {
+        const p = popups[i];
+        p.y -= 0.7;
+        if (--p.life <= 0) popups.splice(i, 1);
+      }
+      for (let i = ripples.length - 1; i >= 0; i--) {
+        ripples[i].t += 0.06;
+        if (ripples[i].t >= 1) ripples.splice(i, 1);
+      }
+      if (shake > 0) { shake *= 0.88; if (shake < 0.25) shake = 0; }
+      if (state === 'over') { overSteps++; return; }
+      if (state !== 'playing') return;
+
+      elapsedSteps++;
+      speedMult = Math.min(2.2, speedMult + 0.00008);
+      setSpeedBox();
+
+      // comet (counterclockwise on screen)
+      comet.a = norm(comet.a - BASE_OMEGA * speedMult);
+      if (comet.tweening) {
+        comet.tweenT = Math.min(1, comet.tweenT + 1 / 8);
+        comet.r = comet.tweenFrom + (comet.tweenTo - comet.tweenFrom) * easeOut(comet.tweenT);
+        if (comet.tweenT >= 1) { comet.tweening = false; comet.r = comet.tweenTo; }
+      }
+      cometPos();
+      trail.push({ x: comet.x, y: comet.y });
+      if (trail.length > 16) trail.shift();
+
+      // hazard arcs
+      arcTimer--;
+      const maxArcs = Math.min(6, 2 + Math.floor(elapsedSteps / 900));
+      let active = 0;
+      for (const arc of arcs) { if (arc.state !== 'fade') active++; }
+      if (active < maxArcs && arcTimer <= 0) {
+        spawnArc();
+        arcTimer = 24 + Math.floor(Math.random() * 48);
+      }
+      for (let i = arcs.length - 1; i >= 0; i--) {
+        const arc = arcs[i];
+        arc.age++;
+        if (arc.state === 'warn' && arc.age >= 60) { arc.state = 'live'; arc.age = 0; }
+        else if (arc.state === 'live' && arc.age >= arc.life) { arc.state = 'fade'; arc.age = 0; }
+        else if (arc.state === 'fade' && arc.age >= 40) { arcs.splice(i, 1); continue; }
+        if (arc.state === 'live' && Math.abs(comet.r - RINGS[arc.ring]) < 10 && inSpan(comet.a, arc.start, arc.len, 0)) {
+          die();
+          return;
+        }
+      }
+
+      // gems
+      gemTimer--;
+      if (gems.length < 3 && gemTimer <= 0) {
+        spawnGem();
+        gemTimer = 30 + Math.floor(Math.random() * 60);
+      }
+      for (let i = gems.length - 1; i >= 0; i--) {
+        const g = gems[i];
+        const dx = comet.x - g.x, dy = comet.y - g.y;
+        if (dx * dx + dy * dy <= 256) {
+          gems.splice(i, 1);
+          score++;
+          setScoreBox();
+          spawnBurst(g.x, g.y, 8, AMBER, 2.6);
+          addPopup(g.x, g.y - 14, '+1', AMBER, false);
+          if (score % 10 === 0) addPopup(g.x, g.y - 34, 'ON FIRE', PINK, true);
+        }
+      }
+    }
+
+    // ---- drawing ----
+    function rr(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function drawRings() {
+      ctx.lineCap = 'butt';
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(154, 163, 194, 0.30)';
+      for (let i = 0; i < 2; i++) {
+        ctx.beginPath();
+        ctx.arc(CX, CY, RINGS[i], 0, TAU);
+        ctx.stroke();
+      }
+      ctx.setLineDash([1.5, 30]);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(167, 139, 250, 0.35)';
+      for (let i = 0; i < 2; i++) {
+        ctx.beginPath();
+        ctx.arc(CX, CY, RINGS[i], 0, TAU);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+    }
+
+    function drawArcs() {
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = PINK;
+      for (const arc of arcs) {
+        if (arc.state === 'warn') {
+          ctx.globalAlpha = 0.10 + 0.30 * (arc.age / 60);
+          ctx.lineWidth = 1.5;
+        } else if (arc.state === 'live') {
+          ctx.globalAlpha = 0.95;
+          ctx.lineWidth = 3.5;
+        } else {
+          ctx.globalAlpha = 0.6 * Math.max(0, 1 - arc.age / 40);
+          ctx.lineWidth = 3.5;
+        }
+        ctx.beginPath();
+        ctx.arc(CX, CY, RINGS[arc.ring], arc.start, arc.start + arc.len);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawTrail() {
+      ctx.fillStyle = CYAN;
+      for (let i = 0; i < trail.length; i++) {
+        const f = (i + 1) / trail.length;
+        ctx.globalAlpha = f * f * 0.35;
+        ctx.beginPath();
+        ctx.arc(trail[i].x, trail[i].y, 1 + f * 6, 0, TAU);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawGems(t) {
+      for (const g of gems) {
+        const s = 1 + 0.14 * Math.sin(t * 3.2 + g.ph);
+        ctx.save();
+        ctx.translate(g.x, g.y);
+        ctx.scale(s, s);
+        ctx.shadowColor = AMBER;
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = AMBER;
+        ctx.beginPath();
+        ctx.moveTo(0, -7);
+        ctx.lineTo(5, 0);
+        ctx.lineTo(0, 7);
+        ctx.lineTo(-5, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = WHITE;
+        ctx.beginPath();
+        ctx.arc(0, -1.5, 1.4, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function drawComet() {
+      const stretch = comet.tweening ? 1 + 0.55 * (1 - comet.tweenT) : 1;
+      ctx.save();
+      ctx.translate(comet.x, comet.y);
+      ctx.rotate(comet.a);
+      ctx.scale(stretch, 1 / stretch);
+      ctx.shadowColor = CYAN;
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = CYAN;
+      ctx.beginPath();
+      ctx.arc(0, 0, 9, 0, TAU);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = WHITE;
+      ctx.beginPath();
+      ctx.arc(0, 0, 4, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      for (const p of particles) {
+        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, TAU);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawPopups() {
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (const p of popups) {
+        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+        ctx.font = (p.big ? '800 20px ' : '700 15px ') + FONT;
+        ctx.fillStyle = p.color;
+        ctx.fillText(p.text, p.x, p.y);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawRipples() {
+      ctx.strokeStyle = CYAN;
+      ctx.lineWidth = 1.5;
+      for (const r of ripples) {
+        ctx.globalAlpha = (1 - r.t) * 0.45;
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, 6 + r.t * 24, 0, TAU);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawReady(t) {
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = WHITE;
+      ctx.font = '800 30px ' + FONT;
+      ctx.fillText('ORBIT SHIFT', CX, CY - 34);
+      ctx.globalAlpha = 0.72 + 0.28 * Math.sin(t * 3);
+      ctx.fillStyle = CYAN;
+      ctx.font = '600 17px ' + FONT;
+      ctx.fillText('Press Space or click to start', CX, CY + 4);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = SOFT;
+      ctx.font = '500 13px ' + FONT;
+      ctx.fillText('One button swaps rings — dodge pink arcs, collect gems', CX, CY + 30);
+    }
+
+    function drawOver() {
+      const bw = 400, bh = 216;
+      const bx = CX - bw / 2, by = CY - bh / 2;
+      rr(bx, by, bw, bh, 18);
+      ctx.fillStyle = 'rgba(5, 8, 20, 0.78)';
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(103, 232, 249, 0.45)';
+      ctx.stroke();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = PINK;
+      ctx.font = '800 28px ' + FONT;
+      ctx.fillText('ORBIT LOST', CX, by + 48);
+      ctx.fillStyle = WHITE;
+      ctx.font = '700 20px ' + FONT;
+      ctx.fillText('Score: ' + score, CX, by + 92);
+      ctx.fillStyle = newBest ? GREEN : SOFT;
+      ctx.font = '600 15px ' + FONT;
+      ctx.fillText(newBest ? 'New best: ' + best + '!' : 'Best: ' + best, CX, by + 122);
+      ctx.fillStyle = SOFT;
+      ctx.font = '500 13px ' + FONT;
+      ctx.fillText('Space, click, or Restart Run to fly again', CX, by + 164);
+    }
+
+    function draw(t) {
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = WHITE;
+      for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        ctx.globalAlpha = s.base * (0.55 + 0.45 * Math.sin(t * s.spd + s.ph));
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, TAU);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      ctx.save();
+      if (shake > 0) ctx.translate((Math.random() * 2 - 1) * shake, (Math.random() * 2 - 1) * shake);
+      drawRings();
+      drawArcs();
+      drawGems(t);
+      if (state !== 'over') {
+        drawTrail();
+        drawComet();
+      }
+      drawParticles();
+      drawPopups();
+      drawRipples();
+      ctx.restore();
+
+      if (state === 'ready') drawReady(t);
+      else if (state === 'over') drawOver();
+    }
+
+    // ---- main loop: rAF + fixed-timestep accumulator ----
+    let lastTime = performance.now();
+    let acc = 0;
+    function frame(now) {
+      let dt = (now - lastTime) / 1000;
+      lastTime = now;
+      if (dt > 0.1) dt = 0.1;
+      if (dt < 0) dt = 0;
+      acc += dt;
+      while (acc >= STEP) {
+        step();
+        acc -= STEP;
+      }
+      draw(now / 1000);
+      requestAnimationFrame(frame);
+    }
+
+    loadBest();
+    setBestBox();
+    reset();
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>
