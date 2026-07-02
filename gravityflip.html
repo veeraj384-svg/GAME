@@ -59,9 +59,9 @@
       bgCanvas.height = H;
       const bgc = bgCanvas.getContext('2d');
       const bgGrad = bgc.createLinearGradient(0, 0, 0, H);
-      bgGrad.addColorStop(0, '#070a16');
-      bgGrad.addColorStop(0.5, '#0b1024');
-      bgGrad.addColorStop(1, '#070a16');
+      bgGrad.addColorStop(0, '#0a0f30');
+      bgGrad.addColorStop(0.5, '#161d52');
+      bgGrad.addColorStop(1, '#0a0f30');
       bgc.fillStyle = bgGrad;
       bgc.fillRect(0, 0, W, H);
 
@@ -403,7 +403,7 @@
         ctx.arc(PX + 14, eyeY, 3.4, 0, Math.PI * 2);
         ctx.arc(PX + 22, eyeY, 3.4, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#070a16';
+        ctx.fillStyle = '#0a0f30';
         ctx.beginPath();
         ctx.arc(PX + 15.4, eyeY, 1.6, 0, Math.PI * 2);
         ctx.arc(PX + 23.4, eyeY, 1.6, 0, Math.PI * 2);

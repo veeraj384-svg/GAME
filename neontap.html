@@ -111,13 +111,13 @@
 
     function drawBackground() {
       const grad = tapCtx.createLinearGradient(0, 0, 0, H);
-      grad.addColorStop(0, "#080b1c");
-      grad.addColorStop(0.5, "#0d1428");
-      grad.addColorStop(1, "#060a18");
+      grad.addColorStop(0, "#0c1236");
+      grad.addColorStop(0.5, "#161d50");
+      grad.addColorStop(1, "#0a0f32");
       tapCtx.fillStyle = grad;
       tapCtx.fillRect(0, 0, W, H);
 
-      tapCtx.strokeStyle = "rgba(255, 226, 122, 0.04)";
+      tapCtx.strokeStyle = "rgba(255, 226, 122, 0.09)";
       tapCtx.lineWidth = 1;
       for (let x = 0; x < W; x += 50) {
         tapCtx.beginPath(); tapCtx.moveTo(x, 0); tapCtx.lineTo(x, H); tapCtx.stroke();
