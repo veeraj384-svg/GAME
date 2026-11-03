@@ -7,44 +7,45 @@
   <link rel="stylesheet" href="style.css" />
   <style>
     :root {
-      --black: #0A0A0A;
-      --panel: #171717;
-      --light: #F5F5F5;
-      --muted: #B3B3B3;
-      --hero: #FFB000;
+      --black: #191919;
+      --panel: #222222;
+      --line: #333333;
+      --light: #F2F2F2;
+      --muted: #A6A6A6;
     }
 
-    body.home-body { background: var(--black); color: var(--light); }
+    body.home-body {
+      background: var(--black);
+      color: var(--light);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-    .brand, .section-label h2 { color: var(--light); }
-    .section-label span, .site-footer { color: var(--muted); }
-    .nav-pill { background: var(--black); color: var(--hero); border: 2px solid var(--hero); }
+    .brand, .section-label h2, .card-body h2 { color: var(--light); }
+    .section-label span, .site-footer, .card-body p, .eyebrow { color: var(--muted); }
+    .nav-pill { background: none; color: var(--muted); border: 1px solid var(--line); }
 
-    .hero-panel { background: var(--hero); border: none; }
+    .hero-panel { background: var(--panel); border: 1px solid var(--line); }
     .hero-panel, .hero-panel * {
-      color: var(--black);
+      color: var(--light);
       box-shadow: none !important;
       text-shadow: none !important;
       filter: none !important;
       animation: none !important;
       backdrop-filter: none !important;
     }
+    .hero-panel .eyebrow, .hero-panel .made-by { color: var(--muted); }
     .hero-panel::before, .hero-panel::after,
     .hero-left::before, .hero-left::after,
     body::before, body::after { display: none !important; }
 
-    .game-card { background: var(--panel); border: 2px solid var(--accent); box-shadow: none; }
-    .card-art { background: var(--accent); min-height: 96px; }
+    .game-card { background: var(--panel); border: 1px solid var(--line); box-shadow: none; }
+    .card-art { background: var(--accent); height: 4px; min-height: 0; padding: 0; }
+    .card-art .art-glyph { display: none; }
     .card-tag { color: var(--accent); }
-    .card-body h2 { color: var(--light); }
-    .card-body p { color: var(--muted); }
     .card-link {
-      display: inline-block;
-      padding: 8px 16px;
-      background: var(--accent);
-      color: var(--black);
-      font-weight: 700;
+      color: var(--light);
       text-decoration: none;
+      border-bottom: 1px solid var(--accent);
     }
   </style>
 </head>
