@@ -3,8 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Totally the legit google classroom</title>
+  <title>Que - Spanish Practice</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    :root {
+      --black: #0A0A0A;
+      --light: #F5F5F5;
+    }
+
+    .hero-panel {
+      background: var(--black);
+      border: none;
+    }
+
+    .hero-panel,
+    .hero-panel * {
+      color: var(--light);
+      box-shadow: none !important;
+      text-shadow: none !important;
+      filter: none !important;
+      animation: none !important;
+      backdrop-filter: none !important;
+    }
+
+    .hero-panel::before, .hero-panel::after,
+    .hero-left::before, .hero-left::after,
+    body::before, body::after {
+      display: none !important;
+      content: none !important;
+    }
+  </style>
 </head>
 
 <body class="home-body">
@@ -16,46 +44,26 @@
         <span class="nav-pill">Hidden URL</span>
       </nav>
 
-<!-- HERO -->
-<style>
-  .hero-panel, .hero-panel * {
-    box-shadow: none !important;
-    text-shadow: none !important;
-    filter: none !important;
-    animation: none !important;
-    backdrop-filter: none !important;
-  }
-  .hero-panel::before, .hero-panel::after,
-  .hero-left::before, .hero-left::after {
-    display: none !important;
-    content: none !important;
-  }
-  body::before, body::after { display: none !important; }
-</style>
-
-<section class="hero-panel" style="background:#191919;border:none;box-shadow:none;">
-  <div class="hero-left">
-    <p class="eyebrow" style="color:#0A0E12;">Premium Arcade</p>
-    <h1 style="color:#0A0E12;">Play something<br /><span style="color:#0A0E12;">Fun. Play 87C</span></h1>
-    <p class="hero-text" style="color:#0A0E12;">
-      Nine handcrafted originals — no tired classics, no downloads, no ads.
-      Tight controls, glowing visuals, and high scores worth chasing.
-    </p>
-    <p class="made-by" style="color:#0A0E12;">Made by <strong style="color:#0A0E12;">Veeraj Dave</strong></p>
-  </div>
-</section>
-
- 
+      <section class="hero-panel">
+        <div class="hero-left">
+          <p class="eyebrow">Premium Arcade</p>
+          <h1>Play something<br /><span>Fun. Play 87C</span></h1>
+          <p class="hero-text">
+            Nine handcrafted originals — no tired classics, no downloads, no ads.
+            Tight controls, glowing visuals, and high scores worth chasing.
+          </p>
+          <p class="made-by">Made by <strong>Veeraj Dave</strong></p>
+        </div>
+      </section>
 
       <div class="section-label">
         <h2>The Collection</h2>
         <span>Every game saves your best score locally</span>
       </div>
 
-      <!-- GAME GRID -->
       <section class="games-grid">
 
-        <article class="game-card" style="--g1:#a78bfa; --g2:#67e8f9;">
+        <article class="game-card" style="--accent:#a78bfa;">
           <div class="card-art"><span class="art-glyph">◮</span></div>
           <div class="card-body">
             <div class="card-tag">PLATFORMER</div>
@@ -65,7 +73,7 @@
           </div>
         </article>
 
-        <article class="game-card" style="--g1:#f472b6; --g2:#a78bfa;">
+        <article class="game-card" style="--accent:#f472b6;">
           <div class="card-art"><span class="art-glyph">⌁</span></div>
           <div class="card-body">
             <div class="card-tag">ACTION</div>
@@ -75,7 +83,7 @@
           </div>
         </article>
 
-        <article class="game-card" style="--g1:#67e8f9; --g2:#86efac;">
+        <article class="game-card" style="--accent:#67e8f9;">
           <div class="card-art"><span class="art-glyph">⇅</span></div>
           <div class="card-body">
             <div class="card-tag">RUNNER</div>
@@ -85,7 +93,7 @@
           </div>
         </article>
 
-        <article class="game-card" style="--g1:#fb923c; --g2:#f472b6;">
+        <article class="game-card" style="--accent:#fb923c;">
           <div class="card-art"><span class="art-glyph">◉</span></div>
           <div class="card-body">
             <div class="card-tag">SHOOTER</div>
@@ -95,7 +103,7 @@
           </div>
         </article>
 
-        <article class="game-card" style="--g1:#67e8f9; --g2:#f472b6;">
+        <article class="game-card" style="--accent:#67e8f9;">
           <div class="card-art"><span class="art-glyph">⚡</span></div>
           <div class="card-body">
             <div class="card-tag">SURVIVAL</div>
@@ -105,7 +113,7 @@
           </div>
         </article>
 
-        <article class="game-card" style="--g1:#fde68a; --g2:#67e8f9;">
+        <article class="game-card" style="--accent:#fde68a;">
           <div class="card-art"><span class="art-glyph">●</span></div>
           <div class="card-body">
             <div class="card-tag">REFLEX</div>
@@ -115,7 +123,7 @@
           </div>
         </article>
 
-        <article class="game-card" style="--g1:#5eead4; --g2:#93c5fd;">
+        <article class="game-card" style="--accent:#5eead4;">
           <div class="card-art"><span class="art-glyph">◎</span></div>
           <div class="card-body">
             <div class="card-tag">ORBIT</div>
@@ -125,7 +133,7 @@
           </div>
         </article>
 
-        <article class="game-card" style="--g1:#93c5fd; --g2:#a78bfa;">
+        <article class="game-card" style="--accent:#93c5fd;">
           <div class="card-art"><span class="art-glyph">▤</span></div>
           <div class="card-body">
             <div class="card-tag">TIMING</div>
@@ -135,7 +143,7 @@
           </div>
         </article>
 
-        <article class="game-card" style="--g1:#fb923c; --g2:#fde68a;">
+        <article class="game-card" style="--accent:#fb923c;">
           <div class="card-art"><span class="art-glyph">⌾</span></div>
           <div class="card-body">
             <div class="card-tag">SPORTS</div>
