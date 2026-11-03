@@ -16,6 +16,22 @@
         <span class="nav-pill">Hidden URL</span>
       </nav>
 
+<!-- HERO -->
+<style>
+  .hero-panel, .hero-panel * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    animation: none !important;
+    backdrop-filter: none !important;
+  }
+  .hero-panel::before, .hero-panel::after,
+  .hero-left::before, .hero-left::after {
+    display: none !important;
+    content: none !important;
+  }
+  body::before, body::after { display: none !important; }
+</style>
 
 <section class="hero-panel" style="background:#191919;border:none;box-shadow:none;">
   <div class="hero-left">
