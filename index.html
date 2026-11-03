@@ -6,11 +6,23 @@
   <title>Que - Spanish Practice</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    :root { --black: #0A0A0A; --light: #F5F5F5; }
+    :root {
+      --black: #0A0A0A;
+      --panel: #171717;
+      --light: #F5F5F5;
+      --muted: #B3B3B3;
+      --hero: #FFB000;
+    }
 
-    .hero-panel { background: var(--black); border: none; }
+    body.home-body { background: var(--black); color: var(--light); }
+
+    .brand, .section-label h2 { color: var(--light); }
+    .section-label span, .site-footer { color: var(--muted); }
+    .nav-pill { background: var(--black); color: var(--hero); border: 2px solid var(--hero); }
+
+    .hero-panel { background: var(--hero); border: none; }
     .hero-panel, .hero-panel * {
-      color: var(--light);
+      color: var(--black);
       box-shadow: none !important;
       text-shadow: none !important;
       filter: none !important;
@@ -20,6 +32,20 @@
     .hero-panel::before, .hero-panel::after,
     .hero-left::before, .hero-left::after,
     body::before, body::after { display: none !important; }
+
+    .game-card { background: var(--panel); border: 2px solid var(--accent); box-shadow: none; }
+    .card-art { background: var(--accent); min-height: 96px; }
+    .card-tag { color: var(--accent); }
+    .card-body h2 { color: var(--light); }
+    .card-body p { color: var(--muted); }
+    .card-link {
+      display: inline-block;
+      padding: 8px 16px;
+      background: var(--accent);
+      color: var(--black);
+      font-weight: 700;
+      text-decoration: none;
+    }
   </style>
 </head>
 
