@@ -6,18 +6,10 @@
   <title>Que - Spanish Practice</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    :root {
-      --black: #0A0A0A;
-      --light: #F5F5F5;
-    }
+    :root { --black: #0A0A0A; --light: #F5F5F5; }
 
-    .hero-panel {
-      background: var(--black);
-      border: none;
-    }
-
-    .hero-panel,
-    .hero-panel * {
+    .hero-panel { background: var(--black); border: none; }
+    .hero-panel, .hero-panel * {
       color: var(--light);
       box-shadow: none !important;
       text-shadow: none !important;
@@ -25,13 +17,9 @@
       animation: none !important;
       backdrop-filter: none !important;
     }
-
     .hero-panel::before, .hero-panel::after,
     .hero-left::before, .hero-left::after,
-    body::before, body::after {
-      display: none !important;
-      content: none !important;
-    }
+    body::before, body::after { display: none !important; }
   </style>
 </head>
 
@@ -40,7 +28,7 @@
     <main class="hub-container">
 
       <nav class="top-nav">
-        <span class="brand"><span class="brand-dot">✦</span> Game Hub</span>
+        <span class="brand">Game Hub</span>
         <span class="nav-pill">Hidden URL</span>
       </nav>
 
@@ -49,7 +37,7 @@
           <p class="eyebrow">Premium Arcade</p>
           <h1>Play something<br /><span>Fun. Play 87C</span></h1>
           <p class="hero-text">
-            Nine handcrafted originals — no tired classics, no downloads, no ads.
+            Nine handcrafted originals - no tired classics, no downloads, no ads.
             Tight controls, glowing visuals, and high scores worth chasing.
           </p>
           <p class="made-by">Made by <strong>Veeraj Dave</strong></p>
@@ -61,99 +49,7 @@
         <span>Every game saves your best score locally</span>
       </div>
 
-      <section class="games-grid">
-
-        <article class="game-card" style="--accent:#a78bfa;">
-          <div class="card-art"><span class="art-glyph">◮</span></div>
-          <div class="card-body">
-            <div class="card-tag">PLATFORMER</div>
-            <h2>Nova Run</h2>
-            <p>Dash, spring, and ride moving platforms through thirteen neon levels that keep getting meaner.</p>
-            <a href="platformer.html" class="card-link">Play <span>→</span></a>
-          </div>
-        </article>
-
-        <article class="game-card" style="--accent:#f472b6;">
-          <div class="card-art"><span class="art-glyph">⌁</span></div>
-          <div class="card-body">
-            <div class="card-tag">ACTION</div>
-            <h2>Neon Slash</h2>
-            <p>Carve glowing orbs out of the air with your blade. Chain combos, dodge the bombs, feel like a samurai.</p>
-            <a href="neonslash.html" class="card-link">Play <span>→</span></a>
-          </div>
-        </article>
-
-        <article class="game-card" style="--accent:#67e8f9;">
-          <div class="card-art"><span class="art-glyph">⇅</span></div>
-          <div class="card-body">
-            <div class="card-tag">RUNNER</div>
-            <h2>Gravity Flip</h2>
-            <p>One button. Two surfaces. Flip gravity between floor and ceiling as the corridor speeds up around you.</p>
-            <a href="gravityflip.html" class="card-link">Play <span>→</span></a>
-          </div>
-        </article>
-
-        <article class="game-card" style="--accent:#fb923c;">
-          <div class="card-art"><span class="art-glyph">◉</span></div>
-          <div class="card-body">
-            <div class="card-tag">SHOOTER</div>
-            <h2>Asteroid Blaster</h2>
-            <p>Pilot a neon ship through a thickening debris field and blast rocks into particle showers.</p>
-            <a href="asteroid.html" class="card-link">Play <span>→</span></a>
-          </div>
-        </article>
-
-        <article class="game-card" style="--accent:#67e8f9;">
-          <div class="card-art"><span class="art-glyph">⚡</span></div>
-          <div class="card-body">
-            <div class="card-tag">SURVIVAL</div>
-            <h2>Neon Dash</h2>
-            <p>Thread the needle through falling neon blocks in an ever-faster survival gauntlet.</p>
-            <a href="neondash.html" class="card-link">Play <span>→</span></a>
-          </div>
-        </article>
-
-        <article class="game-card" style="--accent:#fde68a;">
-          <div class="card-art"><span class="art-glyph">●</span></div>
-          <div class="card-body">
-            <div class="card-tag">REFLEX</div>
-            <h2>Neon Tap</h2>
-            <p>Pop glowing orbs before their timer rings run out. Five misses and the run is over.</p>
-            <a href="neontap.html" class="card-link">Play <span>→</span></a>
-          </div>
-        </article>
-
-        <article class="game-card" style="--accent:#5eead4;">
-          <div class="card-art"><span class="art-glyph">◎</span></div>
-          <div class="card-body">
-            <div class="card-tag">ORBIT</div>
-            <h2>Orbit Shift</h2>
-            <p>Two rings, one button. Swap orbits to dodge the arcs and grab gems as the spin accelerates.</p>
-            <a href="orbit.html" class="card-link">Play <span>→</span></a>
-          </div>
-        </article>
-
-        <article class="game-card" style="--accent:#93c5fd;">
-          <div class="card-art"><span class="art-glyph">▤</span></div>
-          <div class="card-body">
-            <div class="card-tag">TIMING</div>
-            <h2>Neon Stack</h2>
-            <p>Drop sliding slabs into a perfect tower. Every overhang gets sliced — how high can you go?</p>
-            <a href="stack.html" class="card-link">Play <span>→</span></a>
-          </div>
-        </article>
-
-        <article class="game-card" style="--accent:#fb923c;">
-          <div class="card-art"><span class="art-glyph">⌾</span></div>
-          <div class="card-body">
-            <div class="card-tag">SPORTS</div>
-            <h2>Neon Hoops</h2>
-            <p>Drag, aim, release. Bank glowing threes off the backboard before the clock runs out.</p>
-            <a href="hoops.html" class="card-link">Play <span>→</span></a>
-          </div>
-        </article>
-
-      </section>
+      <section class="games-grid" id="games"></section>
 
       <footer class="site-footer">
         Game Hub · handcrafted originals · scores stay on your device Totally google classroom.
@@ -163,5 +59,31 @@
 
     </main>
   </div>
+
+  <script>
+    // [accent, tag, title, description, link]
+    const games = [
+      ["#a78bfa", "PLATFORMER", "Nova Run", "Dash, spring, and ride moving platforms through thirteen neon levels that keep getting meaner.", "platformer.html"],
+      ["#f472b6", "ACTION", "Neon Slash", "Carve glowing orbs out of the air with your blade. Chain combos, dodge the bombs, feel like a samurai.", "neonslash.html"],
+      ["#67e8f9", "RUNNER", "Gravity Flip", "One button. Two surfaces. Flip gravity between floor and ceiling as the corridor speeds up around you.", "gravityflip.html"],
+      ["#fb923c", "SHOOTER", "Asteroid Blaster", "Pilot a neon ship through a thickening debris field and blast rocks into particle showers.", "asteroid.html"],
+      ["#67e8f9", "SURVIVAL", "Neon Dash", "Thread the needle through falling neon blocks in an ever-faster survival gauntlet.", "neondash.html"],
+      ["#fde68a", "REFLEX", "Neon Tap", "Pop glowing orbs before their timer rings run out. Five misses and the run is over.", "neontap.html"],
+      ["#5eead4", "ORBIT", "Orbit Shift", "Two rings, one button. Swap orbits to dodge the arcs and grab gems as the spin accelerates.", "orbit.html"],
+      ["#93c5fd", "TIMING", "Neon Stack", "Drop sliding slabs into a perfect tower. Every overhang gets sliced - how high can you go?", "stack.html"],
+      ["#fb923c", "SPORTS", "Neon Hoops", "Drag, aim, release. Bank glowing threes off the backboard before the clock runs out.", "hoops.html"]
+    ];
+
+    document.getElementById("games").innerHTML = games.map(([accent, tag, title, text, href]) => `
+      <article class="game-card" style="--accent:${accent};">
+        <div class="card-art"></div>
+        <div class="card-body">
+          <div class="card-tag">${tag}</div>
+          <h2>${title}</h2>
+          <p>${text}</p>
+          <a href="${href}" class="card-link">Play</a>
+        </div>
+      </article>`).join("");
+  </script>
 </body>
 </html>
